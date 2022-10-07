@@ -271,6 +271,10 @@ public:
    * Clear the Mesh Control Present flag for the QoS header.
    */
   void SetQosNoMeshControlPresent ();
+  
+  void SetArbitrationSlot(uint8_t slot); //Added by Ryu 2022/10/6
+  uint8_t GetArbitrationSlot(void) ;
+
   /**
    * Set order bit in the frame control field.
    */
@@ -651,6 +655,8 @@ private:
   uint8_t m_qosAckPolicy; ///< QoS Ack policy
   uint8_t m_amsduPresent; ///< A-MSDU present
   uint8_t m_qosStuff;     ///< QoS stuff
+  uint8_t m_arbitrationSlot; //< the number of Arbitratation slot //Added by ryu 2022/10/6
+  
 };
 
 } //namespace ns3

@@ -66,7 +66,8 @@ WifiMacHeader::WifiMacHeader ()
     m_seqSeq (0),
     m_qosEosp (0),
     m_qosAckPolicy (0),  // Normal Ack
-    m_amsduPresent (0)
+    m_amsduPresent (0),
+    m_arbitrationSlot (0)//a\Added by Ryu 2022/10/6
 {
 }
 
@@ -419,6 +420,14 @@ void WifiMacHeader::SetQosNoMeshControlPresent ()
   m_qosStuff = m_qosStuff & 0xfe; //bit 8 of QoS Control Field
 }
 
+void WifiMacHeader::SetArbitrationSlot (uint8_t slot)
+{
+  m_arbitrationSlot = slot;
+}
+uint8_t WifiMacHeader::GetArbitrationSlot(void)
+{
+  return m_arbitrationSlot;
+}
 
 Mac48Address
 WifiMacHeader::GetAddr1 (void) const

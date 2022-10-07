@@ -1544,7 +1544,8 @@ CtrlTriggerHeader::CtrlTriggerHeader ()
     m_ulBandwidth (0),
     m_giAndLtfType (0),
     m_apTxPower (0),
-    m_ulSpatialReuse (0)
+    m_ulSpatialReuse (0),
+    m_arbitrationSlot(0)
 {
 }
 
@@ -1596,6 +1597,7 @@ CtrlTriggerHeader::operator= (const CtrlTriggerHeader& trigger)
   m_ulSpatialReuse = trigger.m_ulSpatialReuse;
   m_userInfoFields.clear ();
   m_userInfoFields = trigger.m_userInfoFields;
+  m_arbitrationSlot = trigger.m_arbitrationSlot;//Added by Ryu 2022/10/5
   return *this;
 }
 
@@ -1668,6 +1670,7 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   commonInfo |= (m_giAndLtfType & 0x03) << 20;
   commonInfo |= static_cast<uint64_t> (m_apTxPower & 0x3f) << 28;
   commonInfo |= static_cast<uint64_t> (m_ulSpatialReuse) << 37;
+  commonInfo |= static_cast<uint64_t> (m_arbitrationSlot & 0x10) << 38;
 
   i.WriteHtolsbU64 (commonInfo);
 
@@ -1694,6 +1697,7 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_giAndLtfType = (commonInfo >> 20) & 0x03;
   m_apTxPower = (commonInfo >> 28) & 0x3f;
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
+  m_arbitrationSlot = (commonInfo >> 38) & 0x10;
   m_userInfoFields.clear ();
 
   NS_ABORT_MSG_IF (m_triggerType == BFRP_TRIGGER, "BFRP Trigger frame is not supported");
@@ -1979,6 +1983,18 @@ uint16_t
 CtrlTriggerHeader::GetUlSpatialReuse (void) const
 {
   return m_ulSpatialReuse;
+}
+
+void
+CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
+{
+  m_arbitrationSlot = slot;
+}
+
+int8_t
+CtrlTriggerHeader::GetArbitrationSlots(void) const
+{
+  return m_arbitrationSlot;
 }
 
 CtrlTriggerHeader

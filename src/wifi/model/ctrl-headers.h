@@ -856,6 +856,7 @@ private:
   uint8_t m_triggerType; //!< Trigger frame type
   uint8_t m_basicTriggerDependentUserInfo;   //!< Basic Trigger variant of Trigger Dependent User Info subfield
   CtrlBAckRequestHeader m_muBarTriggerDependentUserInfo;   //!< MU-BAR variant of Trigger Dependent User Info subfield
+  
 };
 
 
@@ -1110,6 +1111,10 @@ public:
    * \return the UL Spatial Reuse subfield
    */
   uint16_t GetUlSpatialReuse (void) const;
+  
+  void SetArbitrationSlots (int8_t slot);//Added by Ryu 2022/10/5
+  int8_t GetArbitrationSlots(void) const;//Added by Ryu 2022/10/5
+
   /**
    * Get a copy of the Common Info field of this Trigger frame.
    * Note that the User Info fields are excluded.
@@ -1252,6 +1257,7 @@ private:
   uint8_t m_giAndLtfType;      //!< GI And LTF Type subfield
   uint8_t m_apTxPower;         //!< Tx Power used by AP to transmit the Trigger Frame
   uint16_t m_ulSpatialReuse;   //!< Value for the Spatial Reuse field in HE-SIG-A
+  uint8_t m_arbitrationSlot; //!< Number of Arbitration Slots. Added by Ryu 2022/10/5
   /**
    * List of User Info fields
    */
