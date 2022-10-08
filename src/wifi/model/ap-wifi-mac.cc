@@ -1019,6 +1019,8 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
   Mac48Address from = hdr->GetAddr2 ();
   if (hdr->IsData ())
     {
+      // std::cout << "receive data form sta" <<std::endl; //added by ryu 2022/10/7
+          
       Mac48Address bssid = hdr->GetAddr1 ();
       if (!hdr->IsFromDs ()
           && hdr->IsToDs ()
@@ -1095,7 +1097,8 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
           // Address 3 field also is validated to verify that the group addressed
           // frame originated from a STA in the BSS of which the receiving STA is
           // a member (Section 9.3.3.1 of 802.11-2020)
-          if (hdr->GetAddr1 ().IsGroup ()
+          std::cout << "probe request" <<std::endl; //added by ryu 2022/10/7
+           if (hdr->GetAddr1 ().IsGroup ()
               && !hdr->GetAddr3 ().IsBroadcast () && hdr->GetAddr3 () != GetAddress ())
             {
               // not addressed to us
@@ -1116,6 +1119,8 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
           if (hdr->IsAssocReq ())
             {
               NS_LOG_DEBUG ("Association request received from " << from);
+              std::cout << "Association request " <<std::endl; //added by ryu 2022/10/7
+      
               //first, verify that the the station's supported
               //rate set is compatible with our Basic Rate set
               MgtAssocRequestHeader assocReq;
@@ -1254,6 +1259,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
           else if (hdr->IsReassocReq ())
             {
               NS_LOG_DEBUG ("Reassociation request received from " << from);
+              std::cout << "reassociation request" <<std::endl; //added by ryu 2022/10/7
               //first, verify that the the station's supported
               //rate set is compatible with our Basic Rate set
               MgtReassocRequestHeader reassocReq;
@@ -1392,6 +1398,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
           else if (hdr->IsDisassociation ())
             {
               NS_LOG_DEBUG ("Disassociation received from " << from);
+              std::cout << "disassociation" <<std::endl; //added by ryu 2022/10/7
               GetWifiRemoteStationManager ()->RecordDisassociated (from);
               for (auto it = m_staList.begin (); it != m_staList.end (); ++it)
                 {

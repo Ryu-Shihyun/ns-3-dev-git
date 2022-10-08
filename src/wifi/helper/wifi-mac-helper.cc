@@ -52,7 +52,7 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
     {
       macObjectFactory.Set ("QosSupported", BooleanValue (true));
     }
-
+  std::cout << "standard:" << standard << std::endl; //added by ryu 2022/10/7
   Ptr<WifiMac> mac = macObjectFactory.Create<WifiMac> ();
   mac->SetDevice (device);
   mac->SetAddress (Mac48Address::Allocate ());

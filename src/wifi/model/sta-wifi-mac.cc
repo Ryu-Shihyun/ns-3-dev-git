@@ -31,6 +31,7 @@
 #include "wifi-net-device.h"
 #include "ns3/ht-configuration.h"
 #include "ns3/he-configuration.h"
+#include "ns3/ctrl-headers.h" // Added by ryu 2022/10/7
 
 namespace ns3 {
 
@@ -724,6 +725,25 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
             }
         }
       return;
+    }
+    else if(hdr->IsTrigger())
+    {
+      CtrlTriggerHeader trigger;
+      packet->PeekHeader(trigger);
+      if(trigger.FindUserInfoWithAid(m_aid)==trigger.end()){
+        //not addressed to us
+        return;
+      }
+      if(trigger.IsMuBar()){
+        std::cout << "Mu Bar trigger" <<std::endl; //added by ryu 2022/10/7
+      
+      }else if(trigger.IsBasic()){
+        std::cout << "basic trigger" <<std::endl; //added by ryu 2022/10/7
+      }else if(trigger.IsBsrp()){
+        std::cout << "BSRP trigger" <<std::endl; //added by ryu 2022/10/7
+      }
+      
+      
     }
 
   //Invoke the receive handler of our parent class to deal with any
