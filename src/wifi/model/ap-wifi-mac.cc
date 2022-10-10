@@ -39,6 +39,11 @@
 #include "ns3/ht-configuration.h"
 #include "ns3/he-configuration.h"
 #include "qos-txop.h"
+#include "ns3/he-configuration.h"
+#include "ns3/ctrl-headers.h"
+#include "ns3/wifi-mac-header.h"
+#include "wifi-tx-vector.h"
+#include "ns3/he-phy.h"
 
 namespace ns3 {
 
@@ -102,7 +107,8 @@ ApWifiMac::ApWifiMac ()
     m_numNonErpStations (0),
     m_numNonHtStations (0),
     m_shortSlotTimeEnabled (false),
-    m_shortPreambleEnabled (false)
+    m_shortPreambleEnabled (false),
+    m_ulTriggerType (TriggerFrameType::BASIC_TRIGGER)
 {
   NS_LOG_FUNCTION (this);
   m_beaconTxop = CreateObject<Txop> (CreateObject<WifiMacQueue> (AC_BEACON));
@@ -305,7 +311,6 @@ ApWifiMac::ForwardDown (Ptr<Packet> packet, Mac48Address from,
 {
   NS_LOG_FUNCTION (this << packet << from << to << +tid);
   WifiMacHeader hdr;
-
   //For now, an AP that supports QoS does not support non-QoS
   //associations, and vice versa. In future the AP model should
   //support simultaneously associated QoS and non-QoS STAs, at which
@@ -983,6 +988,89 @@ ApWifiMac::SendOneBeacon (void)
     }
 }
 
+//added by ryu 2022/10/8
+void
+ApWifiMac::SendTriggeerFrame(void)
+{
+  MakeWifiTxVector();
+  TriggerFrameType ulTriggerType = TriggerFrameType::BASIC_TRIGGER;
+  m_trigger = CtrlTriggerHeader (ulTriggerType, m_txVector);
+  WifiTxVector txVector = m_txVector;
+  txVector.SetGuardInterval (m_trigger.GetGuardInterval ());
+  uint32_t ampduSize = 3500;
+  Time duration = WifiPhy::CalculateTxDuration (ampduSize, txVector,
+                                                    GetWifiPhy ()->GetPhyBand (),
+                                                    GetStaList ().begin ()->first);
+
+  uint16_t length;
+  std::tie (length, duration) = HePhy::ConvertHeTbPpduDurationToLSigLength (duration,
+                                                                            m_trigger.GetHeTbTxVector (m_trigger.begin ()->GetAid12 ()),
+                                                                            GetWifiPhy ()->GetPhyBand ());
+  m_trigger.SetUlLength (length);
+
+  Ptr<Packet> packet = Create<Packet> ();
+  packet->AddHeader (m_trigger);
+
+  m_triggerHdr = WifiMacHeader (WIFI_MAC_CTL_TRIGGER);
+  m_triggerHdr.SetAddr1 (Mac48Address::GetBroadcast ());
+  m_triggerHdr.SetAddr2 (GetAddress ());
+  m_triggerHdr.SetDsNotTo ();
+  m_triggerHdr.SetDsNotFrom ();
+  
+  GetTxop ()->Queue (packet, m_triggerHdr);
+   
+}
+
+void
+ApWifiMac::MakeWifiTxVector(void)
+{
+  if (m_txVector.GetPreambleType () == WIFI_PREAMBLE_HE_MU)
+    {
+      // the TX vector has been already computed
+      return;
+    }
+
+  uint16_t bw = GetWifiPhy ()->GetChannelWidth ();
+  m_txVector.SetPreambleType (WIFI_PREAMBLE_HE_MU);
+  m_txVector.SetChannelWidth (bw);
+  m_txVector.SetGuardInterval (GetHeConfiguration ()->GetGuardInterval ().GetNanoSeconds ());
+  m_txVector.SetTxPowerLevel (GetWifiRemoteStationManager ()->GetDefaultTxPowerLevel ());
+  const std::map<uint16_t, Mac48Address>& staList = GetStaList ();
+  NS_ABORT_MSG_IF (staList.size () != 4, "There must be 4 associated stations");
+
+  HeRu::RuType ruType;
+  switch (bw)
+    {
+      case 20:
+        ruType = HeRu::RU_52_TONE;
+        break;
+      case 40:
+        ruType = HeRu::RU_106_TONE;
+        break;
+      case 80:
+        ruType = HeRu::RU_242_TONE;
+        break;
+      case 160:
+        ruType = HeRu::RU_484_TONE;
+        break;
+      default:
+        NS_ABORT_MSG ("Unsupported channel width");
+    }
+  bool primary80 = true;
+  std::size_t ruIndex = 1;
+
+  for (auto& sta : staList)
+    {
+      if (bw == 160 && ruIndex == 3)
+        {
+          ruIndex = 1;
+          primary80 = false;
+        }
+      m_txVector.SetHeMuUserInfo (sta.first,
+                                  {{ruType, ruIndex++, primary80}, WifiMode ("HeMcs11"), 1});
+    }
+}
+
 void
 ApWifiMac::TxOk (Ptr<const WifiMacQueueItem> mpdu)
 {
@@ -1116,6 +1204,14 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
         }
       else if (hdr->GetAddr1 () == GetAddress ())
         {
+          /*
+          if(hdr->IsBlockAck()) //Added by ryu 2022/10/10
+          {
+            std::cout << "Recieved BlockAck" <<std::endl;//
+            SendTriggeerFrame();
+          }
+          else
+          */ 
           if (hdr->IsAssocReq ())
             {
               NS_LOG_DEBUG ("Association request received from " << from);

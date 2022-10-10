@@ -24,6 +24,10 @@
 #define AP_WIFI_MAC_H
 
 #include "wifi-mac.h"
+#include "ns3/he-configuration.h"
+#include "ns3/wifi-tx-vector.h"
+#include "ns3/wifi-mac-header.h"
+#include "ns3/ctrl-headers.h"
 #include <unordered_map>
 
 namespace ns3 {
@@ -201,6 +205,11 @@ private:
    * \param to the address of the STA we are sending a probe response to
    */
   void SendProbeResp (Mac48Address to);
+
+  //added by ryu 2022/10/8
+  void SendTriggeerFrame(void);
+  void MakeWifiTxVector(void);
+
   /**
    * Forward an association or a reassociation response packet to the DCF.
    * The standard is not clear on the correct queue for management frames if QoS is supported.
@@ -321,6 +330,14 @@ private:
   bool m_shortPreambleEnabled;               //!< Flag whether short preamble is enabled in the BSS
   bool m_enableNonErpProtection;             //!< Flag whether protection mechanism is used or not when non-ERP STAs are present within the BSS
   Time m_bsrLifetime;                        //!< Lifetime of Buffer Status Reports
+  ns3::TriggerFrameType m_ulTriggerType; //!< Trigger Frame type for UL MU //Added by ryu 2022/10/8
+  ns3::CtrlTriggerHeader m_trigger;      //!< Trigger Frame to send //Added by ryu 2022/10/8
+  WifiMacHeader m_triggerHdr;       //!< MAC header for Trigger Frame //Added by rtu 2022/10/8
+  WifiTxVector m_txVector;
+  
+  
+  
+  
   /// store value and timestamp for each Buffer Status Report
   typedef struct
   {

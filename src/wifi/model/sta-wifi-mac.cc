@@ -708,6 +708,7 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
               UpdateApInfoFromAssocResp (assocResp, hdr->GetAddr2 ());
               if (!m_linkUp.IsNull ())
                 {
+                  std::cout << "link up" << std::endl;
                   m_linkUp ();
                 }
             }
@@ -726,7 +727,8 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
         }
       return;
     }
-    else if(hdr->IsTrigger())
+  /*
+  else if(hdr->IsTrigger())
     {
       CtrlTriggerHeader trigger;
       packet->PeekHeader(trigger);
@@ -739,12 +741,14 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
       
       }else if(trigger.IsBasic()){
         std::cout << "basic trigger" <<std::endl; //added by ryu 2022/10/7
+
       }else if(trigger.IsBsrp()){
         std::cout << "BSRP trigger" <<std::endl; //added by ryu 2022/10/7
       }
       
       
     }
+    */
 
   //Invoke the receive handler of our parent class to deal with any
   //other frames. Specifically, this will handle Block Ack-related
