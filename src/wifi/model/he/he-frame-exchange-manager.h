@@ -214,6 +214,9 @@ protected:
   Ptr<ApWifiMac> m_apMac;                             //!< MAC pointer (null if not an AP)
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
+  
+  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
+
 
 private:
   /**

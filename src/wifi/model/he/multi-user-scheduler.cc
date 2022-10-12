@@ -177,7 +177,8 @@ MultiUserScheduler::GetDlMuInfo (void)
 MultiUserScheduler::UlMuInfo&
 MultiUserScheduler::GetUlMuInfo (void)
 {
-  NS_ABORT_MSG_IF (m_lastTxFormat != UL_MU_TX, "Next transmission is not UL MU");
+  //comment out by ryu 2022/10/10
+  // NS_ABORT_MSG_IF (m_lastTxFormat != UL_MU_TX, "Next transmission is not UL MU");
 
   return m_ulInfo;
 }

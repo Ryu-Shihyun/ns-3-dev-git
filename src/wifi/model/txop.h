@@ -261,7 +261,12 @@ public:
    * slots specified.
    */
   void StartBackoffNow (uint32_t nSlots);
-
+  /**
+   * Return the current number of backoff slots.
+   *
+   * \return the current number of backoff slots
+   */
+  uint32_t GetBackoffSlots (void) const;
 protected:
   ///< ChannelAccessManager associated class
   friend class ChannelAccessManager;
@@ -298,12 +303,7 @@ protected:
    *          minCW.
    */
   uint32_t GetCw (void) const;
-  /**
-   * Return the current number of backoff slots.
-   *
-   * \return the current number of backoff slots
-   */
-  uint32_t GetBackoffSlots (void) const;
+  
   /**
    * Return the time when the backoff procedure started.
    *

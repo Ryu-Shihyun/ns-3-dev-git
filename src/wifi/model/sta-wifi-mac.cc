@@ -586,6 +586,7 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
         }
       else if (hdr->HasData ())
         {
+          // std::cout << "receive data form "<< hdr->GetAddr1() <<std::endl; //added by ryu 2022/10/7
           ForwardUp (packet, hdr->GetAddr3 (), hdr->GetAddr1 ());
         }
       return;

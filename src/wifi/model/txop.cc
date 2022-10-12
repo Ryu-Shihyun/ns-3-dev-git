@@ -357,6 +357,7 @@ Txop::NotifyChannelReleased (void)
   NS_LOG_FUNCTION (this);
   m_access = NOT_REQUESTED;
   GenerateBackoff ();
+  // std::cout << m_backoffSlots << std::endl;
   if (HasFramesToTransmit ())
     {
       Simulator::ScheduleNow (&Txop::RequestAccess, this);

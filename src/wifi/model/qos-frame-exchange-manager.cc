@@ -24,6 +24,7 @@
 #include "wifi-mac-queue.h"
 #include "wifi-mac-trailer.h"
 #include "ap-wifi-mac.h"
+#include "ns3/txop.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT std::clog << "[mac=" << m_self << "] "
@@ -567,7 +568,7 @@ void
 QosFrameExchangeManager::TransmissionFailed (void)
 {
   NS_LOG_FUNCTION (this);
-
+  std::cout << "transmission faild" << std::endl;
   // TODO This will be removed once no Txop is installed on a QoS station
   if (m_edca == 0)
     {
@@ -581,6 +582,7 @@ QosFrameExchangeManager::TransmissionFailed (void)
       // of an MPDU in the initial PPDU of a TXOP fails (Sec. 10.22.2.2 of 802.11-2016)
       NS_LOG_DEBUG ("TX of the initial frame of a TXOP failed: terminate TXOP");
       m_edca->NotifyChannelReleased ();
+      // std::cout << "backoff :" << m_edca->Txop::GetBackoffSlots() << " from: " << m_self <<std::endl;
       m_edca = 0;
     }
   else
@@ -607,6 +609,8 @@ QosFrameExchangeManager::TransmissionFailed (void)
           NS_LOG_DEBUG ("TX of a non-initial frame of a TXOP failed: invoke backoff");
           m_edca->Txop::NotifyChannelReleased ();
           m_edcaBackingOff = m_edca;
+          
+          // std::cout << "backoff :" << m_edcaBackingOff->Txop::GetBackoffSlots() << " from: " << m_self <<std::endl;
           m_edca = 0;
         }
     }

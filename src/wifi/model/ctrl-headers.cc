@@ -1545,7 +1545,11 @@ CtrlTriggerHeader::CtrlTriggerHeader ()
     m_giAndLtfType (0),
     m_apTxPower (0),
     m_ulSpatialReuse (0),
-    m_arbitrationSlot(0)
+    m_mbtaIndicator(false),
+    m_arbitrationSlot(0),
+    m_damsIndicator(false),
+    m_damsBoundary(0)
+    
 {
 }
 
@@ -1597,7 +1601,10 @@ CtrlTriggerHeader::operator= (const CtrlTriggerHeader& trigger)
   m_ulSpatialReuse = trigger.m_ulSpatialReuse;
   m_userInfoFields.clear ();
   m_userInfoFields = trigger.m_userInfoFields;
+  m_mbtaIndicator = trigger.m_mbtaIndicator;
   m_arbitrationSlot = trigger.m_arbitrationSlot;//Added by Ryu 2022/10/5
+  m_damsIndicator = trigger.m_damsIndicator;
+  m_damsBoundary = trigger.m_damsBoundary;
   return *this;
 }
 
@@ -1670,7 +1677,10 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   commonInfo |= (m_giAndLtfType & 0x03) << 20;
   commonInfo |= static_cast<uint64_t> (m_apTxPower & 0x3f) << 28;
   commonInfo |= static_cast<uint64_t> (m_ulSpatialReuse) << 37;
-  commonInfo |= static_cast<uint64_t> (m_arbitrationSlot & 0x10) << 38;
+  commonInfo |= (m_mbtaIndicator ? 1 << 64 : 0);
+  commonInfo |= static_cast<uint64_t> (m_arbitrationSlot & 0x07) << 65;
+  commonInfo |= (m_damsIndicator ? 1 << 68 : 0);
+  commonInfo |= static_cast<uint64_t> (m_damsBoundary & 0x1000) << 69;
 
   i.WriteHtolsbU64 (commonInfo);
 
@@ -1697,7 +1707,10 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_giAndLtfType = (commonInfo >> 20) & 0x03;
   m_apTxPower = (commonInfo >> 28) & 0x3f;
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
-  m_arbitrationSlot = (commonInfo >> 38) & 0x10;
+  m_mbtaIndicator = (commonInfo >> 64) & 0x01;
+  m_arbitrationSlot = (commonInfo >> 65) & 0x07;
+  m_damsIndicator = (commonInfo >> 68) & 0x01;
+  m_damsBoundary = (commonInfo >> 69) & 0x1000;
   m_userInfoFields.clear ();
 
   NS_ABORT_MSG_IF (m_triggerType == BFRP_TRIGGER, "BFRP Trigger frame is not supported");
@@ -1994,7 +2007,7 @@ CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
 int8_t
 CtrlTriggerHeader::GetArbitrationSlots(void) const
 {
-  return m_arbitrationSlot;
+  return static_cast<int8_t> (m_arbitrationSlot);
 }
 
 CtrlTriggerHeader

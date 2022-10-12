@@ -1107,7 +1107,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
   Mac48Address from = hdr->GetAddr2 ();
   if (hdr->IsData ())
     {
-      // std::cout << "receive data form sta" <<std::endl; //added by ryu 2022/10/7
+      // std::cout << "receive data form "<< from <<std::endl; //added by ryu 2022/10/7
           
       Mac48Address bssid = hdr->GetAddr1 ();
       if (!hdr->IsFromDs ()
