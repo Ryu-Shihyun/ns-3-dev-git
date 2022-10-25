@@ -357,6 +357,7 @@ ApWifiMac::ForwardDown (Ptr<Packet> packet, Mac48Address from,
 bool
 ApWifiMac::CanForwardPacketsTo (Mac48Address to) const
 {
+  // std::cout << "canForwardPacektsTo"<< std::endl; //added by ryu 2022/10/13
   return (to.IsGroup () || GetWifiRemoteStationManager ()->IsAssociated (to));
 }
 
@@ -743,6 +744,7 @@ ApWifiMac::GetHeOperation (void) const
 void
 ApWifiMac::SendProbeResp (Mac48Address to)
 {
+  std::cout << "sendProbResp"<<std::endl;
   NS_LOG_FUNCTION (this << to);
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_MGT_PROBE_RESPONSE);
@@ -814,6 +816,7 @@ ApWifiMac::SendProbeResp (Mac48Address to)
 void
 ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
 {
+  std::cout << "sendAssocResp"<<std::endl;
   NS_LOG_FUNCTION (this << to << success << isReassoc);
   WifiMacHeader hdr;
   hdr.SetType (isReassoc ? WIFI_MAC_MGT_REASSOCIATION_RESPONSE : WIFI_MAC_MGT_ASSOCIATION_RESPONSE);
@@ -919,6 +922,7 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
 void
 ApWifiMac::SendOneBeacon (void)
 {
+  // std::cout << "sendOneBeacon"<<std::endl;
   NS_LOG_FUNCTION (this);
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_MGT_BEACON);

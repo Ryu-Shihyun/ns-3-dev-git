@@ -942,7 +942,7 @@ FrameExchangeManager::Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
 {
   NS_LOG_FUNCTION (this << psdu << rxSignalInfo << txVector << perMpduStatus.size ()
                    << std::all_of (perMpduStatus.begin(), perMpduStatus.end(), [](bool v) { return v; }));
-
+  
   if (!perMpduStatus.empty ())
     {
       // for A-MPDUs, we get here only once

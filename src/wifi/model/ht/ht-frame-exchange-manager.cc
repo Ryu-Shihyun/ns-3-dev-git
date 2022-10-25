@@ -592,12 +592,13 @@ HtFrameExchangeManager::TransmissionSucceeded (void)
       // (Sec. 10.22.2.8 of 802.11-2016)
       NS_LOG_DEBUG ("Schedule a transmission from Block Ack Manager in a SIFS");
       bool (HtFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &HtFrameExchangeManager::StartTransmission;
-
+      // std::cout << "ht::transmissionSucceeded"<<std::endl;//added by ryu 10/21
       // TXOP limit is null, hence the txopDuration parameter is unused
       Simulator::Schedule (m_phy->GetSifs (), fp, this, m_edca, Seconds (0));
     }
   else
     {
+      // std::cout << "ht::transmissionSucceeded"<<std::endl;//added by ryu 10/21
       QosFrameExchangeManager::TransmissionSucceeded ();
     }
 }
@@ -815,7 +816,7 @@ HtFrameExchangeManager::SendPsdu (void)
   else if (m_txParams.m_acknowledgment->method == WifiAcknowledgment::BAR_BLOCK_ACK)
     {
       m_psdu->SetDuration (GetPsduDurationId (txDuration, m_txParams));
-
+      std::cout << "BAR_BLOCK_ACK" << std::endl;//10/21
       // schedule the transmission of a BAR in a SIFS
       std::set<uint8_t> tids = m_psdu->GetTids ();
       NS_ABORT_MSG_IF (tids.size () > 1, "Acknowledgment method incompatible with a Multi-TID A-MPDU");
@@ -1167,8 +1168,9 @@ HtFrameExchangeManager::MissedBlockAck (Ptr<WifiPsdu> psdu, const WifiTxVector& 
             }
           else
             {
+              // std::cout << "missed block ack after data frame with Implicit BAR Ack policy"<< std::endl;//10/21
               // missed block ack after data frame with Implicit BAR Ack policy
-              edca->ScheduleBar (edca->PrepareBlockAckRequest (recipient, tid));
+              // edca->ScheduleBar (edca->PrepareBlockAckRequest (recipient, tid));
             }
           resetCw = false;
         }
@@ -1183,6 +1185,7 @@ HtFrameExchangeManager::MissedBlockAck (Ptr<WifiPsdu> psdu, const WifiTxVector& 
             {
               // schedule a BlockAckRequest with skipIfNoDataQueued set to true, so that the
               // BlockAckRequest is only sent if there are data frames queued for this recipient.
+              // std::cout << "schedule a BlockAckRequest with skipIfNoDataQueued "<<std::endl;
               edca->ScheduleBar (edca->PrepareBlockAckRequest (recipient, tid), true);
             }
           resetCw = true;
@@ -1216,7 +1219,7 @@ HtFrameExchangeManager::SendBlockAck (const RecipientBlockAckAgreement& agreemen
                                       WifiTxVector& blockAckTxVector, double rxSnr)
 {
   NS_LOG_FUNCTION (this << durationId << blockAckTxVector << rxSnr);
-
+  std::cout << "sendBlockAck..." << Simulator::Now() << std::endl;
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_CTL_BACKRESP);
   hdr.SetAddr1 (agreement.GetPeer ());

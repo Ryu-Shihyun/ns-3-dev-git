@@ -111,6 +111,7 @@ case WAIT_ ## x: \
     FOO (TB_PPDU_AFTER_BASIC_TF);
     FOO (QOS_NULL_AFTER_BSRP_TF);
     FOO (BLOCK_ACK_AFTER_TB_PPDU);
+    FOO (ARBITRATION_PHASE);
     default:
       NS_ABORT_MSG ("Unknown reason");
     }

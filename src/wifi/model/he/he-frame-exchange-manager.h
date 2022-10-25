@@ -215,7 +215,7 @@ protected:
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
   
-  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
+  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru);
 
 
 private:
@@ -230,6 +230,7 @@ private:
    * \param trigger the Basic Trigger Frame content
    * \param hdr the MAC header of the Basic Trigger Frame
    */
+  void ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
   void ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
 
   WifiPsduMap m_psduMap;                              //!< the A-MPDU being transmitted
@@ -239,7 +240,9 @@ private:
   std::set<Mac48Address> m_staExpectTbPpduFrom;       //!< set of stations expected to send a TB PPDU
   EventId m_multiStaBaEvent;                          //!< Sending a Multi-STA BlockAck event
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
-  bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BAR
+  bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BA
+  int m_slot=3;
+  // bool m_ul;
 };
 
 } //namespace ns3

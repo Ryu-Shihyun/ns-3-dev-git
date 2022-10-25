@@ -568,7 +568,7 @@ void
 QosFrameExchangeManager::TransmissionFailed (void)
 {
   NS_LOG_FUNCTION (this);
-  std::cout << "transmission faild" << std::endl;
+  // std::cout << "transmission faild" << std::endl;
   // TODO This will be removed once no Txop is installed on a QoS station
   if (m_edca == 0)
     {

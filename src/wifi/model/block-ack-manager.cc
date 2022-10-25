@@ -572,7 +572,7 @@ void
 BlockAckManager::NotifyDiscardedMpdu (Ptr<const WifiMacQueueItem> mpdu)
 {
   NS_LOG_FUNCTION (this << *mpdu);
-
+  // std::cout << "notifyDiscardedMpdu"<<std::endl;//10/21
   if (!mpdu->GetHeader ().IsQosData ())
     {
       NS_LOG_DEBUG ("Not a QoS Data frame");

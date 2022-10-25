@@ -367,7 +367,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       m_txParams.Clear ();
       // set the TXVECTOR used to send the Trigger Frame
       m_txParams.m_txVector = m_apMac->GetWifiRemoteStationManager ()->GetRtsTxVector (receiver);
-
+      //set schedule arbitation phase
       if (!m_heFem->TryAddMpdu (item, m_txParams, m_availableTime))
         {
           // an UL OFDMA transmission is not possible, hence return NO_TX. In

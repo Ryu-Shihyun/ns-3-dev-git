@@ -62,6 +62,7 @@ public:
       WAIT_TB_PPDU_AFTER_BASIC_TF,
       WAIT_QOS_NULL_AFTER_BSRP_TF,
       WAIT_BLOCK_ACK_AFTER_TB_PPDU,
+      WAIT_ARBITRATION_PHASE, //added by ryu 2022/10/12
     };
 
   /** Default constructor */

@@ -342,6 +342,7 @@ private:
   TracedCallback<Mac48Address> m_assocLogger;   ///< association logger
   TracedCallback<Mac48Address> m_deAssocLogger; ///< disassociation logger
   TracedCallback<Time>         m_beaconArrival; ///< beacon arrival logger
+  int m_slot=3;
 };
 
 } //namespace ns3

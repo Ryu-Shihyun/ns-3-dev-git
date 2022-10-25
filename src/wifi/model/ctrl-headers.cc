@@ -2007,7 +2007,7 @@ CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
 int8_t
 CtrlTriggerHeader::GetArbitrationSlots(void) const
 {
-  return static_cast<int8_t> (m_arbitrationSlot);
+  return static_cast<int8_t> (m_arbitrationSlot)+3;
 }
 
 CtrlTriggerHeader

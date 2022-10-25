@@ -637,6 +637,7 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
         }
       if (goodBeacon && m_state == ASSOCIATED)
         {
+          // std::cout << "sta Associated"<<std::endl;
           m_beaconArrival (Simulator::Now ());
           Time delay = MicroSeconds (beacon.GetBeaconIntervalUs () * m_maxMissedBeacons);
           RestartBeaconWatchdog (delay);
@@ -644,6 +645,7 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
         }
       if (goodBeacon && m_state == WAIT_BEACON)
         {
+          // std::cout << "wait beacon"<<std::endl;
           NS_LOG_DEBUG ("Beacon received while scanning from " << hdr->GetAddr2 ());
           SnrTag snrTag;
           bool removed = copy->RemovePacketTag (snrTag);
@@ -709,7 +711,7 @@ StaWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
               UpdateApInfoFromAssocResp (assocResp, hdr->GetAddr2 ());
               if (!m_linkUp.IsNull ())
                 {
-                  std::cout << "link up" << std::endl;
+                  // std::cout << "link up" << std::endl;
                   m_linkUp ();
                 }
             }

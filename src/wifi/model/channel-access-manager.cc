@@ -245,6 +245,9 @@ ChannelAccessManager::NeedBackoffUponAccess (Ptr<Txop> txop)
 
   // the Txop might have a stale value of remaining backoff slots
   UpdateBackoff ();
+  // comment out by ryu 2022/10/14
+  // generate arbitration number 
+  // txop get arbitration number; 
 
   /*
    * From section 10.3.4.2 "Basic access" of IEEE 802.11-2016:
