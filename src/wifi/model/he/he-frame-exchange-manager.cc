@@ -146,7 +146,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
 
   MultiUserScheduler::TxFormat txFormat = MultiUserScheduler::SU_TX;
   Ptr<const WifiMacQueueItem> mpdu = edca->PeekNextMpdu ();
-
+  
   /*
    * We consult the Multi-user Scheduler (if available) to know the type of transmission to make if:
    * - there is no pending BlockAckReq to transmit
@@ -191,7 +191,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       counter=0;
       m_staRuInfo.clear();
       // m_staMap.clear();
-      std::cout <<"DL_MU_TX" << std::endl;
+      std::cout <<"DL_MU_TX::"<< Simulator::Now() << std::endl;
       if (m_muScheduler->GetDlMuInfo ().psduMap.empty ())
         {
           // std::cout << "empty psduMap" << std::endl;
@@ -208,7 +208,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
     {
       isUl = true;
       // m_ul = true;
-      std::cout << "ul_mu_tx" << std::endl;
+      std::cout << "UL_MU_TX::"<< Simulator::Now() << std::endl;
       auto packet = Create<Packet> ();
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
       auto trigger = Create<WifiMacQueueItem> (packet, m_muScheduler->GetUlMuInfo ().macHdr);
@@ -537,6 +537,7 @@ HeFrameExchangeManager::SendPsduMap (void)
                                                                         acknowledgment->tbPpduTxVector,
                                                                         m_phy->GetPhyBand ());
       std::cout << "btf:tbPpduDuration: " << tbPpduDuration << std::endl;
+      std::cout << "userInfoField num: "<< m_muScheduler->GetUlMuInfo ().trigger.GetNUserInfoFields() << std::endl;
       acknowledgment->acknowledgmentTime += m_mac->GetWifiPhy ()->GetSifs ()
                                             + tbPpduDuration;//+ NanoSeconds(296000*m_slot);
 
@@ -1435,6 +1436,7 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
         }
     }
     // std::cout << m_txTimer.IsRunning() << std::endl;
+    QosFrameExchangeManager::SetIsArbitration(false);
   if (psdu != 0)
     {
       std::cout << "set psdu" << std::endl; //added by ryu 2022/10/11
@@ -1640,7 +1642,7 @@ HeFrameExchangeManager::SendQosNullFramesInTbPpdu (const CtrlTriggerHeader& trig
 void
 HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru)
 {
-  
+  QosFrameExchangeManager::SetIsArbitration(true);
   // 3. wait until get all =============================== level**
     std::cout << "start atribution phase with "<<m_slot<<"slots" << std::endl;
     std::cout << "SendBusyTone..." << Simulator::Now() << std::endl; // added by ryu 10/20
@@ -1790,7 +1792,6 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           NS_LOG_WARN ("Received a TB PPDU from an unexpected station: " << sender);
           return;
         }
-
       if (hdr.IsBlockAckReq ())
         {
           NS_LOG_DEBUG ("Received a BlockAckReq in a TB PPDU from " << sender);
@@ -2074,6 +2075,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                   || trigger.FindUserInfoWithAid (m_staMac->GetAssociationId ()) == trigger.end ()))
             {
               // not addressed to us
+              // std::cout << "not addressed to us: ["<< (hdr.GetAddr1 () != m_self)<< (!hdr.GetAddr1 ().IsBroadcast ()) << (!m_staMac->IsAssociated ()) << (hdr.GetAddr2 () != m_bssid) << "]" << std::endl;
               return;
             }
 
@@ -2109,7 +2111,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
             }
           else if (trigger.IsBasic ())
             {
-              // std::cout << "receive basic trigger" << std::endl;
+              std::cout << "receive basic trigger" << std::endl;
               m_staCounter++;
               if(trigger.GetArbitrationSlots()>0){
                 m_slot = trigger.GetArbitrationSlots();

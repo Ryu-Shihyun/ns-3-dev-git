@@ -535,7 +535,7 @@ HeRu::GetRuType (uint16_t bandwidth)
 
 HeRu::RuType
 HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
-                                   std::size_t& nCentral26TonesRus)
+                                   std::size_t& nCentral26TonesRus, bool isBasicTf)
 {
   RuType ruType;
   uint8_t nRusAssigned = 0;
@@ -545,8 +545,11 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
     {
       if (ru.first.first == bandwidth && ru.second.size () <= nStations)
         {
+          std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
           ruType = ru.first.second;
-          nRusAssigned = ru.second.size ();
+          
+          if(isBasicTf) nRusAssigned = nStations;
+          else nRusAssigned = ru.second.size ();
           break;
         }
       else if (bandwidth == 160 && ru.first.first == 80 && (2 * ru.second.size () <= nStations))

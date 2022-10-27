@@ -353,6 +353,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (peekedItem == 0)
     {
       NS_LOG_DEBUG ("No frames available for transmission");
+      // std::cout << "No frames abailable" << std::endl;
       return false;
     }
 
@@ -1289,6 +1290,7 @@ HtFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           && m_psdu != 0)
         {
           NS_ABORT_MSG_IF (inAmpdu, "Received CTS as part of an A-MPDU");
+          std::cout << "Receive CTS..." << Simulator::Now() << std::endl;
           NS_ASSERT (hdr.GetAddr1 () == m_self);
 
           Mac48Address sender = m_psdu->GetAddr1 ();
@@ -1334,6 +1336,7 @@ HtFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
         }
       else if (hdr.IsBlockAckReq ())
         {
+          std::cout << "Receive BlockAckReq..." << Simulator::Now() << std::endl;
           NS_ASSERT (hdr.GetAddr1 () == m_self);
           NS_ABORT_MSG_IF (inAmpdu, "BlockAckReq in A-MPDU is not supported");
 

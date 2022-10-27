@@ -1165,7 +1165,7 @@ OfdmaAckSequenceTest::DoRun (void)
 
   mac.SetType ("ns3::ApWifiMac",
                "BE_MaxAmsduSize", UintegerValue (0),
-               "BE_MaxAmpduSize", UintegerValue (0),
+              "BE_MaxAmpduSize", UintegerValue (0),
                "Ssid", SsidValue (ssid),
                "BeaconGeneration", BooleanValue (true));
   mac.SetMultiUserScheduler ("ns3::TestMultiUserScheduler");

@@ -275,6 +275,7 @@ FrameExchangeManager::StartTransmission (Ptr<Txop> dcf)
   if (queue->IsEmpty ())
     {
       NS_LOG_DEBUG ("Queue empty");
+      std::cout << "Queue empty" << std::endl;
       m_dcf->NotifyChannelReleased ();
       m_dcf = 0;
       return false;
@@ -942,7 +943,9 @@ FrameExchangeManager::Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
 {
   NS_LOG_FUNCTION (this << psdu << rxSignalInfo << txVector << perMpduStatus.size ()
                    << std::all_of (perMpduStatus.begin(), perMpduStatus.end(), [](bool v) { return v; }));
-  
+  if(psdu->GetHeader(0).IsTrigger()){
+    // std::cout << "receive tf" << std::endl;
+  };
   if (!perMpduStatus.empty ())
     {
       // for A-MPDUs, we get here only once

@@ -323,6 +323,7 @@ ChannelAccessManager::RequestAccess (Ptr<Txop> txop)
   UpdateBackoff ();
   NS_ASSERT (txop->GetAccessStatus () != Txop::REQUESTED);
   txop->NotifyAccessRequested ();
+  // std::cout << "requestAccess" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
 }
@@ -373,9 +374,9 @@ ChannelAccessManager::DoGrantDcfAccess (void)
            * the result of the calculations.
            */
           NS_ASSERT (m_feManager != 0);
-
           if (m_feManager->StartTransmission (txop))
             {
+              // std::cout << "do grant dcf" << std::endl;
               for (auto& collidingTxop : internalCollisionTxops)
                 {
                   m_feManager->NotifyInternalCollision (collidingTxop);
@@ -399,6 +400,7 @@ ChannelAccessManager::AccessTimeout (void)
 {
   NS_LOG_FUNCTION (this);
   UpdateBackoff ();
+  // std::cout << "AccessTimeout" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
 }
@@ -516,11 +518,13 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded (void)
    */
   bool accessTimeoutNeeded = false;
   Time expectedBackoffEnd = Simulator::GetMaximumSimulationTime ();
+  // std::cout << "expectedBackoffEnd: " << expectedBackoffEnd << std::endl;
   for (auto txop : m_txops)
     {
       if (txop->GetAccessStatus () == Txop::REQUESTED)
         {
           Time tmp = GetBackoffEndFor (txop);
+          // std::cout << "tmp: " << tmp << std::endl;
           if (tmp > Simulator::Now ())
             {
               accessTimeoutNeeded = true;
@@ -533,9 +537,11 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded (void)
     {
       NS_LOG_DEBUG ("expected backoff end=" << expectedBackoffEnd);
       Time expectedBackoffDelay = expectedBackoffEnd - Simulator::Now ();
+      // std::cout << "expectedBackoffDelay: " << expectedBackoffDelay << std::endl;
       if (m_accessTimeout.IsRunning ()
           && Simulator::GetDelayLeft (m_accessTimeout) > expectedBackoffDelay)
         {
+          // std::cout << "delay left" << Simulator::GetDelayLeft(m_accessTimeout) << std::endl;
           m_accessTimeout.Cancel ();
         }
       if (m_accessTimeout.IsExpired ())

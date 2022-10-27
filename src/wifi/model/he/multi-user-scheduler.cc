@@ -130,7 +130,7 @@ MultiUserScheduler::NotifyAccessGranted (Ptr<QosTxop> edca, Time availableTime, 
   m_edca = edca;
   m_availableTime = availableTime;
   m_initialFrame = initialFrame;
-
+  // std::cout << "availableTime:" << m_availableTime << std::endl;
   TxFormat txFormat = SelectTxFormat ();
 
   if (txFormat == DL_MU_TX)

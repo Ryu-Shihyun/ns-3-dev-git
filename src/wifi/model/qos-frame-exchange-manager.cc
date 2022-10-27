@@ -121,6 +121,7 @@ QosFrameExchangeManager::PifsRecovery (void)
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_edca != 0);
   NS_ASSERT (m_edca->IsTxopStarted ());
+  // std::cout << "pifsRecovery" << std::endl;
 
   // Release the channel if it has not been idle for the last PIFS interval
   if (m_channelAccessManager->GetAccessGrantStart () - m_phy->GetSifs ()
@@ -204,7 +205,10 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
       // clear the member variable
       m_edcaBackingOff = 0;
     }
-
+  //  std::cout << "txoplimit: " << m_edca->GetTxopLimit() << std::endl;
+  if(m_is_ul){
+      return false;
+    }
   if (m_edca->GetTxopLimit ().IsStrictlyPositive ())
     {
       // TXOP limit is not null. We have to check if this EDCAF is starting a
@@ -221,6 +225,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
 
           if (StartFrameExchange (m_edca, txopDuration, true))
             {
+              // std::cout << "starting a new Txop" << std::endl;
               m_initialFrame = true;
               return true;
             }
@@ -238,17 +243,19 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
       if (!StartFrameExchange (m_edca, m_edca->GetRemainingTxop (), false))
         {
           NS_LOG_DEBUG ("Not enough remaining TXOP time");
+          std::cout << "Not enough remaining TXOP timer" << std::endl;
           return SendCfEndIfNeeded ();
         }
 
       return true;
     }
-
+    
   // we get here if TXOP limit is null
   m_initialFrame = true;
 
   if (StartFrameExchange (m_edca, Time::Min (), true))
     {
+      // std::cout << "we get here if txop" << std::endl;
       m_edca->NotifyChannelAccessed (Seconds (0));
       return true;
     }
@@ -272,6 +279,7 @@ QosFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTi
   if (mpdu == 0)
     {
       NS_LOG_DEBUG ("Queue empty");
+      std::cout << "qos Queue empty" << std::endl;
       return false;
     }
 
@@ -279,19 +287,19 @@ QosFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTi
   txParams.m_txVector = m_mac->GetWifiRemoteStationManager ()->GetDataTxVector (mpdu->GetHeader ());
 
   Ptr<WifiMacQueueItem> item = edca->GetNextMpdu (mpdu, txParams, availableTime, initialFrame);
-
+  
   if (item == nullptr)
     {
       NS_LOG_DEBUG ("Not enough time to transmit a frame");
       return false;
     }
-
+  // std::cout << "to: " << item->GetHeader().GetAddr1() << ". from: " << item->GetHeader().GetAddr2() << "\ntype: "<< item->GetHeader().GetTypeString()<< std::endl;
   NS_ASSERT_MSG (!item->GetHeader ().IsQosData () || !item->GetHeader ().IsQosAmsdu (),
                  "We should not get an A-MSDU here");
 
   // check if the MSDU needs to be fragmented
   item = GetFirstFragmentIfNeeded (item);
-
+  
   // update the protection method if the frame was fragmented
   if (item->IsFragment () && item->GetSize () != mpdu->GetSize ())
     {
@@ -551,6 +559,7 @@ QosFrameExchangeManager::TransmissionSucceeded (void)
       && m_edca->GetRemainingTxop () > m_phy->GetSifs ())
     {
       NS_LOG_DEBUG ("Schedule another transmission in a SIFS");
+      // std::cout << "qos:success" << std::endl;
       bool (QosFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &QosFrameExchangeManager::StartTransmission;
 
       // we are continuing a TXOP, hence the txopDuration parameter is unused

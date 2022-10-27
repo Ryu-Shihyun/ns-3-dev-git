@@ -54,7 +54,7 @@ public:
 
   /// a vector of subcarrier ranges defining a subcarrier group
   typedef std::vector<SubcarrierRange> SubcarrierGroup;
-
+  
 
   /**
    * RU Specification. Stores the information carried by the RU Allocation subfield
@@ -133,6 +133,8 @@ public:
      */
     bool operator!= (const RuSpec& other) const;
 
+    
+    
   private:
     RuType m_ruType;         //!< RU type
     std::size_t m_index;     /**< RU index (starting at 1) as defined by Tables 27-7
@@ -142,6 +144,7 @@ public:
                                   RU is located in the lower half or the higher half of
                                   a 160MHz channel. For channel widths less than 160MHz,
                                   the RU PHY index equals the RU index */
+    
   };
 
 
@@ -257,7 +260,7 @@ public:
    * \return the RU type
    */
   static RuType GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
-                                             std::size_t& nCentral26TonesRus);
+                                             std::size_t& nCentral26TonesRus, bool isBasicTf);
 
   /// (bandwidth, number of tones) pair
   typedef std::pair<uint8_t, RuType> BwTonesPair;
