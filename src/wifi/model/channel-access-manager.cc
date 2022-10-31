@@ -332,6 +332,7 @@ void
 ChannelAccessManager::DoGrantDcfAccess (void)
 {
   NS_LOG_FUNCTION (this);
+  std::cout << "DoGrantDcfAccess" << std::endl;
   uint32_t k = 0;
   for (Txops::iterator i = m_txops.begin (); i != m_txops.end (); k++)
     {
@@ -376,7 +377,7 @@ ChannelAccessManager::DoGrantDcfAccess (void)
           NS_ASSERT (m_feManager != 0);
           if (m_feManager->StartTransmission (txop))
             {
-              // std::cout << "do grant dcf" << std::endl;
+              std::cout << "do grant dcf" << std::endl;
               for (auto& collidingTxop : internalCollisionTxops)
                 {
                   m_feManager->NotifyInternalCollision (collidingTxop);
@@ -400,7 +401,7 @@ ChannelAccessManager::AccessTimeout (void)
 {
   NS_LOG_FUNCTION (this);
   UpdateBackoff ();
-  // std::cout << "AccessTimeout" << std::endl;
+  std::cout << "AccessTimeout" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
 }

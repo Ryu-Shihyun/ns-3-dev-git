@@ -1754,21 +1754,21 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                                      const WifiTxVector& txVector, bool inAmpdu)
 {
   if(m_txTimer.IsRunning()){
-    // std::cout << "txTimer reason is " << m_txTimer.GetReasonString(m_txTimer.GetReason()) << std::endl;// added by ryu 10/20
-    // std::cout << "to: "<<mpdu->GetHeader().GetAddr1() <<". from: " << mpdu->GetHeader().GetAddr2()<<". ";
+    std::cout << "txTimer reason is " << m_txTimer.GetReasonString(m_txTimer.GetReason()) << std::endl;// added by ryu 10/20
+    std::cout << "to: "<<mpdu->GetHeader().GetAddr1() <<". from: " << mpdu->GetHeader().GetAddr2()<<". ";
     if(mpdu->GetHeader().IsData()){
-        // std::cout << "type: data"<<std::endl;
+        std::cout << "type: data"<<std::endl;
     }else if(mpdu->GetHeader().IsAck()){
-        // std::cout << "type: ack"<<std::endl;
+        std::cout << "type: ack"<<std::endl;
     }else if(mpdu->GetHeader().IsBlockAck()){
-        // std::cout << "type: block ack"<<std::endl;
+        std::cout << "type: block ack"<<std::endl;
     }else if(mpdu->GetHeader().IsTrigger()){
-        // std::cout << "type: trigger"<<std::endl;
+        std::cout << "type: trigger"<<std::endl;
     }else{
-        // std::cout << "type: " << mpdu->GetHeader().GetTypeString() << std::endl;
+        std::cout << "type: " << mpdu->GetHeader().GetTypeString() << std::endl;
         
     }
-    // std::cout << "ReceiveMpdu..." << Simulator::Now() << std::endl;
+    std::cout << "ReceiveMpdu..." << Simulator::Now() << std::endl;
     
   }
   
