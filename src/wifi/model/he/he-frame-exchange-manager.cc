@@ -373,7 +373,8 @@ HeFrameExchangeManager::SendPsduMap (void)
               uint8_t tid = *tids.begin ();
 
               NS_ASSERT (m_edca != 0);
-              // m_edca->ScheduleBar (m_mac->GetQosTxop (tid)->PrepareBlockAckRequest (psdu.second->GetAddr1 (), tid));
+              std::cout <<"sendPsduMap -> prepareBlockAckRequest" << std::endl;
+              m_edca->ScheduleBar (m_mac->GetQosTxop (tid)->PrepareBlockAckRequest (psdu.second->GetAddr1 (), tid));
             }
         }
 
@@ -674,7 +675,7 @@ HeFrameExchangeManager::SendPsduMap (void)
             break;
           case WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF:
             std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/20
-             m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
+             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             std::cout << "timerType is WAIT_TB_PPDU_AFTER_BASIC" << std::endl;
             break;
@@ -977,7 +978,7 @@ HeFrameExchangeManager::TbPpduTimeout (WifiPsduMap* psduMap,
 {
   NS_LOG_FUNCTION (this << psduMap << staMissedTbPpduFrom->size () << nSolicitedStations);
   // NS_ASSERT(!m_ul);
-  // std::cout << "TbPpduTimeout..." << Simulator::Now() << std::endl;
+  std::cout << "TbPpduTimeout..." << Simulator::Now() << std::endl;
   NS_ASSERT (psduMap != nullptr);
   // std::cout << (psduMap != nullptr) << std::endl;
   NS_ASSERT (psduMap->size () == 1 && psduMap->begin ()->first == SU_STA_ID

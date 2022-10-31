@@ -1169,9 +1169,9 @@ HtFrameExchangeManager::MissedBlockAck (Ptr<WifiPsdu> psdu, const WifiTxVector& 
             }
           else
             {
-              // std::cout << "missed block ack after data frame with Implicit BAR Ack policy"<< std::endl;//10/21
+              // std::cout << "missed block ack after data frame with Implicit BAR Ack policy"<< std::endl;//comment out by ryu 10/21
               // missed block ack after data frame with Implicit BAR Ack policy
-              // edca->ScheduleBar (edca->PrepareBlockAckRequest (recipient, tid));
+              edca->ScheduleBar (edca->PrepareBlockAckRequest (recipient, tid));
             }
           resetCw = false;
         }

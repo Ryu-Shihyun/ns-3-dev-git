@@ -234,7 +234,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
           NS_LOG_DEBUG ("No frame transmitted");
           m_edca->NotifyChannelReleased ();
           m_edca = 0;
-          std::cout << "false:l237" << std::endl;
+          // std::cout << "false:l237" << std::endl;
           return false;
         }
 
@@ -244,8 +244,8 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
       if (!StartFrameExchange (m_edca, m_edca->GetRemainingTxop (), false))
         {
           NS_LOG_DEBUG ("Not enough remaining TXOP time");
-          std::cout << "Not enough remaining TXOP timer" << std::endl;
-          std::cout << "false:l248" << std::endl;
+          // std::cout << "Not enough remaining TXOP timer" << std::endl;
+          // std::cout << "false:l248" << std::endl;
           return SendCfEndIfNeeded ();
         }
 
@@ -257,7 +257,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
 
   if (StartFrameExchange (m_edca, Time::Min (), true))
     {
-      std::cout << "we get here if txop" << std::endl;
+      // std::cout << "we get here if txop" << std::endl;
       m_edca->NotifyChannelAccessed (Seconds (0));
       return true;
     }
@@ -265,7 +265,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
   NS_LOG_DEBUG ("No frame transmitted");
   m_edca->NotifyChannelReleased ();
   m_edca = 0;
-  std::cout << "false:l267" << std::endl;
+  // std::cout << "false:l267" << std::endl;
   return false;
 }
 
