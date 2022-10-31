@@ -207,6 +207,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   Time qosNullTxDuration = Seconds (0);
   for (const auto& userInfo : m_trigger)
     {
+      //Add arbitration phase in duration  10/27
       Time duration = WifiPhy::CalculateTxDuration (m_sizeOf8QosNull, txVector,
                                                     m_apMac->GetWifiPhy ()->GetPhyBand (),
                                                     userInfo.GetAid12 ());
@@ -288,7 +289,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       std::size_t nCentral26TonesRus;
       bool isBasicTf = (GetLastTxFormat () == DL_MU_TX);
       HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (),
-                                                               count, nCentral26TonesRus,isBasicTf);
+                                                               count, nCentral26TonesRus,true);
       if (!m_useCentral26TonesRus || ulCandidates.size () == count)
         {
           nCentral26TonesRus = 0;
@@ -324,7 +325,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
         {
           txVector.SetChannelWidth (GetUlMuInfo ().trigger.GetUlBandwidth ());
           txVector.SetGuardInterval (GetUlMuInfo ().trigger.GetGuardInterval ());
-          // std::cout << "ulMuInfo" << std::endl;
+          std::cout << "count is " << count << std::endl;
           for (std::size_t i = 0; i < count + nCentral26TonesRus; i++)
             {
               NS_ASSERT (candidateIt != ulCandidates.end ());
@@ -500,7 +501,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   std::size_t count = std::min (static_cast<std::size_t> (m_nStations), m_staList[primaryAc].size ());
   std::size_t nCentral26TonesRus;
   HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (), count,
-                                                           nCentral26TonesRus,false);
+                                                           nCentral26TonesRus,true);
   NS_ASSERT (count >= 1);
 
   if (!m_useCentral26TonesRus)
@@ -641,7 +642,7 @@ RrMultiUserScheduler::ComputeDlMuInfo (void)
   // compute how many stations can be granted an RU and the RU size
   std::size_t nRusAssigned = m_txParams.GetPsduInfoMap ().size ();
   std::size_t nCentral26TonesRus;
-  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,false);
+  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,true);
 
   NS_LOG_DEBUG (nRusAssigned << " stations are being assigned a " << ruType << " RU");
 
@@ -798,7 +799,6 @@ RrMultiUserScheduler::AssignRuIndices (WifiTxVector& txVector)
     }
 
   std::vector<HeRu::RuSpec> ruSet, central26TonesRus;
-  std::cout<< "rutype size: " << ruTypeSet.size() << std::endl;
   // This scheduler allocates equal sized RUs and optionally the remaining 26-tone RUs
   if (ruTypeSet.size () == 2)
     {

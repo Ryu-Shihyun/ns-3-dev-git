@@ -210,7 +210,8 @@ protected:
    * \param hdr the MAC header of the Basic or BSRP Trigger Frame
    */
   void SendQosNullFramesInTbPpdu (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
-
+  void SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
+  
   Ptr<ApWifiMac> m_apMac;                             //!< MAC pointer (null if not an AP)
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
@@ -242,6 +243,7 @@ private:
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BA
   int m_slot=3;
+  bool m_isbsrp;
   // bool m_ul;
 };
 
