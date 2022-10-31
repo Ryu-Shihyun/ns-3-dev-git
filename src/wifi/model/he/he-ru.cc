@@ -545,7 +545,7 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
     {
       if (ru.first.first == bandwidth && ru.second.size () <= nStations)
         {
-          std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
+          // std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
           ruType = ru.first.second;
           
           if(isBasicTf) nRusAssigned = nStations;

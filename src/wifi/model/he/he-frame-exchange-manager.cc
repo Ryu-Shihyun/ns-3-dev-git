@@ -184,6 +184,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (txFormat == MultiUserScheduler::DL_MU_TX)
     {
       isUl = false;
+      m_isbsrp = false; // added 10/28
       // std::cout << counter << std::endl;
       // std::cout << "staMap's size: " <<m_staMap.size() << std::endl;
       
@@ -538,9 +539,9 @@ HeFrameExchangeManager::SendPsduMap (void)
                                                                         acknowledgment->tbPpduTxVector,
                                                                         m_phy->GetPhyBand ());
       std::cout << "btf:tbPpduDuration: " << tbPpduDuration << std::endl;
-      std::cout << "userInfoField num: "<< m_muScheduler->GetUlMuInfo ().trigger.GetNUserInfoFields() << std::endl;
+      // std::cout << "userInfoField num: "<< m_muScheduler->GetUlMuInfo ().trigger.GetNUserInfoFields() << std::endl;
       acknowledgment->acknowledgmentTime += m_mac->GetWifiPhy ()->GetSifs ()
-                                            + tbPpduDuration;//+ NanoSeconds(296000*m_slot);
+                                            + tbPpduDuration;
 
       timerType = WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF;
       responseTxVector = &acknowledgment->tbPpduTxVector;
@@ -557,7 +558,8 @@ HeFrameExchangeManager::SendPsduMap (void)
       CtrlTriggerHeader& trigger = m_muScheduler->GetUlMuInfo ().trigger;
       NS_ASSERT (trigger.IsBsrp ());
       NS_ASSERT (m_apMac != 0);
-
+      std::cout << "send bsrp" << std::endl; 
+      m_isbsrp = true; 
       // record the set of stations solicited by this Trigger Frame
       m_staExpectTbPpduFrom.clear ();
 
@@ -565,6 +567,7 @@ HeFrameExchangeManager::SendPsduMap (void)
         {
           auto staIt = m_apMac->GetStaList ().find (userInfo.GetAid12 ());
           NS_ASSERT (staIt != m_apMac->GetStaList ().end ());
+          std::cout  << staIt->second << std::endl;
           m_staExpectTbPpduFrom.insert (staIt->second);
         }
 
@@ -626,7 +629,7 @@ HeFrameExchangeManager::SendPsduMap (void)
   else
     {
       txDuration = m_phy->CalculateTxDuration (psduMap, m_txParams.m_txVector, m_phy->GetPhyBand ());
-      // if(timerType == WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF) txDuration += NanoSeconds(29600*m_slot);
+     
       // Set Duration/ID
       std::cout << "txDuration: " << txDuration << std::endl;
       Time durationId = GetPsduDurationId (txDuration, m_txParams);
@@ -648,7 +651,7 @@ HeFrameExchangeManager::SendPsduMap (void)
     {
       Time timeout = txDuration + m_phy->GetSifs () + m_phy->GetSlot ()
                      + m_phy->CalculatePhyPreambleAndHeaderDuration (*responseTxVector);
-      if(timerType==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF) m_channelAccessManager->NotifyAckTimeoutStartNow (timeout+ NanoSeconds(29600*m_slot));
+      if(timerType==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF || timerType==WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF) m_channelAccessManager->NotifyAckTimeoutStartNow (timeout+ NanoSeconds(29600*m_slot));
       else m_channelAccessManager->NotifyAckTimeoutStartNow (timeout);
 
       std::cout << "timeout: " << timeout << std::endl; // added by ryu 10/20
@@ -680,8 +683,10 @@ HeFrameExchangeManager::SendPsduMap (void)
             std::cout << "timerType is WAIT_TB_PPDU_AFTER_BASIC" << std::endl;
             break;
           case WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF:
-            m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
+            std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/28
+            m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
+            std::cout << "timerType is WAIT_QOS_NULL_AFTER_BSRP_TF" << std::endl;
             break;
           case WifiTxTimer::WAIT_BLOCK_ACK_AFTER_TB_PPDU:
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::BlockAckAfterTbPpduTimeout,
@@ -1639,6 +1644,95 @@ HeFrameExchangeManager::SendQosNullFramesInTbPpdu (const CtrlTriggerHeader& trig
   SendPsduMapWithProtection (WifiPsduMap {{staId, psdu}}, txParams);
 }
 
+void
+HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId,HeRu::RuSpec ru)
+{
+  NS_LOG_FUNCTION (this << trigger << hdr);
+  NS_ASSERT (trigger.IsBasic () || trigger.IsBsrp ());
+  NS_ASSERT (m_staMac != 0 && m_staMac->IsAssociated ());
+
+  NS_LOG_DEBUG ("Requested to send QoS Null frames");
+  
+  if (trigger.GetCsRequired () && hdr.GetAddr2 () != m_txopHolder && m_navEnd > Simulator::Now ())
+    {
+      // std::cout << "carrier sensing required and channel bysy" << std::endl;
+      NS_LOG_DEBUG ("Carrier Sensing required and channel busy (TA=" << hdr.GetAddr2 ()
+                    << ", TxopHolder=" << m_txopHolder << ", NAV end=" << m_navEnd.As (Time::S)
+                    << "), do nothing");
+      return;
+    }
+  auto ru_ptr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
+                                  return i.ru == ru;
+                            });
+  
+  auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
+                                  return i.staId == staId;
+                            });
+  if(!my_ptr->isWin){
+    std::cout << "this sta " << staId << "is looser" << std::endl;
+    return;
+  }
+  // std::cout << "set ppdu after qos null" << std::endl;
+  WifiMacHeader header;
+  header.SetType (WIFI_MAC_QOSDATA_NULL);
+  header.SetAddr1 (hdr.GetAddr2 ());
+  header.SetAddr2 (m_self);
+  header.SetAddr3 (hdr.GetAddr2 ());
+  header.SetDsTo ();
+  header.SetDsNotFrom ();
+  // TR3: Sequence numbers for transmitted QoS (+)Null frames may be set
+  // to any value. (Table 10-3 of 802.11-2016)
+  header.SetSequenceNumber (0);
+  // Set the EOSP bit so that NotifyTxToEdca will add the Queue Size
+  header.SetQosEosp ();
+
+  WifiTxParameters txParams;
+  txParams.m_txVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
+  txParams.m_protection = std::unique_ptr<WifiProtection> (new WifiNoProtection);
+  txParams.m_acknowledgment = std::unique_ptr<WifiAcknowledgment> (new WifiNoAck);
+
+  Time ppduDuration = HePhy::ConvertLSigLengthToHeTbPpduDuration (trigger.GetUlLength (),
+                                                                  txParams.m_txVector,
+                                                                  m_phy->GetPhyBand ());
+  header.SetDuration (hdr.GetDuration () - m_phy->GetSifs () - ppduDuration);
+
+  Ptr<WifiMacQueueItem> mpdu;
+  std::vector<Ptr<WifiMacQueueItem>> mpduList;
+  uint8_t tid = 0;
+  header.SetQosTid (tid);
+
+  while (tid < 8
+         && IsWithinSizeAndTimeLimits (txParams.GetSizeIfAddMpdu (mpdu = Create<WifiMacQueueItem> (Create<Packet> (),
+                                                                                                   header)),
+                                       hdr.GetAddr2 (), txParams, ppduDuration))
+    {
+      NS_LOG_DEBUG ("Aggregating a QoS Null frame with tid=" << +tid);
+      // We could call TryAddMpdu instead of IsWithinSizeAndTimeLimits above in order to
+      // get the TX parameters updated automatically. However, aggregating the QoS Null
+      // frames might fail because MPDU aggregation is disabled by default for VO
+      // and BK. Therefore, we skip the check on max A-MPDU size and only update the
+      // TX parameters below.
+      txParams.m_acknowledgment = GetAckManager ()->TryAddMpdu (mpdu, txParams);
+      txParams.AddMpdu (mpdu);
+      UpdateTxDuration (mpdu->GetHeader ().GetAddr1 (), txParams);
+      mpduList.push_back (mpdu);
+      header.SetQosTid (++tid);
+    }
+
+  if (mpduList.empty ())
+    {
+      // std::cout << "not enough time to send a QoS Null frame" << std::endl;
+      NS_LOG_DEBUG ("Not enough time to send a QoS Null frame");
+      return;
+    }
+  // std::cout << m_txTimer.IsRunning() << std::endl;
+  Ptr<WifiPsdu> psdu = (mpduList.size () > 1 ? Create<WifiPsdu> (std::move (mpduList))
+                                             : Create<WifiPsdu> (mpduList.front (), true));
+  // uint16_t staId = m_staMac->GetAssociationId ();
+  QosFrameExchangeManager::SetIsArbitration(false);
+  SendPsduMapWithProtection (WifiPsduMap {{staId, psdu}}, txParams);
+}
+
 //Added by ryu 2022/10/12
 void
 HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru)
@@ -2114,7 +2208,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
             {
               std::cout << "receive basic trigger" << std::endl;
               m_staCounter++;
-              if(trigger.GetArbitrationSlots()>0){
+              if(trigger.GetArbitrationSlots()>0 && !m_isbsrp){
                 m_slot = trigger.GetArbitrationSlots();
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
@@ -2148,8 +2242,36 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           else if (trigger.IsBsrp ())
             { 
               std::cout << "receive bsrp trigger" << std::endl;
-              Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
+              if(trigger.GetArbitrationSlots()>0){
+                m_slot = trigger.GetArbitrationSlots();
+                Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
+                uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
+                HeRuMap sri;
+                std::vector<HeRuMap>::iterator itr;
+                uint16_t staId = m_staMac->GetAssociationId ();
+                WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
+                auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+                itr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
+                                  return i.ru == ru;
+                            });
+                BusyTone busyTone = {staId, arbitrationNum,trigger, hdr,false};
+                if(itr==m_staRuInfo.end()){
+                  
+                  sri.ru=ru;
+                  sri.bt.push_back(busyTone);
+                  m_staRuInfo.insert(m_staRuInfo.end(),sri);
+                }else{
+                      itr->bt.push_back(busyTone);
+                }
+                Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
+                                   this, trigger, hdr,staId,ru);
+                Simulator::Schedule(m_phy->GetSifs ()+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
+                                   this, trigger, hdr,staId,ru);
+              }else{
+                Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
                                    this, trigger, hdr);
+              }
+              
             }
         }
       else
@@ -2230,7 +2352,7 @@ HeFrameExchangeManager::EndReceiveAmpdu (Ptr<const WifiPsdu> psdu, const RxSigna
         {
           // we do not expect any other BlockAck frame
           m_txTimer.Cancel ();
-          std::cout << "ack " <<m_txTimer.IsRunning()<<std::endl;
+          // std::cout << "ack " <<m_txTimer.IsRunning()<<std::endl;
           std::cout << "ack..." << Simulator::Now() << std::endl;
           m_channelAccessManager->NotifyAckTimeoutResetNow ();
 
@@ -2275,6 +2397,7 @@ HeFrameExchangeManager::EndReceiveAmpdu (Ptr<const WifiPsdu> psdu, const RxSigna
       if (m_staExpectTbPpduFrom.empty ())
         {
           // we do not expect any other response
+          std::cout << "ack..." << Simulator::Now() << std::endl;
           m_txTimer.Cancel ();
           m_channelAccessManager->NotifyAckTimeoutResetNow ();
 
