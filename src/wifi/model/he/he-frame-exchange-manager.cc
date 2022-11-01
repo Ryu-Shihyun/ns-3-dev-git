@@ -685,7 +685,7 @@ HeFrameExchangeManager::SendPsduMap (void)
             break;
           case WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF:
             // std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/28
-            m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
+            m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             std::cout << "timerType is WAIT_QOS_NULL_AFTER_BSRP_TF" << std::endl;
             break;
