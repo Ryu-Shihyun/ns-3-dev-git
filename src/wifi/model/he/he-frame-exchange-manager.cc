@@ -651,8 +651,9 @@ HeFrameExchangeManager::SendPsduMap (void)
     {
       Time timeout = txDuration + m_phy->GetSifs () + m_phy->GetSlot ()
                      + m_phy->CalculatePhyPreambleAndHeaderDuration (*responseTxVector);
-      if(timerType==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF || timerType==WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF) m_channelAccessManager->NotifyAckTimeoutStartNow (timeout+ NanoSeconds(29600*m_slot));
-      else m_channelAccessManager->NotifyAckTimeoutStartNow (timeout);
+      //if(timerType==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF || timerType==WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF) m_channelAccessManager->NotifyAckTimeoutStartNow (timeout+ NanoSeconds(29600*m_slot));
+      //else 
+      m_channelAccessManager->NotifyAckTimeoutStartNow (timeout);
 
       std::cout << "timeout: " << timeout << std::endl; // added by ryu 10/20
       std::cout << "sifs: "<< m_phy->GetSifs () << std::endl;
@@ -677,8 +678,8 @@ HeFrameExchangeManager::SendPsduMap (void)
             std::cout << "timerType is WAIT_BLOCK_ACKS_IN_TB_PPDU" << std::endl;
             break;
           case WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF:
-            // std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/20
-             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
+            std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/20
+             m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             std::cout << "timerType is WAIT_TB_PPDU_AFTER_BASIC" << std::endl;
             break;
