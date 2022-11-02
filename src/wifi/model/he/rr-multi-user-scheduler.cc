@@ -87,6 +87,11 @@ RrMultiUserScheduler::GetTypeId (void)
                    TimeValue (Seconds (1)),
                    MakeTimeAccessor (&RrMultiUserScheduler::m_maxCredits),
                    MakeTimeChecker ())
+      .AddAttribute ("NArbiSlots",
+                   "The number of Arbitration slots. Added by ryu",
+                   UintegerValue (500),
+                   MakeUintegerAccessor (&RrMultiUserScheduler::m_nArbiSlots),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
@@ -100,6 +105,13 @@ RrMultiUserScheduler::~RrMultiUserScheduler ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
+
+int
+RrMultiUserScheduler::GetArbiSlots(void) const
+{
+  return m_nArbiSlots;
+}
+
 
 void
 RrMultiUserScheduler::DoInitialize (void)

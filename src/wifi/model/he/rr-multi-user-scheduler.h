@@ -49,6 +49,7 @@ public:
   static TypeId GetTypeId (void);
   RrMultiUserScheduler ();
   virtual ~RrMultiUserScheduler ();
+  int GetArbiSlots(void) const;
 
 protected:
   void DoDispose (void) override;
@@ -137,6 +138,7 @@ private:
   CtrlTriggerHeader m_trigger;                          //!< Trigger Frame to send
   WifiMacHeader m_triggerMacHdr;                        //!< MAC header for Trigger Frame
   WifiTxParameters m_txParams;                          //!< TX parameters
+  uint32_t m_nArbiSlots;
 };
 
 } //namespace ns3

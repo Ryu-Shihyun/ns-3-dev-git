@@ -212,6 +212,9 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       // m_ul = true;
       std::cout << "UL_MU_TX::"<< Simulator::Now() << std::endl;
       auto packet = Create<Packet> ();
+      CtrlTriggerHeader& trigger_ptr = m_muScheduler->GetUlMuInfo ().trigger;
+      trigger_ptr.SetMbtaIndicator(!m_isbsrp);
+      trigger_ptr.SetArbitrationSlots(m_slot);
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
       auto trigger = Create<WifiMacQueueItem> (packet, m_muScheduler->GetUlMuInfo ().macHdr);
       SendPsduMapWithProtection (WifiPsduMap {{SU_STA_ID, GetWifiPsdu (trigger,
@@ -548,7 +551,6 @@ HeFrameExchangeManager::SendPsduMap (void)
       responseTxVector = &acknowledgment->tbPpduTxVector;
       CtrlTriggerHeader& trigger = m_muScheduler->GetUlMuInfo ().trigger;
       std::cout << !m_isbsrp << std::endl;
-      trigger.SetMbtaIndicator(!m_isbsrp);
       // std::cout << trigger.GetMbtaIndicator() << std::endl;
       m_trigVector = GetTrigVector (trigger);
     }
@@ -2220,9 +2222,15 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
             {
               std::cout << "receive basic trigger" << std::endl;
               m_staCounter++;
-              std::cout << "mbtaIndicator: " << trigger.GetMbtaIndicator() << std::endl;
-              if(trigger.GetArbitrationSlots()>0 && m_isbsrp){
+              // std::cout << "mbtaIndicator: " << trigger.GetMbtaIndicator() << std::endl;
+              // int test=0;
+              // test = trigger.GetArbitrationSlots();
+              // std::cout << "aribtrationSlot: " << test << std::endl;
+              // std::cout << "!m_isbsrp: " << !m_isbsrp << std::endl;
+              
+              if(trigger.GetArbitrationSlots()>0 && trigger.GetMbtaIndicator()){
                 m_slot = trigger.GetArbitrationSlots();
+                std::cout << "m_slot: " << m_slot << std::endl;
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
                 HeRuMap sri;

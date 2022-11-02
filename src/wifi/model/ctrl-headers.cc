@@ -1599,12 +1599,13 @@ CtrlTriggerHeader::operator= (const CtrlTriggerHeader& trigger)
   m_giAndLtfType = trigger.m_giAndLtfType;
   m_apTxPower = trigger.m_apTxPower;
   m_ulSpatialReuse = trigger.m_ulSpatialReuse;
-  m_userInfoFields.clear ();
-  m_userInfoFields = trigger.m_userInfoFields;
   m_mbtaIndicator = trigger.m_mbtaIndicator;
   m_arbitrationSlot = trigger.m_arbitrationSlot;//Added by Ryu 2022/10/5
   m_damsIndicator = trigger.m_damsIndicator;
   m_damsBoundary = trigger.m_damsBoundary;
+  m_userInfoFields.clear ();
+  m_userInfoFields = trigger.m_userInfoFields;
+  
   return *this;
 }
 
@@ -1641,8 +1642,8 @@ uint32_t
 CtrlTriggerHeader::GetSerializedSize (void) const
 {
   uint32_t size = 0;
-  size += 10;  // Common Info (excluding Trigger Dependent Common Info)
-
+  size += 8;  // Common Info (excluding Trigger Dependent Common Info)
+  size += 2; // Common Info 2
   // Add the size of the Trigger Dependent Common Info subfield
   if (m_triggerType == GCR_MU_BAR_TRIGGER)
     {
@@ -1680,13 +1681,15 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   
 
   i.WriteHtolsbU64 (commonInfo);
+  
   uint16_t commonInfo_2 = 0;
   commonInfo_2 |= (m_mbtaIndicator ? 1 << 0 : 0);
   commonInfo_2 |=  (m_arbitrationSlot & 0x07) << 1;
   commonInfo_2 |= (m_damsIndicator ? 1 << 4 : 0);
   commonInfo_2 |= (m_damsBoundary & 0x1000) << 5;
-
+  std::cout << "write commonInfo_2: " << commonInfo_2 << std::endl;
   i.WriteHtolsbU16(commonInfo_2);
+
   for (auto& ui : m_userInfoFields)
     {
       i = ui.Serialize (i);
@@ -1701,7 +1704,7 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   Buffer::Iterator i = start;
 
   uint64_t commonInfo = i.ReadLsbtohU64 ();
-
+  std::cout << "commonInfo: " << commonInfo << std::endl;
   m_triggerType = (commonInfo & 0x0f);
   m_ulLength = (commonInfo >> 4) & 0x0fff;
   m_moreTF = (commonInfo >> 16) & 0x01;
@@ -1712,6 +1715,7 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
 
   uint16_t commonInfo_2 = i.ReadLsbtohU16();
+  std::cout << "commonInfo_2: " << commonInfo_2 << std::endl;
   m_mbtaIndicator = (commonInfo_2 & 0x01);
   m_arbitrationSlot = (commonInfo_2 >> 1) & 0x07;
   m_damsIndicator = (commonInfo_2 >> 4) & 0x01;
@@ -2012,7 +2016,7 @@ CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
 int8_t
 CtrlTriggerHeader::GetArbitrationSlots(void) const
 {
-  return int8_t (m_arbitrationSlot)+1;
+  return int8_t (m_arbitrationSlot);
 }
 void
 CtrlTriggerHeader::SetMbtaIndicator(bool indicator)
