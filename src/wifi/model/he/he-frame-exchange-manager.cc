@@ -208,6 +208,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (txFormat == MultiUserScheduler::UL_MU_TX)
     {
       isUl = true;
+      std::cout << "bsrp: " << m_isbsrp << std::endl;
       // m_ul = true;
       std::cout << "UL_MU_TX::"<< Simulator::Now() << std::endl;
       auto packet = Create<Packet> ();
@@ -521,7 +522,7 @@ HeFrameExchangeManager::SendPsduMap (void)
       std::cout << "UL_MU_MULTI_STA_BA" << std::endl;
       // record the set of stations solicited by this Trigger Frame
       m_staExpectTbPpduFrom.clear ();
-
+      std::cout << "bsrp: " << m_isbsrp << std::endl;
       for (const auto& station : acknowledgment->stationsReceivingMultiStaBa)
         {
           m_staExpectTbPpduFrom.insert (station.first.first);
@@ -545,7 +546,11 @@ HeFrameExchangeManager::SendPsduMap (void)
 
       timerType = WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF;
       responseTxVector = &acknowledgment->tbPpduTxVector;
-      m_trigVector = GetTrigVector (m_muScheduler->GetUlMuInfo ().trigger);
+      CtrlTriggerHeader& trigger = m_muScheduler->GetUlMuInfo ().trigger;
+      std::cout << !m_isbsrp << std::endl;
+      trigger.SetMbtaIndicator(!m_isbsrp);
+      // std::cout << trigger.GetMbtaIndicator() << std::endl;
+      m_trigVector = GetTrigVector (trigger);
     }
   /*
    * BSRP Trigger Frame
@@ -678,13 +683,19 @@ HeFrameExchangeManager::SendPsduMap (void)
             std::cout << "timerType is WAIT_BLOCK_ACKS_IN_TB_PPDU" << std::endl;
             break;
           case WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF:
-            std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/20
-             m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
+            if((m_slot > 0) && !m_isbsrp){
+              std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/20
+              m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
+            }else{
+              // std::cout << "modify timeout: " << timeout << std::endl; // added by ryu 10/20
+              m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
+                          &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
+            }
             std::cout << "timerType is WAIT_TB_PPDU_AFTER_BASIC" << std::endl;
             break;
           case WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF:
-            // std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/28
+            std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/28
             m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             std::cout << "timerType is WAIT_QOS_NULL_AFTER_BSRP_TF" << std::endl;
@@ -2209,7 +2220,8 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
             {
               std::cout << "receive basic trigger" << std::endl;
               m_staCounter++;
-              if(trigger.GetArbitrationSlots()>0 && !m_isbsrp){
+              std::cout << "mbtaIndicator: " << trigger.GetMbtaIndicator() << std::endl;
+              if(trigger.GetArbitrationSlots()>0 && m_isbsrp){
                 m_slot = trigger.GetArbitrationSlots();
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
@@ -2243,8 +2255,10 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           else if (trigger.IsBsrp ())
             { 
               std::cout << "receive bsrp trigger" << std::endl;
+              // std::cout << "slot is larger than 0:" << (trigger.GetArbitrationSlots() > 0) << std::endl;
               if(trigger.GetArbitrationSlots()>0){
                 m_slot = trigger.GetArbitrationSlots();
+                std::cout << "slot:" << m_slot << std::endl;
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
                 HeRuMap sri;

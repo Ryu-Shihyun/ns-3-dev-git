@@ -1641,7 +1641,7 @@ uint32_t
 CtrlTriggerHeader::GetSerializedSize (void) const
 {
   uint32_t size = 0;
-  size += 8;  // Common Info (excluding Trigger Dependent Common Info)
+  size += 10;  // Common Info (excluding Trigger Dependent Common Info)
 
   // Add the size of the Trigger Dependent Common Info subfield
   if (m_triggerType == GCR_MU_BAR_TRIGGER)
@@ -1677,13 +1677,16 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   commonInfo |= (m_giAndLtfType & 0x03) << 20;
   commonInfo |= static_cast<uint64_t> (m_apTxPower & 0x3f) << 28;
   commonInfo |= static_cast<uint64_t> (m_ulSpatialReuse) << 37;
-  commonInfo |= (m_mbtaIndicator ? 1 << 64 : 0);
-  commonInfo |= static_cast<uint64_t> (m_arbitrationSlot & 0x07) << 65;
-  commonInfo |= (m_damsIndicator ? 1 << 68 : 0);
-  commonInfo |= static_cast<uint64_t> (m_damsBoundary & 0x1000) << 69;
+  
 
   i.WriteHtolsbU64 (commonInfo);
+  uint16_t commonInfo_2 = 0;
+  commonInfo_2 |= (m_mbtaIndicator ? 1 << 0 : 0);
+  commonInfo_2 |=  (m_arbitrationSlot & 0x07) << 1;
+  commonInfo_2 |= (m_damsIndicator ? 1 << 4 : 0);
+  commonInfo_2 |= (m_damsBoundary & 0x1000) << 5;
 
+  i.WriteHtolsbU16(commonInfo_2);
   for (auto& ui : m_userInfoFields)
     {
       i = ui.Serialize (i);
@@ -1707,10 +1710,12 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_giAndLtfType = (commonInfo >> 20) & 0x03;
   m_apTxPower = (commonInfo >> 28) & 0x3f;
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
-  m_mbtaIndicator = (commonInfo >> 64) & 0x01;
-  m_arbitrationSlot = (commonInfo >> 65) & 0x07;
-  m_damsIndicator = (commonInfo >> 68) & 0x01;
-  m_damsBoundary = (commonInfo >> 69) & 0x1000;
+
+  uint16_t commonInfo_2 = i.ReadLsbtohU16();
+  m_mbtaIndicator = (commonInfo_2 & 0x01);
+  m_arbitrationSlot = (commonInfo_2 >> 1) & 0x07;
+  m_damsIndicator = (commonInfo_2 >> 4) & 0x01;
+  m_damsBoundary = (commonInfo_2 >> 5) & 0x1000;
   m_userInfoFields.clear ();
 
   NS_ABORT_MSG_IF (m_triggerType == BFRP_TRIGGER, "BFRP Trigger frame is not supported");
@@ -2007,7 +2012,18 @@ CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
 int8_t
 CtrlTriggerHeader::GetArbitrationSlots(void) const
 {
-  return static_cast<int8_t> (m_arbitrationSlot)+3;
+  return int8_t (m_arbitrationSlot)+1;
+}
+void
+CtrlTriggerHeader::SetMbtaIndicator(bool indicator)
+{
+  m_mbtaIndicator = indicator;
+}
+
+bool
+CtrlTriggerHeader::GetMbtaIndicator(void) const
+{
+  return m_mbtaIndicator;
 }
 
 CtrlTriggerHeader

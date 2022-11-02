@@ -206,9 +206,9 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
       m_edcaBackingOff = 0;
     }
   //  std::cout << "txoplimit: " << m_edca->GetTxopLimit() << std::endl;
-  if(m_is_ul){
-      return false;
-    }
+  // if(m_is_ul){
+  //     return false;
+  //   }
   if (m_edca->GetTxopLimit ().IsStrictlyPositive ())
     {
       // TXOP limit is not null. We have to check if this EDCAF is starting a

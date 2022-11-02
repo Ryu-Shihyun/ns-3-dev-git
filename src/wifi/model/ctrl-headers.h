@@ -1114,6 +1114,8 @@ public:
   
   void SetArbitrationSlots (int8_t slot);//Added by Ryu 2022/10/5
   int8_t GetArbitrationSlots(void) const;//Added by Ryu 2022/10/5
+  void SetMbtaIndicator (bool indicator);//Added by Ryu 2022/10/5
+  bool GetMbtaIndicator(void) const;//Added by Ryu 2022/10/5
 
   /**
    * Get a copy of the Common Info field of this Trigger frame.
