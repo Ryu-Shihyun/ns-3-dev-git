@@ -1687,7 +1687,6 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   commonInfo_2 |=  (m_arbitrationSlot & 0x07) << 1;
   commonInfo_2 |= (m_damsIndicator ? 1 << 4 : 0);
   commonInfo_2 |= (m_damsBoundary & 0x1000) << 5;
-  std::cout << "write commonInfo_2: " << commonInfo_2 << std::endl;
   i.WriteHtolsbU16(commonInfo_2);
 
   for (auto& ui : m_userInfoFields)
@@ -1704,7 +1703,6 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   Buffer::Iterator i = start;
 
   uint64_t commonInfo = i.ReadLsbtohU64 ();
-  std::cout << "commonInfo: " << commonInfo << std::endl;
   m_triggerType = (commonInfo & 0x0f);
   m_ulLength = (commonInfo >> 4) & 0x0fff;
   m_moreTF = (commonInfo >> 16) & 0x01;
@@ -1715,7 +1713,6 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
 
   uint16_t commonInfo_2 = i.ReadLsbtohU16();
-  std::cout << "commonInfo_2: " << commonInfo_2 << std::endl;
   m_mbtaIndicator = (commonInfo_2 & 0x01);
   m_arbitrationSlot = (commonInfo_2 >> 1) & 0x07;
   m_damsIndicator = (commonInfo_2 >> 4) & 0x01;
