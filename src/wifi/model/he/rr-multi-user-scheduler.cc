@@ -262,6 +262,10 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   // check if an UL OFDMA transmission is possible after a DL OFDMA transmission
   NS_ABORT_MSG_IF (m_ulPsduSize == 0, "The UlPsduSize attribute must be set to a non-null value");
 
+  //added by ryu
+
+  //set m_apMac
+
   // determine which of the stations served in DL have UL traffic
   uint32_t maxBufferSize = 0;
   // candidates sorted in decreasing order of queue size
@@ -301,7 +305,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       std::size_t nCentral26TonesRus;
       bool isBasicTf = (GetLastTxFormat () == DL_MU_TX);
       HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (),
-                                                               count, nCentral26TonesRus,true);
+                                                               count, nCentral26TonesRus,true,(GetLastTxFormat()==DL_MU_TX));
       if (!m_useCentral26TonesRus || ulCandidates.size () == count)
         {
           nCentral26TonesRus = 0;
@@ -513,7 +517,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   std::size_t count = std::min (static_cast<std::size_t> (m_nStations), m_staList[primaryAc].size ());
   std::size_t nCentral26TonesRus;
   HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (), count,
-                                                           nCentral26TonesRus,true);
+                                                           nCentral26TonesRus,false,false);
   NS_ASSERT (count >= 1);
 
   if (!m_useCentral26TonesRus)
@@ -654,7 +658,7 @@ RrMultiUserScheduler::ComputeDlMuInfo (void)
   // compute how many stations can be granted an RU and the RU size
   std::size_t nRusAssigned = m_txParams.GetPsduInfoMap ().size ();
   std::size_t nCentral26TonesRus;
-  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,true);
+  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,false,false);
 
   NS_LOG_DEBUG (nRusAssigned << " stations are being assigned a " << ruType << " RU");
 
