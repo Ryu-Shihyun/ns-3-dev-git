@@ -545,7 +545,7 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
     {
       if (ru.first.first == bandwidth && ru.second.size () <= nStations && !isDl && isBasicTf)
         {
-          // std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
+          std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
           ruType = ru.first.second;
           
           nRusAssigned = nStations;
@@ -553,7 +553,7 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
         }
        else if (ru.first.first == 40 && ru.second.size () == 18 && isBasicTf && isDl )
         {
-          // std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
+          std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
           
           ruType = ru.first.second;
           
@@ -562,7 +562,7 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
         }
       else if (ru.first.first == 80 && ru.second.size () == 37 && !isBasicTf)
         {
-          // std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
+          std::cout << "bandwidth: " << int(ru.first.first) << ". size: " << ru.second.size() << std::endl;
           
           ruType = ru.first.second;
           
