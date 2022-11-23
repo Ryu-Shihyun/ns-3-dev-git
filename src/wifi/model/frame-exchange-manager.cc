@@ -275,7 +275,7 @@ FrameExchangeManager::StartTransmission (Ptr<Txop> dcf)
   if (queue->IsEmpty ())
     {
       NS_LOG_DEBUG ("Queue empty");
-      std::cout << "Queue empty" << std::endl;
+      // std::cout << "Queue empty" << std::endl;
       m_dcf->NotifyChannelReleased ();
       m_dcf = 0;
       return false;

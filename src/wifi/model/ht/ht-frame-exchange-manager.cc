@@ -817,7 +817,7 @@ HtFrameExchangeManager::SendPsdu (void)
   else if (m_txParams.m_acknowledgment->method == WifiAcknowledgment::BAR_BLOCK_ACK)
     {
       m_psdu->SetDuration (GetPsduDurationId (txDuration, m_txParams));
-      std::cout << "BAR_BLOCK_ACK" << std::endl;//10/21
+      // std::cout << "BAR_BLOCK_ACK" << std::endl;//10/21
       // schedule the transmission of a BAR in a SIFS
       std::set<uint8_t> tids = m_psdu->GetTids ();
       NS_ABORT_MSG_IF (tids.size () > 1, "Acknowledgment method incompatible with a Multi-TID A-MPDU");
@@ -1220,7 +1220,7 @@ HtFrameExchangeManager::SendBlockAck (const RecipientBlockAckAgreement& agreemen
                                       WifiTxVector& blockAckTxVector, double rxSnr)
 {
   NS_LOG_FUNCTION (this << durationId << blockAckTxVector << rxSnr);
-  std::cout << "sendBlockAck..." << Simulator::Now() << std::endl;
+  // std::cout << "sendBlockAck..." << Simulator::Now() << std::endl;
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_CTL_BACKRESP);
   hdr.SetAddr1 (agreement.GetPeer ());
@@ -1290,7 +1290,7 @@ HtFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           && m_psdu != 0)
         {
           NS_ABORT_MSG_IF (inAmpdu, "Received CTS as part of an A-MPDU");
-          std::cout << "Receive CTS..." << Simulator::Now() << std::endl;
+          // std::cout << "Receive CTS..." << Simulator::Now() << std::endl;
           NS_ASSERT (hdr.GetAddr1 () == m_self);
 
           Mac48Address sender = m_psdu->GetAddr1 ();
@@ -1336,7 +1336,7 @@ HtFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
         }
       else if (hdr.IsBlockAckReq ())
         {
-          std::cout << "Receive BlockAckReq..." << Simulator::Now() << std::endl;
+          // std::cout << "Receive BlockAckReq..." << Simulator::Now() << std::endl;
           NS_ASSERT (hdr.GetAddr1 () == m_self);
           NS_ABORT_MSG_IF (inAmpdu, "BlockAckReq in A-MPDU is not supported");
 
