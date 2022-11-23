@@ -28,6 +28,8 @@
 
 namespace ns3 {
 
+Ptr<MultiUserScheduler> m_muSch_ptr;
+
 WifiMacHelper::WifiMacHelper ()
 {
   //By default, we create an AdHoc MAC layer (without QoS).
@@ -35,6 +37,7 @@ WifiMacHelper::WifiMacHelper ()
 
   m_protectionManager.SetTypeId ("ns3::WifiDefaultProtectionManager");
   m_ackManager.SetTypeId ("ns3::WifiDefaultAckManager");
+  
 }
 
 WifiMacHelper::~WifiMacHelper ()
@@ -52,7 +55,7 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
     {
       macObjectFactory.Set ("QosSupported", BooleanValue (true));
     }
-  std::cout << "standard:" << standard << std::endl; //added by ryu 2022/10/7
+  // std::cout << "standard:" << standard << std::endl; //added by ryu 2022/10/7
   Ptr<WifiMac> mac = macObjectFactory.Create<WifiMac> ();
   mac->SetDevice (device);
   mac->SetAddress (Mac48Address::Allocate ());
@@ -77,9 +80,31 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
         {
           Ptr<MultiUserScheduler> muScheduler = m_muScheduler.Create<MultiUserScheduler> ();
           apMac->AggregateObject (muScheduler);
+          m_muSch_ptr = DynamicCast<MultiUserScheduler>(muScheduler);
         }
     }
   return mac;
 }
+
+int
+WifiMacHelper::GetUplinkNum(int n) const
+{
+  if(n==0){
+    return m_muSch_ptr->GetBasicPhaseNum();
+  }else{
+    return m_muSch_ptr->GetBsrpPhaseNum();
+  }
+ 
+}
+
+int
+WifiMacHelper::GetConflictNum(void)
+{
+  return m_muSch_ptr->GetConflictStaNum();
+  
+ 
+}
+
+
 
 } //namespace ns3

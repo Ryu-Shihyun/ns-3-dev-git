@@ -282,7 +282,7 @@ QosFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTi
   if (mpdu == 0)
     {
       NS_LOG_DEBUG ("Queue empty");
-      std::cout << "qos Queue empty" << std::endl;
+      // std::cout << "qos Queue empty" << std::endl;
       return false;
     }
 

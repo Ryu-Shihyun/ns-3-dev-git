@@ -112,6 +112,12 @@ public:
    */
   UlMuInfo& GetUlMuInfo (void);
 
+  int GetBasicPhaseNum(void) ;
+  
+  int GetBsrpPhaseNum(void) ;
+  
+  int GetConflictStaNum(void);
+
 protected:
   /**
    * Get the station manager attached to the AP.

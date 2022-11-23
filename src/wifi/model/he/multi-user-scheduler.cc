@@ -195,4 +195,25 @@ MultiUserScheduler::CheckTriggerFrame (void)
   m_heFem->SetTargetRssi (m_ulInfo.trigger);
 }
 
+
+int
+MultiUserScheduler::GetBasicPhaseNum(void)
+{
+  return m_heFem->GetNBasic();
+}
+
+int
+MultiUserScheduler::GetBsrpPhaseNum(void)
+{
+  return m_heFem->GetNBsrp();
+}
+
+int
+MultiUserScheduler::GetConflictStaNum(void)
+{
+  return m_heFem->GetNConflict();
+}
+
+
+
 } //namespace ns3

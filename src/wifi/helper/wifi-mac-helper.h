@@ -23,6 +23,7 @@
 
 #include "ns3/object-factory.h"
 #include "ns3/wifi-standards.h"
+#include "ns3/rr-multi-user-scheduler.h"
 
 namespace ns3 {
 
@@ -107,13 +108,15 @@ public:
    * This allows the ns3::WifiHelper class to create MAC objects from ns3::WifiHelper::Install.
    */
   virtual Ptr<WifiMac> Create (Ptr<WifiNetDevice> device, WifiStandard standard) const;
-
+  int GetUplinkNum(int n) const;
+  int GetConflictNum(void);
 
 protected:
   ObjectFactory m_mac;                ///< MAC object factory
   ObjectFactory m_protectionManager;  ///< Factory to create a protection manager
   ObjectFactory m_ackManager;         ///< Factory to create an acknowledgment manager
   ObjectFactory m_muScheduler;        ///< Multi-user Scheduler object factory
+  
 };
 
 } // namespace ns3

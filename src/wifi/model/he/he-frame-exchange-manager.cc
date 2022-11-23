@@ -44,6 +44,12 @@ NS_OBJECT_ENSURE_REGISTERED (HeFrameExchangeManager);
 bool isUl = true;
 int counter =0;
 int m_staCounter=0;
+
+int m_numBasic=0;
+int m_numBsrp=0;
+int m_nConflict =0;
+int m_wins;
+int m_successes;
 /* struct
  * uint16_t staId
  * <Ptr> WifiPsdu psdu
@@ -206,10 +212,10 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (txFormat == MultiUserScheduler::UL_MU_TX)
     {
       isUl = true;
-      
       std::cout << "UL_MU_TX::"<< Simulator::Now() << std::endl;
       auto packet = Create<Packet> ();
       CtrlTriggerHeader& trigger_ptr = m_muScheduler->GetUlMuInfo ().trigger;
+      (!m_isbsrp) ? m_numBasic++ : m_numBsrp++;
       trigger_ptr.SetMbtaIndicator(!m_isbsrp);
       trigger_ptr.SetArbitrationSlots(m_slot);
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
@@ -1801,16 +1807,21 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
       //                           this, ru_ptr->bt.at(0).trigger, ru_ptr->bt.at(0).hdr, ru_ptr->bt.at(0).staId);
       //ReceiveBasicTriggerAfterA(ru_ptr->bt.at(0).trigger,ru_ptr->bt.at(0).hdr,ru_ptr->bt.at(0).staId);
       ru_ptr->bt.at(0).isWin = true;
+      m_wins++; // test by ryu 2022/11/22
       return;
     }
     auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
                                   return i.staId == staId;
                             });
     uint8_t max_arbi_num = 0;
+    int same_max =0;
     for (auto bt_ptr = ru_ptr->bt.begin(); bt_ptr != ru_ptr->bt.end(); bt_ptr++) {
       // std::cout << "staId: "<<bt_ptr->staId<<std::endl;
       if (max_arbi_num < bt_ptr->arbitrationNum) {
-      max_arbi_num = bt_ptr->arbitrationNum;
+        max_arbi_num = bt_ptr->arbitrationNum;
+        same_max=1;
+      }else if(max_arbi_num == bt_ptr->arbitrationNum){
+        same_max++;
       }
     }
     // std::cout << "loop end." << std::endl;
@@ -1818,12 +1829,15 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
   //  5. schedule ReceiveBassicTrigger(m_staRuInfo.trigger,m_staRuInfo.hdr) **
     if(max_arbi_num == my_ptr->arbitrationNum){
       std::cout << "win staId: "<<my_ptr->staId<<std::endl;
+      m_wins++; // test by ryu 2022/11/22
       //Simulator::Schedule(NanoSeconds(29600*m_slot), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
         //                        this, my_ptr->trigger, my_ptr->hdr, my_ptr->staId);
       //ReceiveBasicTriggerAfterA(ru_ptr->bt.at(0).trigger,ru_ptr->bt.at(0).hdr,ru_ptr->bt.at(0).staId);
       my_ptr->isWin=true;
     }
-    
+    if(same_max>1){
+      m_nConflict++;
+    }
     // for(auto it = m_staRuInfo.begin();it!=m_staRuInfo.end(); it++){
     //     for(auto it2 = it->bt.begin();it2!=it->bt.end(); it2++){
           // std::cout << it2->staId << std::endl;
@@ -2212,6 +2226,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           else if (trigger.IsBasic ())
             {
               std::cout << "receive basic trigger" << std::endl;
+              // m_numBasic++;
               m_staCounter++;
               // std::cout << "mbtaIndicator: " << trigger.GetMbtaIndicator() << std::endl;
               // int test=0;
@@ -2254,6 +2269,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
           else if (trigger.IsBsrp ())
             { 
               std::cout << "receive bsrp trigger" << std::endl;
+              // m_numBsrp++;
               if(trigger.GetArbitrationSlots()>0){
                 m_slot = trigger.GetArbitrationSlots();
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
@@ -2439,6 +2455,23 @@ HeFrameExchangeManager::EndReceiveAmpdu (Ptr<const WifiPsdu> psdu, const RxSigna
 
   // the received frame cannot be handled here
   VhtFrameExchangeManager::EndReceiveAmpdu (psdu, rxSignalInfo, txVector, perMpduStatus);
+}
+
+int
+HeFrameExchangeManager::GetNBasic(void)
+{
+  return m_numBasic;
+}
+int
+HeFrameExchangeManager::GetNBsrp(void)
+{
+  return m_numBsrp;
+}
+
+int
+HeFrameExchangeManager::GetNConflict(void)
+{
+  return m_nConflict;
 }
 
 } //namespace ns3
