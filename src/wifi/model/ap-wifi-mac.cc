@@ -60,7 +60,7 @@ ApWifiMac::GetTypeId (void)
     .AddConstructor<ApWifiMac> ()
     .AddAttribute ("BeaconInterval",
                    "Delay between two beacons",
-                   TimeValue (MicroSeconds (102400)),
+                   TimeValue (MicroSeconds (10240000)),
                    MakeTimeAccessor (&ApWifiMac::GetBeaconInterval,
                                      &ApWifiMac::SetBeaconInterval),
                    MakeTimeChecker ())
@@ -833,18 +833,27 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       code.SetSuccess ();
       uint16_t aid = 0;
       bool found = false;
-      if (isReassoc)
-        {
-          for (const auto& sta : m_staList)
-            {
-              if (sta.second == to)
-                {
-                  aid = sta.first;
-                  found = true;
-                  break;
-                }
-            }
-        }
+      for (const auto& sta : m_staList)
+          {
+            if (sta.second == to)
+              {
+                aid = sta.first;
+                found = true;
+                break;
+              }
+          }
+      // if (isReassoc)
+      //   {
+      //     for (const auto& sta : m_staList)
+      //       {
+      //         if (sta.second == to)
+      //           {
+      //             aid = sta.first;
+      //             found = true;
+      //             break;
+      //           }
+      //       }
+      //   }
       if (!found)
         {
           aid = GetNextAssociationId ();

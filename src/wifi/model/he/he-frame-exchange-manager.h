@@ -245,7 +245,7 @@ private:
   EventId m_multiStaBaEvent;                          //!< Sending a Multi-STA BlockAck event
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BA
-  int m_slot=1;
+  int m_slot=3;
   bool m_isbsrp;
   // bool m_ul;
 };
