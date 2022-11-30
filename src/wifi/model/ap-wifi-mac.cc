@@ -828,24 +828,36 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
   Ptr<Packet> packet = Create<Packet> ();
   MgtAssocResponseHeader assoc;
   StatusCode code;
+
+  // bool has_same_mac_addr = false;
+  // for (auto ptr = m_staList.begin(); ptr != m_staList.end(); ptr++) {
+  //   if (ptr->second == to) {
+  //     has_same_mac_addr = true;
+  //     break;
+  //   }
+  // }
+
   if (success)
     {
       code.SetSuccess ();
       uint16_t aid = 0;
       bool found = false;
       for (const auto& sta : m_staList)
-          {
-            if (sta.second == to)
-              {
-                aid = sta.first;
-                found = true;
-                break;
-              }
-          }
+            {
+              // std::cout << "isReassoc staId: " << sta.first << ". mac address: "<< sta.second << std::endl;
+              if (sta.second == to)
+                {
+                  aid = sta.first;
+                  found = true;
+                  break;
+                }
+            }
+      
       // if (isReassoc)
       //   {
       //     for (const auto& sta : m_staList)
       //       {
+      //         std::cout << "isReassoc staId: " << sta.first << ". mac address: "<< sta.second << std::endl;
       //         if (sta.second == to)
       //           {
       //             aid = sta.first;
@@ -854,9 +866,11 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       //           }
       //       }
       //   }
-      if (!found)
+      if (!found /*&& !has_same_mac_addr*/)
         {
+          // std::cout << "associated sta: " << to ;
           aid = GetNextAssociationId ();
+          // std::cout << ", aid: " << aid << std::endl;
           m_staList.insert (std::make_pair (aid, to));
           m_assocLogger (aid, to);
           GetWifiRemoteStationManager ()->SetAssociationId (to, aid);
@@ -870,6 +884,8 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
             }
           UpdateShortSlotTimeEnabled ();
           UpdateShortPreambleEnabled ();
+
+          // assoc.SetAssociationId (aid);
         }
       assoc.SetAssociationId (aid);
     }
@@ -1228,7 +1244,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
           if (hdr->IsAssocReq ())
             {
               NS_LOG_DEBUG ("Association request received from " << from);
-              // std::cout << "Association request " <<std::endl; //added by ryu 2022/10/7
+              // std::cout << "Association request from " << from <<std::endl; //added by ryu 2022/10/7
       
               //first, verify that the the station's supported
               //rate set is compatible with our Basic Rate set
@@ -1285,6 +1301,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
                       for (uint8_t i = 0; i < GetWifiRemoteStationManager ()->GetNBasicMcs (); i++)
                         {
                           WifiMode mcs = GetWifiRemoteStationManager ()->GetBasicMcs (i);
+                          // std::cout << "mcs: " << mcs.GetMcsValue() << std::endl;
                           if (!hecapabilities.IsSupportedTxMcs (mcs.GetMcsValue ()))
                             {
                               problem = true;
@@ -1361,7 +1378,7 @@ ApWifiMac::Receive (Ptr<WifiMacQueueItem> mpdu)
                     }
                   GetWifiRemoteStationManager ()->RecordWaitAssocTxOk (from);
                   NS_LOG_DEBUG ("Send association response with success status");
-                  SendAssocResp (hdr->GetAddr2 (), true, false);
+                  SendAssocResp (hdr->GetAddr2 (), true, false); // here
                 }
               return;
             }

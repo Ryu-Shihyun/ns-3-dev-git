@@ -214,6 +214,12 @@ MultiUserScheduler::GetConflictStaNum(void)
   return m_heFem->GetNConflict();
 }
 
+int
+MultiUserScheduler::GetMaxCandidatesNum(void)
+{
+  return m_heFem->GetMaxNCandidates();
+}
+
 
 
 } //namespace ns3

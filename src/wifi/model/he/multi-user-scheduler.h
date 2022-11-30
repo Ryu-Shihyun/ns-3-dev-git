@@ -118,6 +118,8 @@ public:
   
   int GetConflictStaNum(void);
 
+  int GetMaxCandidatesNum(void);
+
 protected:
   /**
    * Get the station manager attached to the AP.

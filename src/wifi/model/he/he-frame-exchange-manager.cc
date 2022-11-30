@@ -50,6 +50,8 @@ int m_numBsrp=0;
 int m_nConflict =0;
 int m_wins;
 int m_successes;
+int m_candidate;
+int m_max_candidate;
 /* struct
  * uint16_t staId
  * <Ptr> WifiPsdu psdu
@@ -191,7 +193,11 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
     {
       isUl = false;
       m_isbsrp = false; // added 10/28
-      
+      if(m_candidate > m_max_candidate)
+      {
+        m_max_candidate = m_candidate;
+      }
+      m_candidate = 0;
       m_staCounter=0;
       counter=0;
       m_staRuInfo.clear();
@@ -2236,6 +2242,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
               
               if(trigger.GetArbitrationSlots()>0 && trigger.GetMbtaIndicator()){
                 m_slot = trigger.GetArbitrationSlots();
+                m_candidate++;
                 // std::cout << "m_slot: " << m_slot << std::endl;
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
@@ -2272,6 +2279,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
               // m_numBsrp++;
               if(trigger.GetArbitrationSlots()>0){
                 m_slot = trigger.GetArbitrationSlots();
+                m_candidate++;
                 Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
                 HeRuMap sri;
@@ -2474,4 +2482,12 @@ HeFrameExchangeManager::GetNConflict(void)
   return m_nConflict;
 }
 
+int
+HeFrameExchangeManager::GetMaxNCandidates(void)
+{
+  return m_max_candidate;
+}
+
+
 } //namespace ns3
+

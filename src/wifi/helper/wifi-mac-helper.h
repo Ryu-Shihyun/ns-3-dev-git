@@ -110,6 +110,7 @@ public:
   virtual Ptr<WifiMac> Create (Ptr<WifiNetDevice> device, WifiStandard standard) const;
   int GetUplinkNum(int n) const;
   int GetConflictNum(void);
+  int GetMaxCandidatesNum(void);
 
 protected:
   ObjectFactory m_mac;                ///< MAC object factory

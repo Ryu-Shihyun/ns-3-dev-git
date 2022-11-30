@@ -93,6 +93,7 @@ public:
   int GetNBasic (void);
   int GetNBsrp (void);
   int GetNConflict (void);
+  int GetMaxNCandidates(void);
 
 protected:
   void DoDispose () override;

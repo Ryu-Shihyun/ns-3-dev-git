@@ -105,6 +105,15 @@ WifiMacHelper::GetConflictNum(void)
  
 }
 
+int
+WifiMacHelper::GetMaxCandidatesNum(void)
+{
+  return m_muSch_ptr->GetMaxCandidatesNum();
+  
+ 
+}
+
+
 
 
 } //namespace ns3
