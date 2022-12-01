@@ -60,7 +60,7 @@ ApWifiMac::GetTypeId (void)
     .AddConstructor<ApWifiMac> ()
     .AddAttribute ("BeaconInterval",
                    "Delay between two beacons",
-                   TimeValue (MicroSeconds (10240000)),
+                   TimeValue (MicroSeconds (1024*40000)),
                    MakeTimeAccessor (&ApWifiMac::GetBeaconInterval,
                                      &ApWifiMac::SetBeaconInterval),
                    MakeTimeChecker ())
