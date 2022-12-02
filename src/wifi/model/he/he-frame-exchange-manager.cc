@@ -1460,6 +1460,7 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
     }
     // std::cout << m_txTimer.IsRunning() << std::endl;
     QosFrameExchangeManager::SetIsArbitration(false);
+    HtFrameExchangeManager::SetIsArbitration(false);
   if (psdu != 0)
     {
       // std::cout << "set psdu" << std::endl; //added by ryu 2022/10/11
@@ -1747,6 +1748,7 @@ HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader
                                              : Create<WifiPsdu> (mpduList.front (), true));
   // uint16_t staId = m_staMac->GetAssociationId ();
   QosFrameExchangeManager::SetIsArbitration(false);
+  HtFrameExchangeManager::SetIsArbitration(false);
   SendPsduMapWithProtection (WifiPsduMap {{staId, psdu}}, txParams);
 }
 
@@ -1755,6 +1757,7 @@ void
 HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru)
 {
   QosFrameExchangeManager::SetIsArbitration(true);
+  HtFrameExchangeManager::SetIsArbitration(true);
   // 3. wait until get all =============================== level**
     // std::cout << "start atribution phase with "<<m_slot<<"slots" << std::endl;
     // std::cout << "SendBusyTone..." << Simulator::Now() << std::endl; // added by ryu 10/20

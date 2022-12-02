@@ -89,9 +89,7 @@ public:
    */
   virtual bool IsWithinSizeAndTimeLimits (uint32_t ppduPayloadSize, Mac48Address receiver,
                                           const WifiTxParameters& txParams, Time ppduDurationLimit) const;
-  void SetIsArbitration (bool is_ul){
-    m_is_ul = is_ul;
-  }
+  void SetIsArbitration (bool is_ul);
 protected:
   void DoDispose () override;
 
@@ -175,7 +173,7 @@ private:
   bool m_pifsRecovery;                       //!< true if performing a PIFS recovery after failure
   EventId m_pifsRecoveryEvent;               //!< event associated with an attempt of PIFS recovery
   Ptr<Txop> m_edcaBackingOff;                //!< channel access function that invoked backoff during TXOP
-  bool m_is_ul;
+  // bool m_is_ul;
 };
 
 } //namespace ns3

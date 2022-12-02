@@ -207,7 +207,7 @@ public:
    * \param byOriginator flag to indicate whether this is set by the originator.
    */
   void SendDelbaFrame (Mac48Address addr, uint8_t tid, bool byOriginator);
-
+  void SetIsArbitration (bool is_ul);
 protected:
   void DoDispose () override;
 

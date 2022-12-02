@@ -39,6 +39,8 @@ NS_LOG_COMPONENT_DEFINE ("HtFrameExchangeManager");
 
 NS_OBJECT_ENSURE_REGISTERED (HtFrameExchangeManager);
 
+bool m_is_ht_ul=false;
+
 TypeId
 HtFrameExchangeManager::GetTypeId (void)
 {
@@ -338,6 +340,10 @@ bool
 HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTime, bool initialFrame)
 {
   NS_LOG_FUNCTION (this << edca << availableTime << initialFrame);
+  
+  if(m_is_ht_ul){
+    return false;
+  }
 
   // First, check if there is a BAR to be transmitted
   if (SendMpduFromBaManager (edca, availableTime, initialFrame))
@@ -1426,6 +1432,10 @@ HtFrameExchangeManager::EndReceiveAmpdu (Ptr<const WifiPsdu> psdu, const RxSigna
                                rxSignalInfo.snr);
         }
     }
+}
+void 
+ HtFrameExchangeManager::SetIsArbitration (bool is_ul){
+    m_is_ht_ul = is_ul;
 }
 
 } //namespace ns3

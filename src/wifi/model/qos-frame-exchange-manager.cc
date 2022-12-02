@@ -35,6 +35,8 @@ NS_LOG_COMPONENT_DEFINE ("QosFrameExchangeManager");
 
 NS_OBJECT_ENSURE_REGISTERED (QosFrameExchangeManager);
 
+bool m_is_ul = false;
+
 TypeId
 QosFrameExchangeManager::GetTypeId (void)
 {
@@ -732,6 +734,11 @@ QosFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo r
     }
 
   return FrameExchangeManager::ReceiveMpdu (mpdu, rxSignalInfo, txVector, inAmpdu);
+}
+
+void
+QosFrameExchangeManager::SetIsArbitration (bool is_ul){
+    m_is_ul = is_ul;
 }
 
 } //namespace ns3
