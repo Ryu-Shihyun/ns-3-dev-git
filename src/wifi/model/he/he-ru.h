@@ -260,7 +260,7 @@ public:
    * \return the RU type
    */
   static RuType GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
-                                             std::size_t& nCentral26TonesRus, bool isBasicTf, bool isDl);
+                                             std::size_t& nCentral26TonesRus, bool isBasicTf);
 
   /// (bandwidth, number of tones) pair
   typedef std::pair<uint8_t, RuType> BwTonesPair;

@@ -305,7 +305,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       std::size_t nCentral26TonesRus;
       bool isBasicTf = (GetLastTxFormat () == DL_MU_TX);
       HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (),
-                                                               count, nCentral26TonesRus,true,(GetLastTxFormat()==DL_MU_TX));
+                                                                count, nCentral26TonesRus,true);
       if (!m_useCentral26TonesRus || ulCandidates.size () == count)
         {
           nCentral26TonesRus = 0;
@@ -517,7 +517,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   std::size_t count = std::min (static_cast<std::size_t> (m_nStations), m_staList[primaryAc].size ());
   std::size_t nCentral26TonesRus;
   HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_apMac->GetWifiPhy ()->GetChannelWidth (), count,
-                                                           nCentral26TonesRus,false,false);
+                                                           nCentral26TonesRus,true);
   NS_ASSERT (count >= 1);
 
   if (!m_useCentral26TonesRus)
@@ -658,7 +658,7 @@ RrMultiUserScheduler::ComputeDlMuInfo (void)
   // compute how many stations can be granted an RU and the RU size
   std::size_t nRusAssigned = m_txParams.GetPsduInfoMap ().size ();
   std::size_t nCentral26TonesRus;
-  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,false,false);
+  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (bw, nRusAssigned, nCentral26TonesRus,true);
 
   NS_LOG_DEBUG (nRusAssigned << " stations are being assigned a " << ruType << " RU");
 
