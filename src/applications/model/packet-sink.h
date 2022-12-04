@@ -95,6 +95,8 @@ public:
    */
   std::list<Ptr<Socket> > GetAcceptedSockets (void) const;
 
+  int GetReceiveCount (void);
+
   /**
    * TracedCallback signature for a reception with addresses and SeqTsSizeHeader
    *
@@ -180,6 +182,7 @@ private:
   uint16_t        m_localPort;    //!< Local port to bind to
   uint64_t        m_totalRx;      //!< Total bytes received
   TypeId          m_tid;          //!< Protocol TypeId
+  int             m_receiveCount;
 
   bool            m_enableSeqTsSizeHeader {false}; //!< Enable or disable the export of SeqTsSize header 
 

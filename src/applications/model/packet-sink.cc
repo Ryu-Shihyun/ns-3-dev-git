@@ -83,6 +83,7 @@ PacketSink::PacketSink ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_totalRx = 0;
+  m_receiveCount=0;
 }
 
 PacketSink::~PacketSink()
@@ -108,6 +109,11 @@ PacketSink::GetAcceptedSockets (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_socketList;
+}
+
+int PacketSink::GetReceiveCount(void)
+{
+  return m_receiveCount;
 }
 
 void PacketSink::DoDispose (void)
@@ -201,6 +207,7 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
           break;
         }
       m_totalRx += packet->GetSize ();
+      m_receiveCount++;
       if (InetSocketAddress::IsMatchingType (from))
         {
           NS_LOG_INFO ("At time " << Simulator::Now ().As (Time::S)
