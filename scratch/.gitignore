@@ -1,5 +1,7 @@
 # Ignore everything on scratch by default, except the provided examples
 /*
+!MBTA/
+MBTA/*.txt
 !.gitignore
 !subdir/
 !scratch-simulator.cc
