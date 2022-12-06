@@ -176,7 +176,6 @@ int main (int argc, char *argv[])
   maxAccessDevices = nStations;
   std::ofstream ofs("test.csv");
   ofs << ",throughput,packetSize,receive times" << std::endl;
-  std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n';
   int minMcs = 0;
   int maxMcs = 11;
   if (mcs >= 0 && mcs <= 11)
