@@ -135,7 +135,7 @@ HtFrameExchangeManager::SendAddBaRequest (Mac48Address dest, uint8_t tid, uint16
 {
   NS_LOG_FUNCTION (this << dest << +tid << startingSeq << timeout << immediateBAck);
   NS_LOG_DEBUG ("Send ADDBA request to " << dest);
-
+  std::cout <<"Send ADDBA request to " << dest << std::endl;
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_MGT_ACTION);
   hdr.SetAddr1 (dest);
@@ -318,7 +318,7 @@ HtFrameExchangeManager::CreateBlockAckAgreement (const MgtAddBaResponseHeader *r
       agreement.m_inactivityEvent = Simulator::Schedule (timeout, &HtFrameExchangeManager::SendDelbaFrame,
                                                          this, originator, tid, false);
     }
-
+  std::cout << "sta address:"<< originator << ". tid:" << tid << std::endl;
   m_agreements.insert ({{originator, tid}, agreement});
 }
 
@@ -1226,7 +1226,7 @@ HtFrameExchangeManager::SendBlockAck (const RecipientBlockAckAgreement& agreemen
                                       WifiTxVector& blockAckTxVector, double rxSnr)
 {
   NS_LOG_FUNCTION (this << durationId << blockAckTxVector << rxSnr);
-  // std::cout << "sendBlockAck..." << Simulator::Now() << std::endl;
+  std::cout << "sendBlockAck..." << Simulator::Now() << std::endl;
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_CTL_BACKRESP);
   hdr.SetAddr1 (agreement.GetPeer ());
@@ -1268,6 +1268,9 @@ HtFrameExchangeManager::SendBlockAck (const RecipientBlockAckAgreement& agreemen
 bool
 HtFrameExchangeManager::GetBaAgreementEstablished (Mac48Address originator, uint8_t tid) const
 {
+  for(auto ptr = m_agreements.begin();ptr!=m_agreements.end();ptr++){
+    std::cout << "originator:" << ptr->first.first << ". tid:" << ptr->first.second << std::endl;
+  }
   return (m_agreements.find ({originator, tid}) != m_agreements.end ());
 }
 

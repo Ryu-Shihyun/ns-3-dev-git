@@ -535,6 +535,7 @@ QosTxop::NotifyChannelAccessed (Time txopDuration)
   NS_LOG_FUNCTION (this << txopDuration);
 
   NS_ASSERT (txopDuration != Time::Min ());
+  // m_startTxop
   m_startTxop = Simulator::Now ();
   m_txopDuration = txopDuration;
   Txop::NotifyChannelAccessed ();

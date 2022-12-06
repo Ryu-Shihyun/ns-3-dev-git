@@ -274,7 +274,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   for (const auto& candidate : m_candidates)
     {
       uint8_t queueSize = m_apMac->GetMaxBufferStatus (candidate.first->address);
-      // std::cout << "candites: " << candidate.first->address << ". queueSize: "<< int(queueSize) << std::endl;
+      std::cout << "candites: " << candidate.first->address << ". queueSize: "<< int(queueSize) << std::endl;
       if (queueSize == 255)
         {
           NS_LOG_DEBUG ("Buffer status of station " << candidate.first->address << " is unknown");
@@ -323,7 +323,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
         {
           txVector.SetChannelWidth (GetDlMuInfo ().txParams.m_txVector.GetChannelWidth ());
           txVector.SetGuardInterval (CtrlTriggerHeader ().GetGuardInterval ());
-          // std::cout << "count is " << count << std::endl;
+          std::cout << "Basic only.count is " << count << std::endl;
           for (std::size_t i = 0; i < count + nCentral26TonesRus; i++)
             {
               NS_ASSERT (candidateIt != ulCandidates.end ());
@@ -341,7 +341,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
         {
           txVector.SetChannelWidth (GetUlMuInfo ().trigger.GetUlBandwidth ());
           txVector.SetGuardInterval (GetUlMuInfo ().trigger.GetGuardInterval ());
-          // std::cout << "count is " << count << std::endl;
+          std::cout << "After Bsrp. count is " << count << std::endl;
           for (std::size_t i = 0; i < count + nCentral26TonesRus; i++)
             {
               NS_ASSERT (candidateIt != ulCandidates.end ());
@@ -359,7 +359,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
       // remove candidates that will not be served
       ulCandidates.erase (candidateIt, ulCandidates.end ());
-      // std::cout << "size: " << ulCandidates.size() << std::endl;
+      std::cout << "ulCabdidates.size: " << ulCandidates.size() << std::endl;
       AssignRuIndices (txVector);
 
       m_trigger = CtrlTriggerHeader (TriggerFrameType::BASIC_TRIGGER, txVector);

@@ -323,7 +323,7 @@ ChannelAccessManager::RequestAccess (Ptr<Txop> txop)
   UpdateBackoff ();
   NS_ASSERT (txop->GetAccessStatus () != Txop::REQUESTED);
   txop->NotifyAccessRequested ();
-  // std::cout << "requestAccess" << std::endl;
+  std::cout << "requestAccess" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
 }

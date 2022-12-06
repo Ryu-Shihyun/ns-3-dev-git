@@ -60,7 +60,7 @@ ApWifiMac::GetTypeId (void)
     .AddConstructor<ApWifiMac> ()
     .AddAttribute ("BeaconInterval",
                    "Delay between two beacons",
-                   TimeValue (MicroSeconds (1024*40000)),
+                   TimeValue (MicroSeconds (1024*60000)),
                    MakeTimeAccessor (&ApWifiMac::GetBeaconInterval,
                                      &ApWifiMac::SetBeaconInterval),
                    MakeTimeChecker ())
@@ -844,7 +844,7 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       bool found = false;
       for (const auto& sta : m_staList)
             {
-              // std::cout << "isReassoc staId: " << sta.first << ". mac address: "<< sta.second << std::endl;
+              std::cout << "isReassoc staId: " << sta.first << ". mac address: "<< sta.second << std::endl;
               if (sta.second == to)
                 {
                   aid = sta.first;
@@ -868,9 +868,9 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       //   }
       if (!found /*&& !has_same_mac_addr*/)
         {
-          // std::cout << "associated sta: " << to ;
+          std::cout << "associated sta: " << to ;
           aid = GetNextAssociationId ();
-          // std::cout << ", aid: " << aid << std::endl;
+          std::cout << ", aid: " << aid << std::endl;
           m_staList.insert (std::make_pair (aid, to));
           m_assocLogger (aid, to);
           GetWifiRemoteStationManager ()->SetAssociationId (to, aid);
