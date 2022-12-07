@@ -172,7 +172,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       // std::cout <<"ELSE" << std::endl;
       // txFormat = MultiUserScheduler::UL_MU_TX;//add and comment out by ryu 2022/10/10
       // if(!isUl){
-        // txFormat = m_muScheduler->NotifyAccessGranted (edca, availableTime+NanoSeconds(29600*m_slot), initialFrame);
+        // txFormat = m_muScheduler->NotifyAccessGranted (edca, availableTime, initialFrame);
       // }else{
         txFormat = m_muScheduler->NotifyAccessGranted (edca, availableTime, initialFrame);
       //}
@@ -183,7 +183,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
     {
       // std::cout <<"SU_TX" << std::endl;
       // if(!isUl){
-        // return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime+NanoSeconds(29600*m_slot), initialFrame);
+        // return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime, initialFrame);
       // }else{
         return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime, initialFrame);
       // }
@@ -689,7 +689,7 @@ HeFrameExchangeManager::SendPsduMap (void)
             break;
           case WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF:
             if((m_slot > 0) && !m_isbsrp){
-              m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
+              m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             }else{
               m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
@@ -698,8 +698,8 @@ HeFrameExchangeManager::SendPsduMap (void)
             std::cout << "timerType is WAIT_TB_PPDU_AFTER_BASIC" << std::endl;
             break;
           case WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF:
-            // std::cout << "modify timeout: " << timeout+NanoSeconds(29600*m_slot) << std::endl; // added by ryu 10/28
-            m_txTimer.Set (timerType, timeout+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::TbPpduTimeout, this,
+            // std::cout << "modify timeout: " << timeout << std::endl; // added by ryu 10/28
+            m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             std::cout << "timerType is WAIT_QOS_NULL_AFTER_BSRP_TF" << std::endl;
             break;
@@ -1752,7 +1752,7 @@ HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader
 
 //Added by ryu 2022/10/12
 void
-HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru)
+HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic)
 {
   QosFrameExchangeManager::SetIsArbitration(true);
   HtFrameExchangeManager::SetIsArbitration(true);
@@ -1815,6 +1815,16 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
       //ReceiveBasicTriggerAfterA(ru_ptr->bt.at(0).trigger,ru_ptr->bt.at(0).hdr,ru_ptr->bt.at(0).staId);
       ru_ptr->bt.at(0).isWin = true;
       m_wins++; // test by ryu 2022/11/22
+      if(isBasic)
+      {
+        Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
+                                   this, trigger, hdr,staId,ru);
+      }
+      else
+      {
+        Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
+                                   this, trigger, hdr,staId,ru);
+      }
       return;
     }
     auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
@@ -1844,6 +1854,16 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
     }
     if(same_max>1){
       m_nConflict++;
+    }
+    if(isBasic)
+    {
+      Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
+                                  this, trigger, hdr,staId,ru);
+    }
+    else
+    {
+      Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
+                                  this, trigger, hdr,staId,ru);
     }
     // for(auto it = m_staRuInfo.begin();it!=m_staRuInfo.end(); it++){
     //     for(auto it2 = it->bt.begin();it2!=it->bt.end(); it2++){
@@ -1887,7 +1907,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
         // std::cout << "type: trigger"<<std::endl;
     }else{*/
         std::cout << "type: " << mpdu->GetHeader().GetTypeString() << std::endl;
-        
+        std::cout << "txTimer: " << m_txTimer.GetReasonString(m_txTimer.GetReason()) << std::endl;
     //}
     std::cout << "ReceiveMpdu..." << Simulator::Now() << std::endl;
     
@@ -2264,10 +2284,8 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                 }else{
                       itr->bt.push_back(busyTone);
                 }
-                Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
-                                   this, trigger, hdr,staId,ru);
-                Simulator::Schedule(m_phy->GetSifs ()+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
-                                   this, trigger, hdr,staId,ru);
+                SendBusyTone(trigger,hdr,staId,ru,true);
+                
               }else{
                 Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
                                    this, trigger, hdr);
@@ -2300,10 +2318,8 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                 }else{
                       itr->bt.push_back(busyTone);
                 }
-                Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
-                                   this, trigger, hdr,staId,ru);
-                Simulator::Schedule(m_phy->GetSifs ()+NanoSeconds(29600*m_slot), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
-                                   this, trigger, hdr,staId,ru);
+                SendBusyTone(trigger,hdr,staId,ru,false);
+
               }else{
                 Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
                                    this, trigger, hdr);

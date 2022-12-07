@@ -149,7 +149,7 @@ RrMultiUserScheduler::SelectTxFormat (void)
   NS_LOG_FUNCTION (this);
 
   Ptr<const WifiMacQueueItem> mpdu = m_edca->PeekNextMpdu ();
-
+  m_edca->SetIsDlMuTx(false);
   if (mpdu != 0 && !GetWifiRemoteStationManager ()->GetHeSupported (mpdu->GetHeader ().GetAddr1 ()))
     {
       return SU_TX;
@@ -469,6 +469,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
       return UL_MU_TX;
     }
+  m_edca->SetIsDlMuTx(true);
   return DL_MU_TX;
 }
 
@@ -639,7 +640,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
       NS_LOG_DEBUG ("The AP does not have suitable frames to transmit: return SU_TX");
       return SU_TX;
     }
-
+  m_edca->SetIsDlMuTx(true);
   return TxFormat::DL_MU_TX;
 }
 

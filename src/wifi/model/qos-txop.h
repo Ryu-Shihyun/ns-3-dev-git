@@ -485,7 +485,7 @@ private:
   TracedCallback<Time, Time> m_txopTrace; //!< TXOP trace callback
 
   bool m_is_dl_mu_tx;
-  int m_slot=3;
+  int m_slot=0;
 };
 
 } //namespace ns3
