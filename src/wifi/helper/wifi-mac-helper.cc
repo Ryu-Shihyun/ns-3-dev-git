@@ -113,7 +113,11 @@ WifiMacHelper::GetMaxCandidatesNum(void)
  
 }
 
-
+std::vector<int>
+WifiMacHelper::GetCandidateInfo(Mac48Address addr)
+{
+  return m_muSch_ptr->GetCandidates(addr);
+}
 
 
 } //namespace ns3

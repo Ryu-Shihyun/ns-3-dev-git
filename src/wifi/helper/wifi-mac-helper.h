@@ -111,6 +111,7 @@ public:
   int GetUplinkNum(int n) const;
   int GetConflictNum(void);
   int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidateInfo(Mac48Address addr);
 
 protected:
   ObjectFactory m_mac;                ///< MAC object factory

@@ -318,7 +318,7 @@ HtFrameExchangeManager::CreateBlockAckAgreement (const MgtAddBaResponseHeader *r
       agreement.m_inactivityEvent = Simulator::Schedule (timeout, &HtFrameExchangeManager::SendDelbaFrame,
                                                          this, originator, tid, false);
     }
-
+  std::cout << "sta address:" << originator << ". tid:" << int(tid) << std::endl;
   m_agreements.insert ({{originator, tid}, agreement});
 }
 
@@ -599,7 +599,7 @@ HtFrameExchangeManager::TransmissionSucceeded (void)
       // (Sec. 10.22.2.8 of 802.11-2016)
       NS_LOG_DEBUG ("Schedule a transmission from Block Ack Manager in a SIFS");
       bool (HtFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &HtFrameExchangeManager::StartTransmission;
-      // std::cout << "ht::transmissionSucceeded"<<std::endl;//added by ryu 10/21
+      // std::cout << "ht::transmissionSucceeded..."<< Simulator::Now()<< std::endl;//added by ryu 10/21
       // TXOP limit is null, hence the txopDuration parameter is unused
       Simulator::Schedule (m_phy->GetSifs (), fp, this, m_edca, Seconds (0));
     }
@@ -1268,6 +1268,9 @@ HtFrameExchangeManager::SendBlockAck (const RecipientBlockAckAgreement& agreemen
 bool
 HtFrameExchangeManager::GetBaAgreementEstablished (Mac48Address originator, uint8_t tid) const
 {
+  for(auto ptr=m_agreements.begin();ptr!=m_agreements.end();ptr++){
+    std::cout << "originator:" << ptr->first.first << ". tid:" << ptr->first.second << std::endl;
+  }
   return (m_agreements.find ({originator, tid}) != m_agreements.end ());
 }
 

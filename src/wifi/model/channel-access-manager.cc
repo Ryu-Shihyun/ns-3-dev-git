@@ -323,7 +323,7 @@ ChannelAccessManager::RequestAccess (Ptr<Txop> txop)
   UpdateBackoff ();
   NS_ASSERT (txop->GetAccessStatus () != Txop::REQUESTED);
   txop->NotifyAccessRequested ();
-  // std::cout << "requestAccess" << std::endl;
+  std::cout << "requestAccess" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
 }
@@ -375,6 +375,7 @@ ChannelAccessManager::DoGrantDcfAccess (void)
            * the result of the calculations.
            */
           NS_ASSERT (m_feManager != 0);
+          std::cout << "do grant Dcf" << std::endl;
           if (m_feManager->StartTransmission (txop))
             {
               // std::cout << "do grant dcf" << std::endl;
@@ -403,6 +404,7 @@ ChannelAccessManager::AccessTimeout (void)
   UpdateBackoff ();
   // std::cout << "AccessTimeout" << std::endl;
   DoGrantDcfAccess ();
+  // std::cout << "DoRestartAccessTimeout" << std::endl;
   DoRestartAccessTimeoutIfNeeded ();
 }
 
@@ -525,7 +527,7 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded (void)
       if (txop->GetAccessStatus () == Txop::REQUESTED)
         {
           Time tmp = GetBackoffEndFor (txop);
-          // std::cout << "tmp: " << tmp << std::endl;
+          std::cout << "tmp: " << tmp << std::endl;
           if (tmp > Simulator::Now ())
             {
               accessTimeoutNeeded = true;
@@ -538,7 +540,8 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded (void)
     {
       NS_LOG_DEBUG ("expected backoff end=" << expectedBackoffEnd);
       Time expectedBackoffDelay = expectedBackoffEnd - Simulator::Now ();
-      // std::cout << "expectedBackoffDelay: " << expectedBackoffDelay << std::endl;
+      std::cout << "expectedBackoffEnd:  " << expectedBackoffEnd << std::endl;
+      std::cout << "expectedBackoffDelay: " << expectedBackoffDelay << std::endl;
       if (m_accessTimeout.IsRunning ()
           && Simulator::GetDelayLeft (m_accessTimeout) > expectedBackoffDelay)
         {
@@ -547,6 +550,7 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded (void)
         }
       if (m_accessTimeout.IsExpired ())
         {
+          // std::cout << "schedule accessTimeout" << std::endl;
           m_accessTimeout = Simulator::Schedule (expectedBackoffDelay,
                                                  &ChannelAccessManager::AccessTimeout, this);
         }

@@ -868,9 +868,9 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       //   }
       if (!found /*&& !has_same_mac_addr*/)
         {
-          // std::cout << "associated sta: " << to ;
+          std::cout << "associated sta: " << to ;
           aid = GetNextAssociationId ();
-          // std::cout << ", aid: " << aid << std::endl;
+          std::cout << ", aid: " << aid << std::endl;
           m_staList.insert (std::make_pair (aid, to));
           m_assocLogger (aid, to);
           GetWifiRemoteStationManager ()->SetAssociationId (to, aid);

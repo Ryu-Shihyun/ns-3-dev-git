@@ -135,6 +135,7 @@ QosFrameExchangeManager::PifsRecovery (void)
   else
     {
       // the txopDuration parameter is unused because we are not starting a new TXOP
+      // std::cout << "PifsRecovery..." << Simulator::Now() << std::endl;
       StartTransmission (m_edca, Seconds (0));
     }
 }
@@ -259,7 +260,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
 
   if (StartFrameExchange (m_edca, Time::Min (), true))
     {
-      // std::cout << "we get here if txop" << std::endl;
+      std::cout << "we get here if txop" << std::endl;
       m_edca->NotifyChannelAccessed (Seconds (0));
       return true;
     }
@@ -564,7 +565,6 @@ QosFrameExchangeManager::TransmissionSucceeded (void)
       && m_edca->GetRemainingTxop () > m_phy->GetSifs ())
     {
       NS_LOG_DEBUG ("Schedule another transmission in a SIFS");
-      // std::cout << "qos:success" << std::endl;
       bool (QosFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &QosFrameExchangeManager::StartTransmission;
 
       // we are continuing a TXOP, hence the txopDuration parameter is unused

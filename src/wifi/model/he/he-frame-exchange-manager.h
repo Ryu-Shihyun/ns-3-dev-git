@@ -94,6 +94,7 @@ public:
   int GetNBsrp (void);
   int GetNConflict (void);
   int GetMaxNCandidates(void);
+  std::vector<int> GetCandidatesInfo(Mac48Address addr);
 
 protected:
   void DoDispose () override;
@@ -220,7 +221,9 @@ protected:
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
   
-  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru);
+  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic);
+  void SetSuccesses(Mac48Address addr);
+  void UpdateSuccesses(Mac48Address addr,int byte);
 
 
 private:
@@ -246,7 +249,7 @@ private:
   EventId m_multiStaBaEvent;                          //!< Sending a Multi-STA BlockAck event
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BA
-  int m_slot=0;
+  int m_slot=3;
   bool m_isbsrp;
   // bool m_ul;
 };

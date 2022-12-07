@@ -220,6 +220,11 @@ MultiUserScheduler::GetMaxCandidatesNum(void)
   return m_heFem->GetMaxNCandidates();
 }
 
+std::vector<int> 
+MultiUserScheduler::GetCandidates(Mac48Address addr)
+{
+  return m_heFem->GetCandidatesInfo(addr);
+}
 
 
 } //namespace ns3

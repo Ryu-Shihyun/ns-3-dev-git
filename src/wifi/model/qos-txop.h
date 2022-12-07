@@ -440,6 +440,10 @@ public:
    */
   uint8_t GetAifsn (void) const override;
 
+  void SetIsDlMuTx(bool is_dl_mu_tx){
+    m_is_dl_mu_tx = is_dl_mu_tx;
+  }
+
 protected:
   void DoDispose (void) override;
 
@@ -480,6 +484,9 @@ private:
   Time m_muEdcaTimerStartTime; //!< last start time of the MU EDCA Timer
 
   TracedCallback<Time, Time> m_txopTrace; //!< TXOP trace callback
+
+  bool m_is_dl_mu_tx;
+  int m_slot=3;
 };
 
 } //namespace ns3

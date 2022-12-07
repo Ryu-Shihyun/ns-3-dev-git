@@ -119,6 +119,7 @@ public:
   int GetConflictStaNum(void);
 
   int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidates(Mac48Address addr);
 
 protected:
   /**

@@ -536,7 +536,9 @@ QosTxop::NotifyChannelAccessed (Time txopDuration)
 
   NS_ASSERT (txopDuration != Time::Min ());
   m_startTxop = Simulator::Now ();
+  if(m_is_dl_mu_tx) m_startTxop+=NanoSeconds(29600*m_slot);
   m_txopDuration = txopDuration;
+  std::cout << "m_startTxop:" << m_startTxop << ". m_txopDuration:" << m_txopDuration << std::endl;
   Txop::NotifyChannelAccessed ();
 }
 

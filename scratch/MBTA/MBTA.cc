@@ -110,6 +110,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("maxExpectedThroughput", "if set, simulation fails if the highest throughput is above this value", maxExpectedThroughput);
   cmd.AddValue ("maxAccessDevices", "the maximum number of stations taht can be granted an RU", maxAccessDevices);
   cmd.AddValue ("bitRateVariable", "the maximum number of stations taht can be granted an RU", bitRateVariable);
+  cmd.AddValue("warmUpTime","Set the time when clients start transmission. It is for Association time",warmUpTime);
   
   cmd.Parse (argc,argv);
 
@@ -175,7 +176,7 @@ int main (int argc, char *argv[])
   //modify maxAccessDevices;
   maxAccessDevices = nStations;
   std::ofstream ofs("test.csv");
-  ofs << ",throughput,packetSize,receive times" << std::endl;
+  ofs << "index,Mac Address,candidate,Success Receive to AP, total Packet Size" << std::endl;
   std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n';
   int minMcs = 0;
   int maxMcs = 11;
@@ -435,7 +436,7 @@ int main (int argc, char *argv[])
                 {
                   for (uint32_t i = 0; i < serverApp.GetN (); i++)
                     {
-                      ofs << i << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetTotalRx ()*8 << "," <<payloadSize << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetReceiveCount() << std::endl;
+                      // ofs << i << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetTotalRx ()*8 << "," <<payloadSize << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetReceiveCount() << std::endl;
                       rxBytes += DynamicCast<PacketSink> (serverApp.Get (i))->GetTotalRx ();
                     }
                 }
@@ -444,6 +445,10 @@ int main (int argc, char *argv[])
               int bsrpNum = mac.GetUplinkNum(1);
               int conflictStaNum = mac.GetConflictNum();
               int maxCandidates = mac.GetMaxCandidatesNum();
+            for (int i=0; i<wifiStaNodes.GetN(); i++) {
+              auto candidateInfo = mac.GetCandidateInfo(Mac48Address::ConvertFrom(wifiStaNodes.Get(i)->GetDevice(0)->GetAddress()));
+              ofs << i << "," <<  wifiStaNodes.Get(i)->GetDevice(0)->GetAddress() << "," <<  candidateInfo.at(0)<< "," <<  candidateInfo.at(1)<< "," <<  candidateInfo.at(2) << std::endl;
+            }
               Simulator::Destroy ();
               // std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n'; 
               std::cout << nStations << "\t\t" <<mcs << "\t\t" << channelWidth << "\t\t" << gi << "\t\t" << throughput  << "\t\t" << basicNum << "\t\t" << bsrpNum << "\t\t" << conflictStaNum << "\t\t"  << maxCandidates << std::endl;

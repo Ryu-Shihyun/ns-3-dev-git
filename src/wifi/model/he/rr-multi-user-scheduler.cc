@@ -147,11 +147,13 @@ MultiUserScheduler::TxFormat
 RrMultiUserScheduler::SelectTxFormat (void)
 {
   NS_LOG_FUNCTION (this);
+  m_edca->SetIsDlMuTx(false);
 
   Ptr<const WifiMacQueueItem> mpdu = m_edca->PeekNextMpdu ();
 
   if (mpdu != 0 && !GetWifiRemoteStationManager ()->GetHeSupported (mpdu->GetHeader ().GetAddr1 ()))
     {
+      std::cout << "not GetHeSupported" << std::endl;
       return SU_TX;
     }
 
@@ -469,6 +471,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
       return UL_MU_TX;
     }
+  m_edca->SetIsDlMuTx(true);
   return DL_MU_TX;
 }
 
@@ -511,6 +514,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   if (m_staList[primaryAc].empty ())
     {
       NS_LOG_DEBUG ("No HE stations associated: return SU_TX");
+      std::cout << "No HE stations associated: return SU_TX" << std::endl;
       return TxFormat::SU_TX;
     }
 
@@ -637,9 +641,10 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
           return NO_TX;
         }
       NS_LOG_DEBUG ("The AP does not have suitable frames to transmit: return SU_TX");
+      std::cout << "The AP does not have suitable frames to transmit" << std::endl;
       return SU_TX;
     }
-
+  m_edca->SetIsDlMuTx(true);
   return TxFormat::DL_MU_TX;
 }
 
