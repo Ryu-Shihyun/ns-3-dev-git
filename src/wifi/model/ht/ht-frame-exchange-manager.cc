@@ -135,6 +135,7 @@ HtFrameExchangeManager::SendAddBaRequest (Mac48Address dest, uint8_t tid, uint16
 {
   NS_LOG_FUNCTION (this << dest << +tid << startingSeq << timeout << immediateBAck);
   NS_LOG_DEBUG ("Send ADDBA request to " << dest);
+  std::cout << "Send ADDBA request from " << m_self << std::endl; 
 
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_MGT_ACTION);

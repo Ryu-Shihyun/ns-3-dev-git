@@ -323,6 +323,7 @@ ChannelAccessManager::RequestAccess (Ptr<Txop> txop)
   UpdateBackoff ();
   NS_ASSERT (txop->GetAccessStatus () != Txop::REQUESTED);
   txop->NotifyAccessRequested ();
+  // txop->GetWifiMacQueue()
   std::cout << "requestAccess" << std::endl;
   DoGrantDcfAccess ();
   DoRestartAccessTimeoutIfNeeded ();
@@ -505,6 +506,7 @@ ChannelAccessManager::UpdateBackoff (void)
           uint32_t n = std::min (nIntSlots, txop->GetBackoffSlots ());
           NS_LOG_DEBUG ("dcf " << k << " dec backoff slots=" << n);
           Time backoffUpdateBound = backoffStart + (n * GetSlot ());
+          std::cout << "n:" << n << ". slot:" << GetSlot() << ". backoffUpdateBound:" << backoffUpdateBound << std::endl;
           txop->UpdateBackoffSlotsNow (n, backoffUpdateBound);
         }
       ++k;

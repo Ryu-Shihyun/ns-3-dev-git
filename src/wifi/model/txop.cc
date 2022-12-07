@@ -319,6 +319,7 @@ Txop::StartAccessIfNeeded (void)
   NS_LOG_FUNCTION (this);
   if (HasFramesToTransmit () && m_access == NOT_REQUESTED)
     {
+      std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
       m_channelAccessManager->RequestAccess (this);
     }
 }
@@ -360,6 +361,7 @@ Txop::NotifyChannelReleased (void)
   // std::cout << m_backoffSlots << std::endl;
   if (HasFramesToTransmit ())
     {
+      std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
       Simulator::ScheduleNow (&Txop::RequestAccess, this);
     }
 }
@@ -369,6 +371,7 @@ Txop::RequestAccess (void)
 {
   if (m_access == NOT_REQUESTED)
     {
+      std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
       m_channelAccessManager->RequestAccess (this);
     }
 }

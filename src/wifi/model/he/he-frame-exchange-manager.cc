@@ -1766,7 +1766,7 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
   HtFrameExchangeManager::SetIsArbitration(true);
   // 3. wait until get all =============================== level**
     // std::cout << "start atribution phase with "<<m_slot<<"slots" << std::endl;
-    std::cout << "SendBusyTone"  << std::endl; // added by ryu 10/20
+    std::cout << "SendBusyTone..."<<Simulator::Now()  << std::endl; // added by ryu 10/20
     // 4. compaire number ========== level:***
     //  for(int i=0; i<m_staRuInfo.size();i++){
     //     if(m_staRuInfo.at(i).bt.size()>1){
@@ -1824,11 +1824,9 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
       ru_ptr->bt.at(0).isWin = true;
       m_wins++; // test by ryu 2022/11/22
       if(isBasic){
-        Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
-                                   this, trigger, hdr,staId,ru);
+        ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
       }else{
-        Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
-                                   this, trigger, hdr,staId,ru);
+        SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
       }
       
       return;
@@ -1838,8 +1836,10 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
                             });
     uint8_t max_arbi_num = 0;
     int same_max =0;
+    int staCount=0;
     for (auto bt_ptr = ru_ptr->bt.begin(); bt_ptr != ru_ptr->bt.end(); bt_ptr++) {
       // std::cout << "staId: "<<bt_ptr->staId<<std::endl;
+      staCount++;
       if (max_arbi_num < bt_ptr->arbitrationNum) {
         max_arbi_num = bt_ptr->arbitrationNum;
         same_max=1;
@@ -1848,7 +1848,8 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
       }
     }
     // std::cout << "loop end." << std::endl;
-   
+
+    std::cout << "staId:"<< staId <<". ru:"<<ru <<". count:" << staCount << ". same_max_arbi_num:" << same_max << std::endl; 
   //  5. schedule ReceiveBassicTrigger(m_staRuInfo.trigger,m_staRuInfo.hdr) **
     if(max_arbi_num == my_ptr->arbitrationNum){
       std::cout << "win staId: "<<my_ptr->staId<<std::endl;
@@ -1870,11 +1871,9 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
         
     // }
     if(isBasic){
-      Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTriggerAfterA,
-                                  this, trigger, hdr,staId,ru);
+      ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
     }else{
-      Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpduAfterA,
-                                  this, trigger, hdr,staId,ru);
+      SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
     }
    
 }
@@ -2298,7 +2297,11 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                 }else{
                       itr->bt.push_back(busyTone);
                 }
-                SendBusyTone(trigger,hdr,staId,ru,true);
+                std::cout << "sta addr: " << m_self << ". staId:" << staId << std::endl;
+
+                // SendBusyTone(trigger,hdr,staId,ru,true);
+                Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
+                                   this, trigger, hdr,staId,ru,true);
               }else{
                 Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
                                    this, trigger, hdr);
@@ -2332,7 +2335,10 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
                 }else{
                       itr->bt.push_back(busyTone);
                 }
-                SendBusyTone(trigger,hdr,staId,ru,false);
+                std::cout << "sta addr: " << m_self << ". staId:" << staId << std::endl;
+                // SendBusyTone(trigger,hdr,staId,ru,false);
+                Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
+                                   this, trigger, hdr,staId,ru,false);
               }else{
                 Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
                                    this, trigger, hdr);

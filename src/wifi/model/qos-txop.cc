@@ -580,6 +580,7 @@ QosTxop::GetRemainingTxop (void) const
 void
 QosTxop::PushFront (Ptr<const Packet> packet, const WifiMacHeader &hdr)
 {
+  std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
   NS_LOG_FUNCTION (this << packet << &hdr);
   WifiMacTrailer fcs;
   m_queue->PushFront (Create<WifiMacQueueItem> (packet, hdr));
@@ -620,6 +621,7 @@ QosTxop::GotAddBaResponse (const MgtAddBaResponseHeader *respHdr, Mac48Address r
 
   if (HasFramesToTransmit () && m_access == NOT_REQUESTED)
     {
+      std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
       m_channelAccessManager->RequestAccess (this);
     }
 }
@@ -691,6 +693,7 @@ QosTxop::AddBaResponseTimeout (Mac48Address recipient, uint8_t tid)
       GenerateBackoff ();
       if (HasFramesToTransmit () && m_access == NOT_REQUESTED)
         {
+          std::cout << "DEBUG: " << Simulator::Now () << ", " << __func__ << std::endl;
           m_channelAccessManager->RequestAccess (this);
         }
     }
