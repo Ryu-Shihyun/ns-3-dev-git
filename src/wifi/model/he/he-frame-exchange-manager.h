@@ -91,6 +91,14 @@ public:
    */
   virtual void SetTargetRssi (CtrlTriggerHeader& trigger) const;
 
+  // BEGIN: MY CODE
+  int GetNBasic (void);
+  int GetNBsrp (void);
+  int GetNConflict (void);
+  int GetMaxNCandidates(void);
+  std::vector<int> GetCandidatesInfo(Mac48Address addr);
+  // END: MY CODE
+
 protected:
   void DoDispose () override;
 
@@ -210,10 +218,16 @@ protected:
    * \param hdr the MAC header of the Basic or BSRP Trigger Frame
    */
   void SendQosNullFramesInTbPpdu (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
-
+  //BEGIN: MY CODE
+  void SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
+  //END: MY CODE
   Ptr<ApWifiMac> m_apMac;                             //!< MAC pointer (null if not an AP)
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
+
+  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic);
+  void SetSuccesses(Mac48Address addr);
+  void UpdateSuccesses(Mac48Address addr,int byte);
 
 private:
   /**
@@ -228,7 +242,9 @@ private:
    * \param hdr the MAC header of the Basic Trigger Frame
    */
   void ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr);
-
+  //BEGIN: MY CODE
+  void ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
+  //END: MY CODE
   WifiPsduMap m_psduMap;                              //!< the A-MPDU being transmitted
   WifiTxParameters m_txParams;                        //!< the TX parameters for the current PPDU
   Ptr<MultiUserScheduler> m_muScheduler;              //!< Multi-user Scheduler (HE APs only)
@@ -237,6 +253,9 @@ private:
   EventId m_multiStaBaEvent;                          //!< Sending a Multi-STA BlockAck event
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BAR
+
+  int m_slot=0;
+  bool m_isbsrp;
 };
 
 } //namespace ns3

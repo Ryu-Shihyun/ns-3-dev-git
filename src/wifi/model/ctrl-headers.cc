@@ -1544,7 +1544,13 @@ CtrlTriggerHeader::CtrlTriggerHeader ()
     m_ulBandwidth (0),
     m_giAndLtfType (0),
     m_apTxPower (0),
-    m_ulSpatialReuse (0)
+    m_ulSpatialReuse (0),
+    //BEGIN: MY CODE
+    m_mbtaIndicator(false),
+    m_arbitrationSlot(0),
+    m_damsIndicator(false),
+    m_damsBoundary(0)
+    //END: MY CODE
 {
 }
 
@@ -1594,6 +1600,12 @@ CtrlTriggerHeader::operator= (const CtrlTriggerHeader& trigger)
   m_giAndLtfType = trigger.m_giAndLtfType;
   m_apTxPower = trigger.m_apTxPower;
   m_ulSpatialReuse = trigger.m_ulSpatialReuse;
+  //BEGIN: MY CODE
+  m_mbtaIndicator = trigger.m_mbtaIndicator;
+  m_arbitrationSlot = trigger.m_arbitrationSlot;//Added by Ryu 2022/10/5
+  m_damsIndicator = trigger.m_damsIndicator;
+  m_damsBoundary = trigger.m_damsBoundary;
+  //END: MY CODE
   m_userInfoFields.clear ();
   m_userInfoFields = trigger.m_userInfoFields;
   return *this;
@@ -1632,8 +1644,10 @@ uint32_t
 CtrlTriggerHeader::GetSerializedSize (void) const
 {
   uint32_t size = 0;
-  size += 8;  // Common Info (excluding Trigger Dependent Common Info)
-
+  // size += 8;  // Common Info (excluding Trigger Dependent Common Info)
+  //BEGIN: MY CODE
+  size+=10;
+  //END: MY CODE
   // Add the size of the Trigger Dependent Common Info subfield
   if (m_triggerType == GCR_MU_BAR_TRIGGER)
     {
@@ -1670,7 +1684,14 @@ CtrlTriggerHeader::Serialize (Buffer::Iterator start) const
   commonInfo |= static_cast<uint64_t> (m_ulSpatialReuse) << 37;
 
   i.WriteHtolsbU64 (commonInfo);
-
+  //BEGIN: MY CODE
+  uint16_t commonInfo_2 = 0;
+  commonInfo_2 |= (m_mbtaIndicator ? 1 << 0 : 0);
+  commonInfo_2 |=  (m_arbitrationSlot & 0x07) << 1;
+  commonInfo_2 |= (m_damsIndicator ? 1 << 4 : 0);
+  commonInfo_2 |= (m_damsBoundary & 0x1000) << 5;
+  i.WriteHtolsbU16(commonInfo_2);
+  //END: MY CODE
   for (auto& ui : m_userInfoFields)
     {
       i = ui.Serialize (i);
@@ -1694,6 +1715,14 @@ CtrlTriggerHeader::Deserialize (Buffer::Iterator start)
   m_giAndLtfType = (commonInfo >> 20) & 0x03;
   m_apTxPower = (commonInfo >> 28) & 0x3f;
   m_ulSpatialReuse = (commonInfo >> 37) & 0xffff;
+
+  //BEGIN: MY CODE
+  uint16_t commonInfo_2 = i.ReadLsbtohU16();
+  m_mbtaIndicator = (commonInfo_2 & 0x01);
+  m_arbitrationSlot = (commonInfo_2 >> 1) & 0x07;
+  m_damsIndicator = (commonInfo_2 >> 4) & 0x01;
+  m_damsBoundary = (commonInfo_2 >> 5) & 0x1000;
+  //END: MY CODE
   m_userInfoFields.clear ();
 
   NS_ABORT_MSG_IF (m_triggerType == BFRP_TRIGGER, "BFRP Trigger frame is not supported");
@@ -1980,6 +2009,32 @@ CtrlTriggerHeader::GetUlSpatialReuse (void) const
 {
   return m_ulSpatialReuse;
 }
+
+//BEGIN: MY CODE
+void
+CtrlTriggerHeader::SetArbitrationSlots(int8_t slot)
+{
+  m_arbitrationSlot = slot;
+}
+
+int8_t
+CtrlTriggerHeader::GetArbitrationSlots(void) const
+{
+  return int8_t (m_arbitrationSlot);
+}
+void
+CtrlTriggerHeader::SetMbtaIndicator(bool indicator)
+{
+  m_mbtaIndicator = indicator;
+}
+
+bool
+CtrlTriggerHeader::GetMbtaIndicator(void) const
+{
+  return m_mbtaIndicator;
+}
+
+//END: MY CODE
 
 CtrlTriggerHeader
 CtrlTriggerHeader::GetCommonInfoField (void) const

@@ -51,5 +51,7 @@ cmake-build-release/
 !.vscode/tasks.json
 .vs/
 
+*.csv
+
 # Ignore local cache used by e.g. clangd
 .cache/

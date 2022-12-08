@@ -29,6 +29,9 @@
 #include "ns3/boolean.h"
 
 namespace ns3 {
+//BEGIN: MY CODE
+Ptr<MultiUserScheduler> m_muSch_ptr;
+//END: MY CODE
 
 WifiMacHelper::WifiMacHelper ()
 {
@@ -103,6 +106,9 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
     {
       Ptr<MultiUserScheduler> muScheduler = m_muScheduler.Create<MultiUserScheduler> ();
       apMac->AggregateObject (muScheduler);
+      //BEGIN: MY CODE
+      m_muSch_ptr = DynamicCast<MultiUserScheduler>(muScheduler);
+      //END: MY CODE
     }
 
   // create and install the Association Manager if this is a STA
@@ -110,9 +116,44 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
     {
       Ptr<WifiAssocManager> assocManager = m_assocManager.Create<WifiAssocManager> ();
       staMac->SetAssocManager (assocManager);
+      
     }
 
   return mac;
 }
+//BEGIN: MY CODE
+int
+WifiMacHelper::GetUplinkNum(int n) const
+{
+  if(n==0){
+    return m_muSch_ptr->GetBasicPhaseNum();
+  }else{
+    return m_muSch_ptr->GetBsrpPhaseNum();
+  }
+ 
+}
+
+int
+WifiMacHelper::GetConflictNum(void)
+{
+  return m_muSch_ptr->GetConflictStaNum();
+  
+ 
+}
+
+int
+WifiMacHelper::GetMaxCandidatesNum(void)
+{
+  return m_muSch_ptr->GetMaxCandidatesNum();
+  
+ 
+}
+
+std::vector<int>
+WifiMacHelper::GetCandidateInfo(Mac48Address addr)
+{
+  return m_muSch_ptr->GetCandidates(addr);
+}
+//END: MY CODE
 
 } //namespace ns3

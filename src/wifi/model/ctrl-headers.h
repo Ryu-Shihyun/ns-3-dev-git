@@ -1110,6 +1110,15 @@ public:
    * \return the UL Spatial Reuse subfield
    */
   uint16_t GetUlSpatialReuse (void) const;
+  
+  //BEGIN: MY CODE
+  void SetArbitrationSlots (int8_t slot);//Added by Ryu 2022/10/5
+  int8_t GetArbitrationSlots(void) const;//Added by Ryu 2022/10/5
+  void SetMbtaIndicator (bool indicator);//Added by Ryu 2022/10/5
+  bool GetMbtaIndicator(void) const;//Added by Ryu 2022/10/5
+
+  //END: MY CODE
+
   /**
    * Get a copy of the Common Info field of this Trigger frame.
    * Note that the User Info fields are excluded.
@@ -1252,6 +1261,14 @@ private:
   uint8_t m_giAndLtfType;      //!< GI And LTF Type subfield
   uint8_t m_apTxPower;         //!< Tx Power used by AP to transmit the Trigger Frame
   uint16_t m_ulSpatialReuse;   //!< Value for the Spatial Reuse field in HE-SIG-A
+  
+  //BEGIN: MY CODE
+  bool m_mbtaIndicator;   //!< Indicator of whether we use MBTA(1) or not(0)
+  uint8_t m_arbitrationSlot; //!< Number of Arbitration Slots. Added by Ryu 2022/10/5
+  bool m_damsIndicator;   //!< Indicator of whether we use DAMS(1) or not(0)
+  uint16_t m_damsBoundary; //!< Boundary of frame length between UORA and UONRA
+  //END: MY CODE
+  
   /**
    * List of User Info fields
    */

@@ -47,7 +47,8 @@ RrMultiUserScheduler::GetTypeId (void)
                    "The maximum number of stations that can be granted an RU in a DL MU OFDMA transmission",
                    UintegerValue (4),
                    MakeUintegerAccessor (&RrMultiUserScheduler::m_nStations),
-                   MakeUintegerChecker<uint8_t> (1, 74))
+                  //  MakeUintegerChecker<uint8_t> (1, 74))
+                   MakeUintegerChecker<uint8_t> (1, 1000))
     .AddAttribute ("EnableTxopSharing",
                    "If enabled, allow A-MPDUs of different TIDs in a DL MU PPDU.",
                    BooleanValue (true),
@@ -137,6 +138,9 @@ MultiUserScheduler::TxFormat
 RrMultiUserScheduler::SelectTxFormat (void)
 {
   NS_LOG_FUNCTION (this);
+  // ----- BEGIN MY CODE ------
+  // m_edca->SetIsDlMuTx(false);
+  // ----- END MY CODE ------
 
   Ptr<const WifiMpdu> mpdu = m_edca->PeekNextMpdu (SINGLE_LINK_OP_ID);
 
@@ -148,7 +152,6 @@ RrMultiUserScheduler::SelectTxFormat (void)
   if (m_enableUlOfdma && m_enableBsrp && (GetLastTxFormat () == DL_MU_TX || !mpdu))
     {
       TxFormat txFormat = TrySendingBsrpTf ();
-
       if (txFormat != DL_MU_TX)
         {
           return txFormat;
@@ -353,6 +356,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
       NS_LOG_DEBUG ("No suitable station found");
+      // m_edca->SetIsDlMuTx(true);
       return TxFormat::DL_MU_TX;
     }
 
@@ -382,6 +386,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
   if (maxBufferSize == 0)
     {
+      // m_edca->SetIsDlMuTx(true);
       return DL_MU_TX;
     }
 

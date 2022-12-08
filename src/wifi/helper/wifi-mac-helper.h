@@ -23,6 +23,7 @@
 
 #include "ns3/object-factory.h"
 #include "ns3/wifi-standards.h"
+#include "ns3/mac48-address.h"
 
 namespace ns3 {
 
@@ -127,7 +128,13 @@ public:
    * This allows the ns3::WifiHelper class to create MAC objects from ns3::WifiHelper::Install.
    */
   virtual Ptr<WifiMac> Create (Ptr<WifiNetDevice> device, WifiStandard standard) const;
-
+  
+  //BEGIN: MY CODE
+  int GetUplinkNum(int n) const;
+  int GetConflictNum(void);
+  int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidateInfo(Mac48Address addr);
+  //END: MY CODE
 
 protected:
   ObjectFactory m_mac;                ///< MAC object factory

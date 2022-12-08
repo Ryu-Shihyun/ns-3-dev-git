@@ -111,8 +111,18 @@ public:
    *
    * \return the information required to solicit an UL MU transmission
    */
+  // BEGIN: MY CODE
   UlMuInfo& GetUlMuInfo (void);
 
+  int GetBasicPhaseNum(void) ;
+  
+  int GetBsrpPhaseNum(void) ;
+  
+  int GetConflictStaNum(void);
+
+  int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidates(Mac48Address addr);
+  // END: MY CODE
 protected:
   /**
    * Get the station manager attached to the AP.
