@@ -530,8 +530,14 @@ ChannelAccessManager::UpdateBackoff (void)
             }
           uint32_t n = std::min (nIntSlots, txop->GetBackoffSlots (m_linkId));
           NS_LOG_DEBUG ("dcf " << k << " dec backoff slots=" << n);
+          
           Time backoffUpdateBound = backoffStart + (n * GetSlot ());
           txop->UpdateBackoffSlotsNow (n, backoffUpdateBound, m_linkId);
+          //BEGIN: log for
+          if(n>0){
+            std::cout << "n:" << n << ". slot:" << GetSlot() << ". backoffUpdateBound:" << backoffUpdateBound << ". m_linkId:" << int(m_linkId)<< std::endl;
+          }
+          //End: log for
         }
       ++k;
     }

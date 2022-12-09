@@ -740,7 +740,14 @@ WifiMac::ConfigurePhyDependentParameters (uint8_t linkId)
   SetDsssSupported (standard == WIFI_STANDARD_80211b, linkId);
   SetErpSupported (standard >= WIFI_STANDARD_80211g
                     && m_links[linkId]->phy->GetPhyBand () == WIFI_PHY_BAND_2_4GHZ, linkId);
-
+  //BEGIN: Inspection CW
+  cwmin=15;
+  cwmax=15;
+  //END: Inspection CW
+  //BEGIN: Inspection CW
+  std::cout <<"TIME:"<<Simulator::Now() << ". Function:" << __func__ << ". cwmin:"<<cwmin << ". cwmax:" << cwmax << std::endl;
+  //END: Inspection CW
+  
   ConfigureContentionWindow (cwmin, cwmax);
 }
 

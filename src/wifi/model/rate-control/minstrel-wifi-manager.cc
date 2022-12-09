@@ -963,6 +963,10 @@ MinstrelWifiManager::CalculateTimeUnicastPacket (Time dataTransmissionTime, uint
 
   uint32_t cwMax = 1023;
   uint32_t cw = 31;
+  //BEGIN: Inspection CW
+  cw = 1;
+  cwMax=1;
+  //END: Inspection CW
   for (uint32_t retry = 0; retry < longRetries; retry++)
     {
       //Add one re-transmission (Data + Ack timeout)
@@ -974,7 +978,9 @@ MinstrelWifiManager::CalculateTimeUnicastPacket (Time dataTransmissionTime, uint
       //Update contention window
       cw = std::min (cwMax, (cw + 1) * 2);
     }
-
+  //BEGIN: log for
+  std::cout <<"TIME:"<<Simulator::Now() << ". Function:" << __func__ << ". cwmin:"<<cw << ". cwmax:" << cwMax << std::endl;
+  //END: log for
   return tt;
 }
 

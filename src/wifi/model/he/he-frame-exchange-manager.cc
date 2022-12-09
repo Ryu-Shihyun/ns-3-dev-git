@@ -161,11 +161,23 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
 
   if (txFormat == MultiUserScheduler::SU_TX)
     {
+      std::cout << "Time:" << Simulator::Now() << ". SU_TX" << std::endl;
       return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime, initialFrame);
     }
 
   if (txFormat == MultiUserScheduler::DL_MU_TX)
     {
+      //BEGIN: MY CODE
+      m_isbsrp = false; // added 10/28
+      if(m_candidate > m_max_candidate)
+      {
+        m_max_candidate = m_candidate;
+      }
+      std::cout << "Time:" << Simulator::Now() << ". DL_MU_TX" << std::endl;
+      std::cout << "empty:" << m_muScheduler->GetDlMuInfo ().psduMap.empty () << std::endl;
+      m_candidate = 0;
+      m_staRuInfo.clear();
+      //END: MY CODE
       if (m_muScheduler->GetDlMuInfo ().psduMap.empty ())
         {
           NS_LOG_DEBUG ("The Multi-user Scheduler returned DL_MU_TX with empty psduMap, do not transmit");
@@ -180,6 +192,14 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (txFormat == MultiUserScheduler::UL_MU_TX)
     {
       auto packet = Create<Packet> ();
+      //BEGIN: MY CODE
+      std::cout << "Time:" << Simulator::Now() << ". UL_MU_TX" << std::endl;
+      CtrlTriggerHeader& trigger_ptr = m_muScheduler->GetUlMuInfo ().trigger;
+      (!m_isbsrp) ? m_numBasic++ : m_numBsrp++;
+      trigger_ptr.SetMbtaIndicator(!m_isbsrp);
+      trigger_ptr.SetArbitrationSlots(m_slot);
+      //END: MY CODE
+      
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
       auto trigger = Create<WifiMpdu> (packet, m_muScheduler->GetUlMuInfo ().macHdr);
       SendPsduMapWithProtection (WifiPsduMap {{SU_STA_ID, GetWifiPsdu (trigger,
@@ -1471,6 +1491,23 @@ void
 HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSignalInfo,
                                      const WifiTxVector& txVector, bool inAmpdu)
 {
+  //BEGIN: MY CODE
+  if(m_txTimer.IsRunning()){
+    
+    std::cout << "Time:" << Simulator::Now()<<". " << __func__ << std::endl;
+    std::cout << "type: " << mpdu->GetHeader().GetTypeString() << std::endl;
+    std::cout << "txTimer: " << m_txTimer.GetReasonString(m_txTimer.GetReason()) << std::endl;
+    
+    if(m_txTimer.GetReason()==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF && mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA)
+    {
+      std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << std::endl;
+      UpdateSuccesses(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
+    }else{
+      std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". receiver: " << m_self << ". byte = " << mpdu->GetPacketSize() << std::endl;
+      
+    }
+  }
+  //END: MY CODE
   // The received MPDU is either broadcast or addressed to this station
   NS_ASSERT (mpdu->GetHeader ().GetAddr1 ().IsGroup ()
              || mpdu->GetHeader ().GetAddr1 () == m_self);
@@ -1843,11 +1880,17 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
             }
           else if (trigger.IsBsrp ())
             {
-              SetSuccesses(m_self);
-              if(trigger.GetArbitrationSlots()>0) {
-                // BEGIN: for log
+              
+              // BEGIN: for log
+                uint16_t staId = m_staMac->GetAssociationId ();
+                WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
+                auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+                 std::cout << "Time:" << Simulator::Now()<<". sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
                 m_candidate++;
+                SetSuccesses(m_self);
                 // END: for log
+              if(trigger.GetArbitrationSlots()>0) {
+                
 
                 // save info for arbitration phase
                 m_slot = trigger.GetArbitrationSlots();
@@ -1855,9 +1898,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
                 HeRuMap sri;
                 std::vector<HeRuMap>::iterator itr;
-                uint16_t staId = m_staMac->GetAssociationId ();
-                WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
-                auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+                
                 itr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool { return i.ru == ru; });
                 BusyTone busyTone = {staId, arbitrationNum,trigger, hdr, false};
                 if(itr==m_staRuInfo.end()){
@@ -1867,7 +1908,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 } else {
                   itr->bt.push_back(busyTone);
                 }
-                std::cout << "sta addr: " << m_self << ". staId:" << staId << std::endl;
+               
                 Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
                                    this, trigger, hdr,staId,ru,false);
               }else{

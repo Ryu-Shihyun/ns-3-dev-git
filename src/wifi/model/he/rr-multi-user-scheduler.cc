@@ -253,7 +253,10 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
       NS_LOG_DEBUG ("No suitable station");
       return txVector;
     }
-
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+  //END: log for
+  
   FinalizeTxVector (txVector);
   return txVector;
 }
@@ -703,11 +706,12 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
       NS_ASSERT (candidateIt != m_candidates.end ());
       auto mapIt = heMuUserInfoMap.find (candidateIt->first->aid);
       NS_ASSERT (mapIt != heMuUserInfoMap.end ());
-
+      std::cout << "Assign RU. staId:" << mapIt->first << ". RuSet:" << *ruSetIt << std::endl;
       txVector.SetHeMuUserInfo (mapIt->first,
                                 {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
                                  mapIt->second.mcs, mapIt->second.nss});
       candidateIt++;
+       
     }
 
   // remove candidates that will not be served
@@ -768,7 +772,9 @@ RrMultiUserScheduler::ComputeDlMuInfo (void)
     {
       return DlMuInfo ();
     }
-
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+  //END: log for
   DlMuInfo dlMuInfo;
   std::swap (dlMuInfo.txParams.m_txVector, m_txParams.m_txVector);
   FinalizeTxVector (dlMuInfo.txParams.m_txVector);

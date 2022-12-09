@@ -1684,6 +1684,12 @@ MinstrelHtWifiManager::CalculateRetransmits (MinstrelHtWifiRemoteStation *statio
   Time slotTime = GetPhy ()->GetSlot ();
   Time ackTime = GetPhy ()->GetSifs () + GetPhy ()->GetBlockAckTxTime ();
 
+  //BEGIN: Inspection CW
+  cw = 1;
+  cwMax=1;
+  //END: Inspection CW
+  
+
   if (station->m_groupsTable[groupId].m_ratesTable[rateId].ewmaProb < 1)
     {
       station->m_groupsTable[groupId].m_ratesTable[rateId].retryCount = 1;
@@ -1718,6 +1724,9 @@ MinstrelHtWifiManager::CalculateRetransmits (MinstrelHtWifiRemoteStation *statio
       while ((txTime < MilliSeconds (6))
              && (++station->m_groupsTable[groupId].m_ratesTable[rateId].retryCount < 7));
     }
+    //BEGIN: log for
+  std::cout <<"TIME:"<<Simulator::Now() << ". Function:" << __func__ << ". cwmin:"<<cw << ". cwmax:" << cwMax << std::endl;
+  //END: log for
 }
 
 double

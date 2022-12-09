@@ -295,6 +295,9 @@ Txop::UpdateFailedCw (uint8_t linkId)
 uint32_t
 Txop::GetBackoffSlots (uint8_t linkId) const
 {
+  //BEGIN: log for
+  std::cout << __func__ << ". linkId:" << int(linkId) << ". slot:" <<GetLink (linkId).backoffSlots << std::endl;
+  //END: log for
   return GetLink (linkId).backoffSlots;
 }
 
