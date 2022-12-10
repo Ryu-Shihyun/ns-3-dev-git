@@ -215,16 +215,20 @@ bool
 HeFrameExchangeManager::SendMpduFromBaManager (Ptr<QosTxop> edca, Time availableTime, bool initialFrame)
 {
   NS_LOG_FUNCTION (this << edca << availableTime << initialFrame);
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl; 
   // First, check if there is a BAR to be transmitted
   Ptr<const WifiMpdu> peekedItem = edca->GetBaManager ()->GetBar (false);
-
+  
   if (!peekedItem )
     {
       NS_LOG_DEBUG ("Block Ack Manager returned no frame to send");
       return false;
     }
-
+  //BEGIN: log for
+  std::cout << __func__ << ". type:" << peekedItem->GetHeader().GetTypeString() 
+           << ". To:" << peekedItem->GetHeader().GetAddr1() << ". From:" << peekedItem->GetHeader().GetAddr2() 
+           << ". byte:" << peekedItem->GetPacket()->GetSize() <<std::endl;  
+  //END: log for
   if (peekedItem->GetHeader ().IsBlockAckReq ())
     {
       // BlockAckReq are handled by the HT FEM
@@ -242,9 +246,16 @@ void
 HeFrameExchangeManager::SendPsduMapWithProtection (WifiPsduMap psduMap, WifiTxParameters& txParams)
 {
   NS_LOG_FUNCTION (this << &txParams);
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+    for(auto itr = psduMap.begin();itr!=psduMap.end();itr++){
+      std::cout << "type:"<< itr->second->GetHeader(0).GetTypeString() << ". to:" << itr->second->GetAddr1() 
+                << ". sender:" << m_self << ". byte = " << itr->second->GetPacket()->GetSize() << std::endl; 
+    }
   m_psduMap = std::move (psduMap);
   m_txParams = std::move (txParams);
+  //BEGIN: log for
+  
+  //END: log for
 
 #ifdef NS3_BUILD_PROFILE_DEBUG
   // If protection is required, the MPDUs must be stored in some queue because
@@ -335,7 +346,7 @@ HeFrameExchangeManager::SendPsduMap (void)
   Ptr<WifiMpdu> mpdu = nullptr;
   Ptr<WifiPsdu> psdu = nullptr;
   WifiTxVector txVector;
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << "m_self:" << m_self << std::endl;
   // Compute the type of TX timer to set depending on the acknowledgment method
 
   /*
@@ -497,6 +508,7 @@ HeFrameExchangeManager::SendPsduMap (void)
       // the PSDU map being sent must contain a (Basic) Trigger Frame
       NS_ASSERT (m_psduMap.size () == 1 && m_psduMap.begin ()->first == SU_STA_ID
                  && (mpdu = *m_psduMap.begin ()->second->begin ())->GetHeader ().IsTrigger ());
+      std::cout << "Time:" << Simulator::Now() << ". BASIC TF" << std::endl;
 
       WifiUlMuMultiStaBa* acknowledgment = static_cast<WifiUlMuMultiStaBa*> (m_txParams.m_acknowledgment.get ());
 
@@ -537,7 +549,9 @@ HeFrameExchangeManager::SendPsduMap (void)
       CtrlTriggerHeader& trigger = m_muScheduler->GetUlMuInfo ().trigger;
       NS_ASSERT (trigger.IsBsrp ());
       NS_ASSERT (m_apMac);
-
+      //BEGIN: log for
+      std::cout << "Time:" << Simulator::Now() << ". BSRP TF" << std::endl;
+      //END: log for
       // record the set of stations solicited by this Trigger Frame
       m_staExpectTbPpduFrom.clear ();
 
@@ -1300,6 +1314,7 @@ HeFrameExchangeManager::ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, c
   NS_ASSERT (m_staMac && m_staMac->IsAssociated ());
 
   NS_LOG_DEBUG ("Received a Trigger Frame (basic variant) soliciting a transmission");
+  std::cout << "Time:" << Simulator::Now() << ". " << __func__ << std::endl;
 
   if (trigger.GetCsRequired () && hdr.GetAddr2 () != m_txopHolder && m_navEnd > Simulator::Now ())
     {
@@ -1398,6 +1413,7 @@ HeFrameExchangeManager::SendQosNullFramesInTbPpdu (const CtrlTriggerHeader& trig
   NS_ASSERT (m_staMac && m_staMac->IsAssociated ());
 
   NS_LOG_DEBUG ("Requested to send QoS Null frames");
+  std::cout << "Time:" << Simulator::Now() << ". " << __func__ << std::endl;
 
   if (trigger.GetCsRequired () && hdr.GetAddr2 () != m_txopHolder && m_navEnd > Simulator::Now ())
     {
@@ -1875,20 +1891,26 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
             }
           else if (trigger.IsBasic ())
             {
+              //BEGIN: log for
+              uint16_t staId = m_staMac->GetAssociationId ();
+              WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
+              auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+              std::cout << "Time:" << Simulator::Now() << ". RECEIVE BASIC. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
+              //END: log for
               Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
                                    this, trigger, hdr);
             }
           else if (trigger.IsBsrp ())
             {
               
-              // BEGIN: for log
+              // BEGIN: MY CODE
                 uint16_t staId = m_staMac->GetAssociationId ();
                 WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
                 auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
-                 std::cout << "Time:" << Simulator::Now()<<". sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
+                 std::cout << "Time:" << Simulator::Now()<<". RECEIVE BSRP. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
                 m_candidate++;
                 SetSuccesses(m_self);
-                // END: for log
+                // END: My Code
               if(trigger.GetArbitrationSlots()>0) {
                 
 
@@ -1912,8 +1934,10 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 Simulator::Schedule(m_phy->GetSifs (), &HeFrameExchangeManager::SendBusyTone,
                                    this, trigger, hdr,staId,ru,false);
               }else{
-                Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
-                                   this, trigger, hdr);
+                //BEGIN: Inspection no BSRP
+                /* Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
+                                   this, trigger, hdr);*/
+                //END: Inspection no BSRP
               }
               // BEGIN: DEFAULT CODE
               // Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,

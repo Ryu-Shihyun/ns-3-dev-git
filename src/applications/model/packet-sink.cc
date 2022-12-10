@@ -209,6 +209,14 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
                        << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes");
+          //BEGIN: log for
+          std::cout << "At time " << Simulator::Now ().As (Time::S)
+                       << " packet sink received "
+                       <<  packet->GetSize () << " bytes from "
+                       << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
+                       << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
+                       << " total Rx " << m_totalRx << " bytes" << std::endl;
+          //END: log for
         }
       else if (Inet6SocketAddress::IsMatchingType (from))
         {
@@ -218,6 +226,14 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
                        << Inet6SocketAddress::ConvertFrom(from).GetIpv6 ()
                        << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes");
+          //BEGIN: log for
+          std::cout << "At time " << Simulator::Now ().As (Time::S)
+                       << " packet sink received "
+                       <<  packet->GetSize () << " bytes from "
+                       << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
+                       << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
+                       << " total Rx " << m_totalRx << " bytes" << std::endl;
+          //END: log for
         }
 
       if (!m_rxTrace.IsEmpty () || !m_rxTraceWithAddresses.IsEmpty () ||

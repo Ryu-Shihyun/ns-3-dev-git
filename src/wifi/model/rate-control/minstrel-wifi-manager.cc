@@ -964,8 +964,8 @@ MinstrelWifiManager::CalculateTimeUnicastPacket (Time dataTransmissionTime, uint
   uint32_t cwMax = 1023;
   uint32_t cw = 31;
   //BEGIN: Inspection CW
-  cw = 1;
-  cwMax=1;
+  // cw = 1;
+  // cwMax=1;
   //END: Inspection CW
   for (uint32_t retry = 0; retry < longRetries; retry++)
     {

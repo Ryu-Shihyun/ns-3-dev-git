@@ -1685,8 +1685,8 @@ MinstrelHtWifiManager::CalculateRetransmits (MinstrelHtWifiRemoteStation *statio
   Time ackTime = GetPhy ()->GetSifs () + GetPhy ()->GetBlockAckTxTime ();
 
   //BEGIN: Inspection CW
-  cw = 1;
-  cwMax=1;
+  // cw = 1;
+  // cwMax=1;
   //END: Inspection CW
   
 

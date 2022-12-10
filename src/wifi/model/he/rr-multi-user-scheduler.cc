@@ -678,7 +678,9 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
   std::size_t nCentral26TonesRus;
   HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_allowedWidth, nRusAssigned,
                                                            nCentral26TonesRus);
-
+  //BEGIN: log for
+  std::cout << "nRusAssigned:" << nRusAssigned << std::endl; 
+  //END: log for
   NS_LOG_DEBUG (nRusAssigned << " stations are being assigned a " << ruType << " RU");
 
   if (!m_useCentral26TonesRus || m_candidates.size () == nRusAssigned)
@@ -707,9 +709,17 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
       auto mapIt = heMuUserInfoMap.find (candidateIt->first->aid);
       NS_ASSERT (mapIt != heMuUserInfoMap.end ());
       std::cout << "Assign RU. staId:" << mapIt->first << ". RuSet:" << *ruSetIt << std::endl;
+      //BEGIN: Inspection No Bsrp Fixed-RU
       txVector.SetHeMuUserInfo (mapIt->first,
-                                {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
+                                {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
                                  mapIt->second.mcs, mapIt->second.nss});
+      //END: Inspection No Bsrp Fixed-RU
+
+      //BEGIN: Default
+      // txVector.SetHeMuUserInfo (mapIt->first,
+      //                           {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
+      //                            mapIt->second.mcs, mapIt->second.nss});
+      //END: Default
       candidateIt++;
        
     }
