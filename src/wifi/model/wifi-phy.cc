@@ -1568,6 +1568,8 @@ void
 WifiPhy::Send (Ptr<const WifiPsdu> psdu, const WifiTxVector& txVector)
 {
   NS_LOG_FUNCTION (this << *psdu << txVector);
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". type:" << psdu->GetHeader(0).GetTypeString() 
+                << ". addr1:"<<  psdu->GetAddr1() << ". addr2:" << psdu->GetAddr2() <<  ". byte:" << psdu->GetPacket()->GetSize() <<  std::endl; 
   Send (GetWifiConstPsduMap (psdu, txVector), txVector);
 }
 
@@ -1575,6 +1577,7 @@ void
 WifiPhy::Send (WifiConstPsduMap psdus, const WifiTxVector& txVector)
 {
   NS_LOG_FUNCTION (this << psdus << txVector);
+  
   /* Transmission can happen if:
    *  - we are syncing on a packet. It is the responsibility of the
    *    MAC layer to avoid doing this but the PHY does nothing to

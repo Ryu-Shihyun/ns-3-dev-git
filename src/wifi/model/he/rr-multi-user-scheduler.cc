@@ -146,6 +146,8 @@ RrMultiUserScheduler::SelectTxFormat (void)
 
   if (mpdu && !GetWifiRemoteStationManager ()->GetHeSupported (mpdu->GetHeader ().GetAddr1 ()))
     {
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX" << std::endl;
+
       return SU_TX;
     }
 
@@ -346,6 +348,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   if (m_staListUl.empty ())
     {
       NS_LOG_DEBUG ("No HE stations associated: return SU_TX");
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX" << std::endl; 
       return TxFormat::SU_TX;
     }
 
@@ -533,6 +536,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   if (m_staListDl[primaryAc].empty ())
     {
       NS_LOG_DEBUG ("No HE stations associated: return SU_TX");
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX. No HE stations associtated" << std::endl; 
       return TxFormat::SU_TX;
     }
 
@@ -659,6 +663,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
           return NO_TX;
         }
       NS_LOG_DEBUG ("The AP does not have suitable frames to transmit: return SU_TX");
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX. The AP does not have suitable frames to transmit" << std::endl; 
       return SU_TX;
     }
 

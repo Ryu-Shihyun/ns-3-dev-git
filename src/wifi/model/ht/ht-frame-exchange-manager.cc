@@ -379,6 +379,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (!peekedItem)
     {
       NS_LOG_DEBUG ("No frames available for transmission");
+      std::cout << "ht StartFrame :no frame available" << std::endl;
       return false;
     }
 
@@ -395,6 +396,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
                                                                                             hdr.GetAddr1 ()));
       SendAddBaRequest (hdr.GetAddr1 (), hdr.GetQosTid (), startingSeq,
                         edca->GetBlockAckInactivityTimeout (), true);
+      std::cout << "ht StartFrame :sendAddBaReq" << std::endl;
       return true;
     }
 
@@ -402,6 +404,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (hdr.IsQosData () && !hdr.GetAddr1 ().IsGroup () && !peekedItem->IsFragment ()
       && !GetWifiRemoteStationManager ()->NeedFragmentation (peekedItem))
     {
+      std::cout << "ht StartFrame :send Data Frame" << std::endl;
       return SendDataFrame (peekedItem, availableTime, initialFrame);
     }
 
@@ -944,6 +947,8 @@ HtFrameExchangeManager::ForwardPsduDown (Ptr<const WifiPsdu> psdu, WifiTxVector&
   NS_LOG_FUNCTION (this << psdu << txVector);
 
   NS_LOG_DEBUG ("Transmitting a PSDU: " << *psdu << " TXVECTOR: " << txVector);
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". type:" << psdu->GetHeader(0).GetTypeString() 
+                << ". addr1:"<<  psdu->GetAddr1() << ". addr2:" << psdu->GetAddr2() <<  ". byte:" << psdu->GetPacket()->GetSize() <<  std::endl; 
   NotifyTxToEdca (psdu);
 
   if (psdu->IsAggregate ())

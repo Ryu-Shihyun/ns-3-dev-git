@@ -988,7 +988,10 @@ FrameExchangeManager::Receive (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalIn
       // for A-MPDUs, we get here only once
       PreProcessFrame (psdu, txVector);
     }
-
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". type:" << psdu->GetHeader(0).GetTypeString() 
+            << ". addr1:"<<  psdu->GetAddr1() << ". addr2:" << psdu->GetAddr2() << ". m_self:" <<m_self << ". byte:" << psdu->GetPacket()->GetSize() <<  std::endl;        
+  //END: log for 
   // ignore unicast frames that are not addressed to us
   Mac48Address addr1 = psdu->GetAddr1 ();
   if (!addr1.IsGroup () && addr1 != m_self)
@@ -996,6 +999,7 @@ FrameExchangeManager::Receive (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalIn
       if (m_promisc && psdu->GetNMpdus () == 1 && psdu->GetHeader (0).IsData ())
         {
           m_rxMiddle->Receive (*psdu->begin (), m_linkId);
+          
         }
       return;
     }
