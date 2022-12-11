@@ -715,15 +715,15 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
       NS_ASSERT (mapIt != heMuUserInfoMap.end ());
       std::cout << "Assign RU. staId:" << mapIt->first << ". RuSet:" << *ruSetIt << std::endl;
       //BEGIN: Inspection No Bsrp Fixed-RU
-      txVector.SetHeMuUserInfo (mapIt->first,
-                                {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
-                                 mapIt->second.mcs, mapIt->second.nss});
+      // txVector.SetHeMuUserInfo (mapIt->first,
+                                // {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
+                                //  mapIt->second.mcs, mapIt->second.nss});
       //END: Inspection No Bsrp Fixed-RU
 
       //BEGIN: Default
-      // txVector.SetHeMuUserInfo (mapIt->first,
-      //                           {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
-      //                            mapIt->second.mcs, mapIt->second.nss});
+      txVector.SetHeMuUserInfo (mapIt->first,
+                                {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
+                                 mapIt->second.mcs, mapIt->second.nss});
       //END: Default
       candidateIt++;
        

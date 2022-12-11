@@ -1937,8 +1937,8 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                                    this, trigger, hdr,staId,ru,false);
               }else{
                 //BEGIN: Inspection no BSRP
-                /* Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
-                                   this, trigger, hdr);*/
+                Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
+                                   this, trigger, hdr);
                 //END: Inspection no BSRP
               }
               // BEGIN: DEFAULT CODE
