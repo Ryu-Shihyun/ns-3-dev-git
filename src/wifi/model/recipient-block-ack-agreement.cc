@@ -86,6 +86,7 @@ RecipientBlockAckAgreement::PassBufferedMpdusUntilFirstLost (void)
   while (it != m_bufferedMpdus.end () && it->first.first == m_winStartB)
     {
       NS_LOG_DEBUG ("Forwarding up: " << *it->second);
+      std::cout << "Function:" << __func__ << ". Forwarding up: " << *it->second << ". m_winStartB: " << int(m_winStartB) << std::endl;
       m_rxMiddle->Receive (it->second, WIFI_LINKID_UNDEFINED);
       it = m_bufferedMpdus.erase (it);
       m_winStartB = (m_winStartB + 1) % SEQNO_SPACE_SIZE;
@@ -108,6 +109,7 @@ RecipientBlockAckAgreement::PassBufferedMpdusWithSeqNumberLessThan (uint16_t new
          && GetDistance (it->first.first, m_winStartB) < GetDistance (newWinStartB, m_winStartB))
     {
       NS_LOG_DEBUG ("Forwarding up: " << *it->second);
+      std::cout << "Function:" << __func__ << ". Forwarding up: " << *it->second << ". m_winStartB: " << int(m_winStartB) << ". newWinStartB: " << int(newWinStartB) << std::endl;
       m_rxMiddle->Receive (it->second, WIFI_LINKID_UNDEFINED);
       it = m_bufferedMpdus.erase (it);
     }

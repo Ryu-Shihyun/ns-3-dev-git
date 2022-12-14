@@ -626,13 +626,14 @@ void
 HtFrameExchangeManager::TransmissionSucceeded (void)
 {
   NS_LOG_DEBUG (this);
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
   if (m_edca && m_edca->GetTxopLimit (m_linkId).IsZero () && m_edca->GetBaManager ()->GetBar (false))
     {
       // A TXOP limit of 0 indicates that the TXOP holder may transmit or cause to
       // be transmitted (as responses) the following within the current TXOP:
       // f) Any number of BlockAckReq frames
       // (Sec. 10.22.2.8 of 802.11-2016)
+      std::cout << "Schedule a transmission from Block Ack Manager in a SIFS" << std::endl;
       NS_LOG_DEBUG ("Schedule a transmission from Block Ack Manager in a SIFS");
       bool (HtFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &HtFrameExchangeManager::StartTransmission;
 
@@ -641,6 +642,8 @@ HtFrameExchangeManager::TransmissionSucceeded (void)
     }
   else
     {
+      std::cout << "qosFem::TransmissionSucceeded" << std::endl;
+      
       QosFrameExchangeManager::TransmissionSucceeded ();
     }
 }
@@ -1421,12 +1424,16 @@ HtFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
           // a Block Ack agreement has been established
           NS_LOG_DEBUG ("Received from=" << hdr.GetAddr2 ()
                         << " (" << *mpdu << ")");
-
+          std::cout << "Function:" << __func__ << "_fem. Received from=" << hdr.GetAddr2 ()
+                        << " (" << *mpdu << ")" << std::endl;
+          
           agreementIt->second.NotifyReceivedMpdu (mpdu);
 
           if (!inAmpdu && hdr.GetQosAckPolicy () == WifiMacHeader::NORMAL_ACK)
             {
               NS_LOG_DEBUG ("Schedule Normal Ack");
+              std::cout << "Function:" << __func__ << "_htFem. Schedule Normal Ack" << std::endl;
+          
               Simulator::Schedule (m_phy->GetSifs (), &HtFrameExchangeManager::SendNormalAck,
                                    this, hdr, txVector, rxSnr);
             }

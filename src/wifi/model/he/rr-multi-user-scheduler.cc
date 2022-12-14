@@ -271,6 +271,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   if (m_staListUl.empty ())
     {
       NS_LOG_DEBUG ("No HE stations associated: return SU_TX");
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX. No HE stations associated" << std::endl;
       return TxFormat::SU_TX;
     }
 
@@ -279,6 +280,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
       NS_LOG_DEBUG ("No suitable station found");
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun DlMuTX" << std::endl;
       return TxFormat::DL_MU_TX;
     }
 
@@ -336,7 +338,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
                                                                                        m_apMac->GetWifiPhy ()->GetPhyBand ());
   NS_LOG_DEBUG ("Duration of QoS Null frames: " << qosNullTxDuration.As (Time::MS));
   m_trigger.SetUlLength (ulLength);
-
+  std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun UlMuTX" << std::endl;
   return UL_MU_TX;
 }
 
@@ -363,6 +365,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
     {
       NS_LOG_DEBUG ("No suitable station found");
       // m_edca->SetIsDlMuTx(true);
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun DlMuTX. No suitable station found" << std::endl;
       return TxFormat::DL_MU_TX;
     }
 
@@ -393,6 +396,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   if (maxBufferSize == 0)
     {
       // m_edca->SetIsDlMuTx(true);
+      std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun DlMuTX. maxBufferSize is 0" << std::endl;
       return DL_MU_TX;
     }
 
@@ -490,7 +494,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
     }
 
   UpdateCredits (m_staListUl, maxDuration, txVector);
-
+  std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun UlMuTX. " << std::endl;
   return UL_MU_TX;
 }
 
@@ -666,7 +670,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
       std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX. The AP does not have suitable frames to transmit" << std::endl; 
       return SU_TX;
     }
-
+  std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun DlMuTX" << std::endl;
   return TxFormat::DL_MU_TX;
 }
 
@@ -716,8 +720,8 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
       std::cout << "Assign RU. staId:" << mapIt->first << ". RuSet:" << *ruSetIt << std::endl;
       //BEGIN: Inspection No Bsrp Fixed-RU
       // txVector.SetHeMuUserInfo (mapIt->first,
-                                // {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
-                                //  mapIt->second.mcs, mapIt->second.nss});
+      //                           {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
+      //                            mapIt->second.mcs, mapIt->second.nss});
       //END: Inspection No Bsrp Fixed-RU
 
       //BEGIN: Default

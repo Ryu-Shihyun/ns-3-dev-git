@@ -1016,10 +1016,12 @@ FrameExchangeManager::Receive (Ptr<const WifiPsdu> psdu, RxSignalInfo rxSignalIn
           GetWifiRemoteStationManager ()->ReportRxOk (psdu->GetHeader (0).GetAddr2 (),
                                                              rxSignalInfo, txVector);
         }
+        std::cout << typeid(this).name() << ":ReceiveMpdu" << std::endl; 
       ReceiveMpdu (*(psdu->begin ()), rxSignalInfo, txVector, perMpduStatus.empty ());
     }
   else
     {
+      std::cout << typeid(this).name() << ":EndReceiveMpdu" << std::endl;
       EndReceiveAmpdu (psdu, rxSignalInfo, txVector, perMpduStatus);
     }
 }
@@ -1187,6 +1189,7 @@ FrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSign
       if (hdr.GetAddr1 () == m_self)
         {
           NS_LOG_DEBUG ("Received " << hdr.GetTypeString () << " from=" << hdr.GetAddr2 () << ", schedule ACK");
+          std::cout << "Function:" << __func__ << "_fem. Recived "<< hdr.GetTypeString () << " from=" << hdr.GetAddr2 () << ", schedule ACK" << std::endl;
           Simulator::Schedule (m_phy->GetSifs (), &FrameExchangeManager::SendNormalAck,
                                this, hdr, txVector, rxSnr);
         }

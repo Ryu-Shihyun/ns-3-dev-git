@@ -218,7 +218,7 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
         {
           // starting a new TXOP
           m_edca->NotifyChannelAccessed (m_linkId, txopDuration);
-
+          std::cout << "Time:"<<Simulator::Now() << ". Function:" << __func__ << "_qos. txopDuration:" << txopDuration << std::endl;//Check availableTime
           if (StartFrameExchange (m_edca, txopDuration, true))
             {
               m_initialFrame = true;
@@ -234,10 +234,12 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
 
       // We are continuing a TXOP, check if we can transmit another frame
       NS_ASSERT (!m_initialFrame);
-
+      std::cout << "Time:"<<Simulator::Now() << ". Function:" << __func__ << "_qos. getremainingTxop:" << m_edca->GetRemainingTxop (m_linkId) << std::endl;//Check availableTime
+          
       if (!StartFrameExchange (m_edca, m_edca->GetRemainingTxop (m_linkId), false))
         {
           NS_LOG_DEBUG ("Not enough remaining TXOP time");
+          std::cout << typeid(this).name() << ":Not enough remaining TXOP time" << std::endl;
           return SendCfEndIfNeeded ();
         }
 
@@ -246,14 +248,16 @@ QosFrameExchangeManager::StartTransmission (Ptr<QosTxop> edca, Time txopDuration
 
   // we get here if TXOP limit is null
   m_initialFrame = true;
-
+  std::cout << "Time:"<<Simulator::Now() << ". Function:" << __func__ << "_qos. Time::Min():" << Time::Min() << std::endl;//Check availableTime
+      
   if (StartFrameExchange (m_edca, Time::Min (), true))
     {
       m_edca->NotifyChannelAccessed (m_linkId, Seconds (0));
       return true;
     }
 
-  NS_LOG_DEBUG ("No frame transmitted");
+  NS_LOG_DEBUG ("No frame transmitted"); 
+  std::cout << this << ": No frame transmitted"<< std::endl;
   m_edca->NotifyChannelReleased (m_linkId);
   m_edca = 0;
   return false;
@@ -265,7 +269,7 @@ QosFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTi
   NS_LOG_FUNCTION (this << edca << availableTime << initialFrame);
 
   Ptr<WifiMpdu> mpdu = edca->PeekNextMpdu (m_linkId);
-
+  std::cout << "Time:"<<Simulator::Now() << ". Function:" << __func__ << "_QosFem. " << std::endl;
   // Even though channel access is requested when the queue is not empty, at
   // the time channel access is granted the lifetime of the packet might be
   // expired and the queue might be empty.
@@ -551,6 +555,7 @@ QosFrameExchangeManager::TransmissionSucceeded (void)
       && m_edca->GetRemainingTxop (m_linkId) > m_phy->GetSifs ())
     {
       NS_LOG_DEBUG ("Schedule another transmission in a SIFS");
+      std::cout  <<"Schedule another transmission in a SIFS_Qos. sifs:" << m_phy->GetSifs() << std::endl;
       bool (QosFrameExchangeManager::*fp) (Ptr<QosTxop>, Time) = &QosFrameExchangeManager::StartTransmission;
 
       // we are continuing a TXOP, hence the txopDuration parameter is unused
@@ -558,6 +563,7 @@ QosFrameExchangeManager::TransmissionSucceeded (void)
     }
   else
     {
+      std::cout << "channel released in qosFem"<< std::endl; 
       m_edca->NotifyChannelReleased (m_linkId);
       m_edca = 0;
     }

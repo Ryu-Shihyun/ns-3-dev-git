@@ -320,7 +320,7 @@ int main (int argc, char *argv[])
               discStaPos->SetZ(0.0);
               Vector v = discStaPos->GetNext();
               positionAlloc->Add (v);
-              // std::cout << "STA" << i << "\t\t" << v.x <<"\t\t" << v.y << "\n";
+              std::cout << "STA" << i << "\t\t" << v.x <<"\t\t" << v.y << "\n";
             }
               
               mobility.SetPositionAllocator (positionAlloc);

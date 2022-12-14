@@ -141,6 +141,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
 
   MultiUserScheduler::TxFormat txFormat = MultiUserScheduler::SU_TX;
   Ptr<const WifiMpdu> mpdu;
+ 
 
   /*
    * We consult the Multi-user Scheduler (if available) to know the type of transmission to make if:
@@ -149,6 +150,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
    *   or the next frame in the AC queue is a non-broadcast QoS data frame addressed to
    *   a receiver with which a BA agreement has been already established
    */
+  
   if (m_muScheduler
       && !edca->GetBaManager ()->GetBar (false)
       && (!(mpdu = edca->PeekNextMpdu (m_linkId))
@@ -158,9 +160,21 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
     {
       txFormat = m_muScheduler->NotifyAccessGranted (edca, availableTime, initialFrame, m_allowedWidth);
     }
+  //BEGIN: CHECK SU_TX
+  // std::cout << "!edca->getBAmanager()->GetBar(false):" << !edca->GetBaManager ()->GetBar (false) 
+  //           << ".!(mpdu = edca->PeekNextMpdu (m_linkId)):" << (mpdu == 0)  
+  //           << ".mpdu->GetHeader ().IsQosData ()" << mpdu->GetHeader ().IsQosData () 
+  //           << ".!mpdu->GetHeader ().GetAddr1 ().IsGroup ()"<< !mpdu->GetHeader ().GetAddr1 ().IsGroup ()
+  //           <<".edca->GetBaAgreementEstablished (mpdu->GetHeader ().GetAddr1 (), mpdu->GetHeader ().GetQosTid ())" <<edca->GetBaAgreementEstablished (mpdu->GetHeader ().GetAddr1 (), mpdu->GetHeader ().GetQosTid ()) <<std::endl;
+
+  //END: CHECK SU_TX
+  std::cout << "m_self:" << m_self << std::endl;
+  std::cout << "availableTime:" << availableTime << std::endl;
 
   if (txFormat == MultiUserScheduler::SU_TX)
     {
+      // std::cout << "!edca->getBAmanager()->GetBar(false):" << !edca->GetBaManager ()->GetBar (false) << ".!(mpdu = edca->PeekNextMpdu (m_linkId)):" <<!(mpdu = edca->PeekNextMpdu (m_linkId))  << std::endl; 
+  
       std::cout << "Time:" << Simulator::Now() << ". SU_TX" << std::endl;
       return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime, initialFrame);
     }
@@ -627,11 +641,16 @@ HeFrameExchangeManager::SendPsduMap (void)
           psdu.second->SetDuration (durationId);
         }
     }
-
+  // std::cout << "Function:" << __func__ <<  std::endl;
+  // if(m_self != 0) std::cout << "m_self:" << m_self << std::endl;
+  // if(timerType != 0) std::cout << "timerType:" << timerType << std::endl;
   if (timerType == WifiTxTimer::NOT_RUNNING)
     {
+      std::cout << "Not_RUNNING" << std::endl;
+      std::cout << "txDuration:" << txDuration << std::endl;
       if (!m_txParams.m_txVector.IsUlMu ())
         {
+          std::cout << "is not ulMU" << std::endl;
           Simulator::Schedule (txDuration, &HeFrameExchangeManager::TransmissionSucceeded, this);
         }
     }
@@ -640,30 +659,36 @@ HeFrameExchangeManager::SendPsduMap (void)
       Time timeout = txDuration + m_phy->GetSifs () + m_phy->GetSlot ()
                      + m_phy->CalculatePhyPreambleAndHeaderDuration (*responseTxVector);
       m_channelAccessManager->NotifyAckTimeoutStartNow (timeout);
-
+     std::cout << "txDuration:" << txDuration << ". sifs:" << m_phy->GetSifs() << ". slot" << m_phy->GetSlot()
+               << ". preamble and header:" <<  m_phy->CalculatePhyPreambleAndHeaderDuration (*responseTxVector) << std::endl;
       // start timer
       switch (timerType)
         {
           case WifiTxTimer::WAIT_NORMAL_ACK_AFTER_DL_MU_PPDU:
             NS_ASSERT (mpdu);
+            std::cout << "WAIT_NORMAL_ACK_AFTER_DL_MU_PPDU."<< m_self <<  std::endl;
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::NormalAckTimeout,
                           this, mpdu, m_txParams.m_txVector);
             break;
           case WifiTxTimer::WAIT_BLOCK_ACK:
             NS_ASSERT (psdu);
+            std::cout << "WAIT_BLOCK_ACK."<< m_self<< std::endl;
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::BlockAckTimeout,
                           this, psdu, m_txParams.m_txVector);
             break;
           case WifiTxTimer::WAIT_BLOCK_ACKS_IN_TB_PPDU:
+          std::cout << "WAIT_BLOCK_ACKS_IN_TB_PPDU."<< m_self <<  std::endl;
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::BlockAcksInTbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             break;
           case WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF:
           case WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF:
+           std::cout << "WAIT_TB_PPDU_AFTER_BASIC_TF or WAIT_QOS_NULL_AFTER_BSRP_TF."<< m_self <<  std::endl;
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::TbPpduTimeout, this,
                           &m_psduMap, &m_staExpectTbPpduFrom, m_staExpectTbPpduFrom.size ());
             break;
           case WifiTxTimer::WAIT_BLOCK_ACK_AFTER_TB_PPDU:
+           std::cout << "WAIT_BLOCK_ACK_AFTER_TB_PPDU."<< m_self <<  std::endl;
             m_txTimer.Set (timerType, timeout, &HeFrameExchangeManager::BlockAckAfterTbPpduTimeout,
                           this, m_psduMap.begin ()->second, m_txParams.m_txVector);
             break;
@@ -1305,6 +1330,7 @@ HeFrameExchangeManager::SendMultiStaBlockAck (const WifiTxParameters& txParams)
   m_psduMap.clear ();
   m_edca->ResetCw (m_linkId);
   m_muSnrTag.Reset ();
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". txDuration:" << txDuration << std::endl;
   Simulator::Schedule (txDuration, &HeFrameExchangeManager::TransmissionSucceeded, this);
 }
 
@@ -1594,6 +1620,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
       // Schedule the transmission of a Multi-STA BlockAck frame if needed
       if (!acknowledgment->stationsReceivingMultiStaBa.empty () && !m_multiStaBaEvent.IsRunning ())
         {
+          
           m_multiStaBaEvent = Simulator::Schedule (m_phy->GetSifs (),
                                                    &HeFrameExchangeManager::SendMultiStaBlockAck,
                                                    this, std::cref (m_txParams));
