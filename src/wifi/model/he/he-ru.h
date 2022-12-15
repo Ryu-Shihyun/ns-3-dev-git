@@ -243,6 +243,7 @@ public:
    */
   static RuType GetRuType (uint16_t bandwidth);
 
+  //BEGIN: Default
   /**
    * Given the channel bandwidth and the number of stations candidate for being
    * assigned an RU, maximize the number of candidate stations that can be assigned
@@ -258,6 +259,12 @@ public:
    */
   static RuType GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
                                              std::size_t& nCentral26TonesRus);
+  //END: Default
+  static RuType GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
+                                             std::size_t& nCentral26TonesRus,bool isBsrp);
+  //BEGIN: My Code
+
+  //END: My Code
 
   /// (bandwidth, number of tones) pair
   typedef std::pair<uint8_t, RuType> BwTonesPair;

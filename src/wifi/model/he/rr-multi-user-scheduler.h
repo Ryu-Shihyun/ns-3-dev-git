@@ -86,6 +86,7 @@ private:
    */
   virtual TxFormat TrySendingDlMuPpdu (void);
 
+  //BEGIN: Default
   /**
    * Compute a TXVECTOR that can be used to construct a Trigger Frame to solicit
    * transmissions from suitable stations, i.e., stations that have established a
@@ -98,6 +99,12 @@ private:
    */
   template <class Func>
   WifiTxVector GetTxVectorForUlMu (Func canBeSolicited);
+  //END: Default
+
+  //BEGIN: My Code My Code Ru Random Assign
+  template <class Func>
+  WifiTxVector GetTxVectorForUlMu (Func canBeSolicited,bool isBsrp);
+  //END: My Code My Code Ru Random Assign
 
   /**
    * Notify the scheduler that a station associated with the AP
@@ -124,6 +131,7 @@ private:
     double credits;               //!< credits accumulated by the station
   };
 
+  //BEGIN: Default
   /**
    * Finalize the given TXVECTOR by only including the largest subset of the
    * current set of candidate stations that can be allocated equal-sized RUs
@@ -136,6 +144,12 @@ private:
    * \param txVector the given TXVECTOR
    */
   void FinalizeTxVector (WifiTxVector& txVector);
+  //END: Default
+
+  //BEGIN: My Code Ru Random Assign
+  void FinalizeTxVector (WifiTxVector& txVector, bool isBsrp);
+  //END: My Code Ru Random Assign
+
   /**
    * Update credits of the stations in the given list considering that a PPDU having
    * the given duration is being transmitted or solicited by using the given TXVECTOR.

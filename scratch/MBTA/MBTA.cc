@@ -45,6 +45,7 @@
 #include "ns3/multi-user-scheduler.h"
 #include <unistd.h>
 #include "ns3/rr-multi-user-scheduler.h"
+#include <string>
 
 // This is a simple example in order to show how to configure an IEEE 802.11ax Wi-Fi network.
 //
@@ -92,6 +93,8 @@ int main (int argc, char *argv[])
   int maxAccessDevices{18};
   int bitRateVariable{1500};
   int warmUpTime{40};
+  std::string csvOption = "default";
+
   CommandLine cmd (__FILE__);
   cmd.AddValue ("frequency", "Whether working in the 2.4, 5 or 6 GHz band (other values gets rejected)", frequency);
   cmd.AddValue ("downlink", "Generate downlink flows if set to 1, uplink flows otherwise", downlink);
@@ -113,6 +116,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("maxAccessDevices", "the maximum number of stations taht can be granted an RU", maxAccessDevices);
   cmd.AddValue ("bitRateVariable", "the maximum number of stations taht can be granted an RU", bitRateVariable);
   cmd.AddValue("warmUpTime","Set the time when clients start transmission. It is for Association time",warmUpTime);
+  cmd.AddValue ("option","Set csv file name",csvOption);
   
   cmd.Parse (argc,argv);
 
@@ -176,9 +180,15 @@ int main (int argc, char *argv[])
   // }
 
   //modify maxAccessDevices;
+  warmUpTime = (nStations+4)/5;
   maxAccessDevices = nStations;
-  std::ofstream ofs("test.csv");
-  ofs << "index,Mac Address,candidate,Success Receive to AP, total Packet Size" << std::endl;
+  std::string ulName =(enableBsrp) ? "UONRA" : "UORA";
+  std::stringstream csvName;
+  csvName << "Sta" << nStations << "_slot0_Warm" << warmUpTime << "_Sim" << simulationTime <<"_Rate" << payloadSize*8*bitRateVariable/1000000 << "M_payload" << payloadSize << "_" << ulName; 
+  std::string fileName = "./data/"+csvName.str() + "_"+csvOption+".csv";
+  
+  std::ofstream ofs(fileName);
+  ofs << "index,IP Address,candidate,Success Receive to AP, total Packet Size,Average Duration of Transmission" << std::endl;
   std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n';
   int minMcs = 0;
   int maxMcs = 11;
@@ -405,10 +415,10 @@ int main (int argc, char *argv[])
                     }
                 }
             
-            // std::cout << "AP adress" << "\t\t" << apNodeInterface.GetAddress(0,0) << std::endl;
-            // for(int i=0;i<nStations;i++){
-            //   std::cout << "STA"<< i <<" adress" << "\t\t" << staNodeInterfaces.GetAddress(i,0) << std::endl;  
-            // }
+            std::cout << "AP adress" << "\t\t" << apNodeInterface.GetAddress(0,0) << std::endl;
+            for(int i=0;i<nStations;i++){
+              std::cout << "STA"<< i <<" adress" << "\t\t" << staNodeInterfaces.GetAddress(i,0) << std::endl;  
+            }
             // for(auto sta_ptr = staDevices.Begin();sta_ptr!=staDevices.End();sta_ptr++){
             //   std::cout << "Sta::Address: " << sta_ptr->GetAddress() << ". ID: " << sta_ptr->GetNode()->GetId() << std::endl;
             // }
@@ -433,6 +443,8 @@ int main (int argc, char *argv[])
               // that the throughput cannot decrease by introducing a scaling factor (or tolerance)
               double tolerance = 0.10;
               uint64_t rxBytes = 0;
+              typedef std::pair<Ipv4Address, Time> averageDelay;
+              std::vector <averageDelay> v;
               if (udp)
                 {
                   for (uint32_t i = 0; i < serverApp.GetN (); i++)
@@ -446,6 +458,12 @@ int main (int argc, char *argv[])
                     {
                       // ofs << i << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetTotalRx ()*8 << "," <<payloadSize << "," << DynamicCast<PacketSink> (serverApp.Get (i))->GetReceiveCount() << std::endl;
                       rxBytes += DynamicCast<PacketSink> (serverApp.Get (i))->GetTotalRx ();
+                      // for(int staIndex=0;staIndex<wifiStaNodes.GetN();staIndex++){
+                      //   auto addr = staNodeInterfaces.GetAddress(staIndex,0);
+                      //   std::cout << "sta"<< staIndex << "'s address:" << addr << ". delay:" << DynamicCast<PacketSink> (serverApp.Get (i))->GetAverageDelay(addr) << std::endl;
+                      //   v.push_back({addr,DynamicCast<PacketSink> (serverApp.Get (i))->GetAverageDelay(addr)});
+                      // }
+                      
                     }
                 }
               double throughput = (rxBytes * 8) / (simulationTime * 1000000.0); //Mbit/s
@@ -454,8 +472,14 @@ int main (int argc, char *argv[])
               int conflictStaNum = mac.GetConflictNum();
               int maxCandidates = mac.GetMaxCandidatesNum();
             for (int i=0; i<wifiStaNodes.GetN(); i++) {
-              auto candidateInfo = mac.GetCandidateInfo(Mac48Address::ConvertFrom(wifiStaNodes.Get(i)->GetDevice(0)->GetAddress()));
-              ofs << i << "," <<  wifiStaNodes.Get(i)->GetDevice(0)->GetAddress() << "," <<  candidateInfo.at(0)<< "," <<  candidateInfo.at(1)<< "," <<  candidateInfo.at(2) << std::endl;
+              Address addr = wifiStaNodes.Get(i)->GetDevice(0)->GetAddress();
+              auto candidateInfo = mac.GetCandidateInfo(Mac48Address::ConvertFrom(addr));
+              auto ipAddr= staNodeInterfaces.GetAddress(i,0);
+              // auto v_ptr = std::find_if(v.begin(),v.end(),
+              //                     [&ipAddr] (averageDelay pair)
+              //               { return pair.first == ipAddr; });
+              // std::cout << ipAddr << ((v_ptr!=v.end()) ? "true" : "false") << std::endl;
+              ofs << i << "," <<  ipAddr << "," <<  candidateInfo.at(0)<< "," <<  candidateInfo.at(1)<< "," <<  candidateInfo.at(2) /*<<"," << v_ptr->second */<< std::endl;
             }
               Simulator::Destroy ();
               // std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n'; 

@@ -27,6 +27,7 @@
 #include "he-frame-exchange-manager.h"
 #include "he-configuration.h"
 #include "he-phy.h"
+#include "ns3/rng-seed-manager.h"
 #include <algorithm>
 #include <numeric>
 
@@ -208,10 +209,11 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
          && txVector.GetHeMuUserInfoMap ().size () < std::min<std::size_t> (m_nStations, count + nCentral26TonesRus))
     {
       NS_LOG_DEBUG ("Next candidate STA (MAC=" << staIt->address << ", AID=" << staIt->aid << ")");
-
+      std::cout << "Next candidate STA(MAC=" << staIt->address << ", AID=" << staIt->aid << ")" << std::endl;
       if (!canbeSolicited (*staIt))
         {
           NS_LOG_DEBUG ("Skipping station based on provided function object");
+          std::cout << "Skipping station based on provided function object" << std::endl;
           staIt++;
           continue;
         }
@@ -274,8 +276,13 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
       std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun SU_TX. No HE stations associated" << std::endl;
       return TxFormat::SU_TX;
     }
-
-  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  //BEGIN: Default
+  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  //END: Default
+  
+  //BEGIN: My Code Ru Random Assign
+  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
+  //END:  My Code Ru Random Assign
 
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
@@ -356,7 +363,12 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
   // check if an UL OFDMA transmission is possible after a DL OFDMA transmission
   NS_ABORT_MSG_IF (m_ulPsduSize == 0, "The UlPsduSize attribute must be set to a non-null value");
-
+  //BEGIN: log for
+  for(auto info : m_staListUl)
+  {
+    std::cout << "Sta:" << info.address << ". maxBufferStatus:" << m_apMac->GetMaxBufferStatus(info.address) << std::endl;
+  }
+  //END: log for
   // only consider stations that do not have reported a null queue size
   WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
                                               { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
@@ -674,6 +686,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
   return TxFormat::DL_MU_TX;
 }
 
+//BEGIN Default
 void
 RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
 {
@@ -736,6 +749,7 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector)
   // remove candidates that will not be served
   m_candidates.erase (candidateIt, m_candidates.end ());
 }
+//END: Default
 
 void
 RrMultiUserScheduler::UpdateCredits (std::list<MasterInfo>& staList, Time txDuration,
@@ -871,5 +885,180 @@ RrMultiUserScheduler::ComputeUlMuInfo (void)
 {
   return UlMuInfo {m_trigger, m_triggerMacHdr, std::move (m_txParams)};
 }
+
+//BEGIN: My Code My Code Ru Random Assign
+template <class Func>
+WifiTxVector
+RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited,bool isBsrp)
+{
+  NS_LOG_FUNCTION (this);
+
+  // determine RUs to allocate to stations
+  auto count = std::min<std::size_t> (m_nStations, m_staListUl.size ());
+  std::size_t nCentral26TonesRus;
+  HeRu::GetEqualSizedRusForStations (m_allowedWidth, count, nCentral26TonesRus);
+  NS_ASSERT (count >= 1);
+
+  if (!m_useCentral26TonesRus)
+    {
+      nCentral26TonesRus = 0;
+    }
+
+  Ptr<HeConfiguration> heConfiguration = m_apMac->GetHeConfiguration ();
+  NS_ASSERT (heConfiguration);
+
+  WifiTxVector txVector;
+  txVector.SetPreambleType (WIFI_PREAMBLE_HE_TB);
+  txVector.SetChannelWidth (m_allowedWidth);
+  txVector.SetGuardInterval (heConfiguration->GetGuardInterval ().GetNanoSeconds ());
+  txVector.SetBssColor (heConfiguration->GetBssColor ());
+
+  // iterate over the associated stations until an enough number of stations is identified
+  auto staIt = m_staListUl.begin ();
+  m_candidates.clear ();
+
+  while (staIt != m_staListUl.end ()
+         && txVector.GetHeMuUserInfoMap ().size () < std::min<std::size_t> (m_nStations, count + nCentral26TonesRus))
+    {
+      NS_LOG_DEBUG ("Next candidate STA (MAC=" << staIt->address << ", AID=" << staIt->aid << ")");
+      std::cout << "Next candidate STA(MAC=" << staIt->address << ", AID=" << staIt->aid << ")" << std::endl;
+      if (!canbeSolicited (*staIt))
+        {
+          NS_LOG_DEBUG ("Skipping station based on provided function object");
+          std::cout << "Skipping station based on provided function object" << std::endl;
+          staIt++;
+          continue;
+        }
+
+      uint8_t tid = 0;
+      while (tid < 8)
+        {
+          // check that a BA agreement is established with the receiver for the
+          // considered TID, since ack sequences for UL MU require block ack
+          if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+            {
+              break;
+            }
+          ++tid;
+        }
+      if (tid == 8)
+        {
+          NS_LOG_DEBUG ("No Block Ack agreement established with " << staIt->address);
+          staIt++;
+          continue;
+        }
+
+      // prepare the MAC header of a frame that would be sent to the candidate station,
+      // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+      WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+      hdr.SetAddr1 (staIt->address);
+      hdr.SetAddr2 (m_apMac->GetAddress ());
+      WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+      txVector.SetHeMuUserInfo (staIt->aid,
+                                {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+                                suTxVector.GetMode (),
+                                suTxVector.GetNss ()});
+      m_candidates.push_back ({staIt, nullptr});
+
+      // move to the next station in the list
+      staIt++;
+    }
+
+  if (txVector.GetHeMuUserInfoMap ().empty ())
+    {
+      NS_LOG_DEBUG ("No suitable station");
+      return txVector;
+    }
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+  //END: log for
+  
+  FinalizeTxVector (txVector, isBsrp);
+  return txVector;
+}
+
+void
+RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector, bool isBsrp)
+{
+  // Do not log txVector because GetTxVectorForUlMu() left RUs undefined and
+  // printing them will crash the simulation
+  NS_LOG_FUNCTION (this);
+  NS_ASSERT (txVector.GetHeMuUserInfoMap ().size () == m_candidates.size ());
+
+  // compute how many stations can be granted an RU and the RU size
+  std::size_t nRusAssigned = m_candidates.size ();
+  std::size_t nCentral26TonesRus;
+  HeRu::RuType ruType = HeRu::GetEqualSizedRusForStations (m_allowedWidth, nRusAssigned,
+                                                           nCentral26TonesRus);
+  //BEGIN: log for
+  std::cout << "nRusAssigned:" << nRusAssigned << std::endl; 
+  //END: log for
+  NS_LOG_DEBUG (nRusAssigned << " stations are being assigned a " << ruType << " RU");
+
+  if (!m_useCentral26TonesRus || m_candidates.size () == nRusAssigned)
+    {
+      nCentral26TonesRus = 0;
+    }
+  else
+    {
+      nCentral26TonesRus = std::min (m_candidates.size () - nRusAssigned, nCentral26TonesRus);
+      NS_LOG_DEBUG (nCentral26TonesRus << " stations are being assigned a 26-tones RU");
+    }
+
+  // re-allocate RUs based on the actual number of candidate stations
+  WifiTxVector::HeMuUserInfoMap heMuUserInfoMap;
+  std::swap (heMuUserInfoMap, txVector.GetHeMuUserInfoMap ());
+
+  auto candidateIt = m_candidates.begin (); // iterator over the list of candidate receivers
+  auto ruSet = HeRu::GetRusOfType (m_allowedWidth, ruType);
+  auto ruSetIt = ruSet.begin ();
+  auto ruSetSize = ruSet.size();
+  auto central26TonesRus = HeRu::GetCentral26TonesRus (m_allowedWidth, ruType);
+  auto central26TonesRusIt = central26TonesRus.begin ();
+  if(txVector.GetHeMuUserInfoMap().size() <= ruSetSize)
+  {
+    for (std::size_t i = 0; i < nRusAssigned + nCentral26TonesRus; i++)
+      {
+        NS_ASSERT (candidateIt != m_candidates.end ());
+        auto mapIt = heMuUserInfoMap.find (candidateIt->first->aid);
+        NS_ASSERT (mapIt != heMuUserInfoMap.end ());
+        std::cout << "Assign RU. staId:" << mapIt->first << ". RuSet:" << *ruSetIt << "RuSetSize:"<< ruSetSize << std::endl;
+        //BEGIN: Inspection No Bsrp Fixed-RU
+        // txVector.SetHeMuUserInfo (mapIt->first,
+        //                           {(i < nRusAssigned ? *ruSetIt : *central26TonesRusIt++),
+        //                            mapIt->second.mcs, mapIt->second.nss});
+        //END: Inspection No Bsrp Fixed-RU
+
+        //BEGIN: Default
+        txVector.SetHeMuUserInfo (mapIt->first,
+                                  {(i < nRusAssigned ? *ruSetIt++ : *central26TonesRusIt++),
+                                  mapIt->second.mcs, mapIt->second.nss});
+        //END: Default
+        candidateIt++;
+        
+      }
+  }
+  else
+  {
+    RngSeedManager::SetSeed (1);
+    RngSeedManager::SetRun (1);
+    Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+    int ruIndex;
+    for(auto& userInfo : txVector.GetHeMuUserInfoMap ())
+    {
+      auto mapIt = heMuUserInfoMap.find (candidateIt->first->aid);
+      ruIndex = rand->GetInteger(0,ruSetSize-1);
+      txVector.SetHeMuUserInfo (mapIt->first,{ruSet.at(ruIndex),mapIt->second.mcs, mapIt->second.nss});
+    }
+    candidateIt++;
+
+  }
+
+  // remove candidates that will not be served
+  m_candidates.erase (candidateIt, m_candidates.end ());
+}
+
+//END: My Code Ru Random Assign
+
 
 } //namespace ns3

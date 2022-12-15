@@ -319,7 +319,12 @@ void OnOffApplication::SendPacket ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT (m_sendEvent.IsExpired ());
-
+  //BEGIN: log for
+  Address f, t;
+  m_socket->GetSockName(f);
+  m_socket->GetPeerName(t);
+  std::cout << typeid(this).name() << ". Funciton:"<<__func__ << ". from:"<< f << ". to:" << t << ". m_unsentPacket:" << ((m_unsentPacket) ? "true" : "false") << std::endl;
+  //END: log for
   Ptr<Packet> packet;
   if (m_unsentPacket)
     {
@@ -334,14 +339,34 @@ void OnOffApplication::SendPacket ()
       header.SetSeq (m_seq++);
       header.SetSize (m_pktSize);
       NS_ABORT_IF (m_pktSize < header.GetSerializedSize ());
-      packet = Create<Packet> (m_pktSize - header.GetSerializedSize ());
+      //BEGIN: log for
+      std::ostringstream msg;
+      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ","; 
+      std::cout << msg.str() << std::endl;
+      packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize - header.GetSerializedSize ());
+      //END: log for
+
+      //BEGIN: Default
+      // packet = Create<Packet> (m_pktSize - header.GetSerializedSize ());
+      //END: Default
       // Trace before adding header, for consistency with PacketSink
       m_txTraceWithSeqTsSize (packet, from, to, header);
       packet->AddHeader (header);
     }
   else
     {
-      packet = Create<Packet> (m_pktSize);
+      //BEGIN: log for
+      Address from;
+      m_socket->GetSockName (from);
+      std::ostringstream msg;
+      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ","; 
+      std::cout << msg.str() << std::endl;
+      packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize);
+      //END: log for
+
+      //BEGIN: Default
+      // packet = Create<Packet> (m_pktSize);
+      //END:Default
     }
 
   int actual = m_socket->Send (packet);

@@ -1,6 +1,7 @@
 # Ignore everything on scratch by default, except the provided examples
 
 MBTA/*.txt
+MBTA/*.zip
 !subdir/
 
 !scratch-simulator.cc

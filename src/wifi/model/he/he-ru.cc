@@ -533,6 +533,7 @@ HeRu::GetRuType (uint16_t bandwidth)
     }
 }
 
+//BEGIN: Default
 HeRu::RuType
 HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
                                    std::size_t& nCentral26TonesRus)
@@ -597,6 +598,73 @@ HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
 
   return ruType;
 }
+//END: Default
+
+//BEGIN: My Code Ru Random Assign
+HeRu::RuType
+HeRu::GetEqualSizedRusForStations (uint16_t bandwidth, std::size_t& nStations,
+                                   std::size_t& nCentral26TonesRus,bool isBsrp)
+{
+  RuType ruType;
+  uint8_t nRusAssigned = 0;
+
+  // iterate over all the available RU types
+  for (auto& ru : m_heRuSubcarrierGroups)
+    {
+      if (ru.first.first == bandwidth && ru.second.size () <= nStations)
+        {
+          ruType = ru.first.second;
+          nRusAssigned = ru.second.size ();
+          break;
+        }
+      else if (bandwidth == 160 && ru.first.first == 80 && (2 * ru.second.size () <= nStations))
+        {
+          ruType = ru.first.second;
+          nRusAssigned = 2 * ru.second.size ();
+          break;
+        }
+    }
+  if (nRusAssigned == 0)
+    {
+      NS_ABORT_IF (bandwidth != 160 || nStations != 1);
+      nRusAssigned = 1;
+      ruType = RU_2x996_TONE;
+    }
+  if(!isBsrp) nStations = nRusAssigned;
+
+  switch (ruType)
+    {
+      case RU_52_TONE:
+      case RU_106_TONE:
+        if (bandwidth == 20)
+          {
+            nCentral26TonesRus = 1;
+          }
+        else if (bandwidth == 40)
+          {
+            nCentral26TonesRus = 2;
+          }
+        else
+          {
+            nCentral26TonesRus = 5;
+          }
+        break;
+      case RU_242_TONE:
+      case RU_484_TONE:
+        nCentral26TonesRus = (bandwidth >= 80 ? 1 : 0);
+        break;
+      default:
+        nCentral26TonesRus = 0;
+    }
+
+  if (bandwidth == 160)
+    {
+      nCentral26TonesRus *= 2;
+    }
+
+  return ruType;
+}
+//END: My Code Ru Random Assign
 
 bool
 HeRu::RuSpec::operator== (const RuSpec& other) const

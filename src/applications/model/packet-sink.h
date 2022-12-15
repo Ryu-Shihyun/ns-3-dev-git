@@ -106,6 +106,9 @@ public:
    */
   typedef void (* SeqTsSizeCallback)(Ptr<const Packet> p, const Address &from, const Address & to,
                                    const SeqTsSizeHeader &header);
+  //BEGIN: log for
+  // Time GetAverageDelay(Ipv4Address addr);
+  //END: log for
 
 protected:
   virtual void DoDispose (void);
@@ -200,6 +203,12 @@ private:
   TracedCallback<Ptr<const Packet>, const Address &, const Address &> m_rxTraceWithAddresses;
   /// Callbacks for tracing the packet Rx events, includes source, destination addresses, and headers
   TracedCallback<Ptr<const Packet>, const Address &, const Address &, const SeqTsSizeHeader&> m_rxTraceWithSeqTsSize;
+
+  //BEGIN: log for
+  // typedef std::pair<Time, int> delayPair;
+  // typedef std::pair<Ipv4Address, delayPair> addrPair;
+  // std::vector <addrPair> m_delayInfo;
+  //BEGIN: log for
 };
 
 } // namespace ns3

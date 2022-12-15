@@ -34,6 +34,8 @@
 #include "ns3/boolean.h"
 #include "ns3/ipv4-packet-info-tag.h"
 #include "ns3/ipv6-packet-info-tag.h"
+#include <fstream>
+#include <string>
 
 namespace ns3 {
 
@@ -216,6 +218,51 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
                        << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes" << std::endl;
+          
+          uint8_t *buffer = new uint8_t[packet->GetSize()];
+          packet->CopyData(buffer,packet->GetSize());
+          std::string str = std::string(buffer, buffer + packet->GetSize());
+          int first = 0;
+          int last = str.find_first_of(',');
+          std::cout << str << std::endl;
+          std::vector<std::string> result;
+          while (first < str.size()) {
+            result.push_back(str.substr(first, last - first));
+            first = last + 1;
+            last = str.find_first_of(',', first);
+            if (last == std::string::npos) last = str.size();
+          }
+          
+          auto ip_from = InetSocketAddress::ConvertFrom(from).GetIpv4 ();
+          Time delay = Simulator::Now() - Time(result.at(1));
+          
+          //SUB BEGIN: waste code but it`s called many time
+          // auto itr = std::find_if(m_delayInfo.begin(),m_delayInfo.end(),
+          //                 [&ip_from] (addrPair pair)
+          //                   { return pair.first == ip_from; });
+          // std::cout << "ip_from: " <<  ip_from << ((itr!=m_delayInfo.end()) ? "true" : "false") << std::endl;
+          // if(itr == m_delayInfo.end())
+          // {
+          //   delayPair dp = {delay,1};
+          //   addrPair ap = {ip_from,dp};
+          //   m_delayInfo.push_back(ap);
+          // }
+          // else
+          // {
+          //   Time data = ((itr->second.first) * (itr->second.second) + delay)/(itr->second.second + 1);
+          //   itr->second.first = delay;
+          //   itr->second.second += 1;
+          //   std::cout << "delay:" << itr->second.first << ". count:" << itr->second.second << std::endl;
+          // }
+          //SUB END: waste code but it`s called many time
+
+          //SUB BEGIN: record delay
+          std::ofstream  writting_file;
+          std::string filename = "./data/delayData.csv";
+          writting_file.open(filename, std::ios::app);
+          writting_file << ip_from << "," << delay.GetNanoSeconds() << std::endl;
+          writting_file.close();
+
           //END: log for
         }
       else if (Inet6SocketAddress::IsMatchingType (from))
@@ -230,9 +277,40 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
           std::cout << "At time " << Simulator::Now ().As (Time::S)
                        << " packet sink received "
                        <<  packet->GetSize () << " bytes from "
-                       << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
-                       << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
+                       << Inet6SocketAddress::ConvertFrom(from).GetIpv6 ()
+                       << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes" << std::endl;
+
+          // uint8_t *buffer = new uint8_t[packet->GetSize()];
+          // packet->CopyData(buffer,packet->GetSize());
+          // std::string str = std::string(buffer, buffer + packet->GetSize());
+          // int first = 0;
+          // int last = str.find_first_of(',');
+          // std::vector<std::string> result;
+          // while (first < str.size()) {
+          //   result.push_back(str.substr(first, last - first));
+          //   first = last + 1;
+          //   last = str.find_first_of(',', first);
+          //   if (last == std::string::npos) last = str.size();
+          // }
+
+          // Time delay = Simulator::Now() - Time(result.at(1));
+          // auto itr = std::find_if(m_delayInfo.begin(),m_delayInfo.end(),
+          //                 [&from] (addrPair pair)
+          //                   { return pair.first == from; });
+          // if(itr == m_delayInfo.end())
+          // {
+          //   delayPair dp = {delay,1};
+          //   addrPair ap = {InetSocketAddress::ConvertFrom(from).GetIpv4 (),dp};
+          //   m_delayInfo.push_back(ap);
+          // }
+          // else
+          // {
+          //   Time data = ((itr->second.first) * (itr->second.second) + delay)/(itr->second.second + 1);
+          //   itr->second.first = delay;
+          //   itr->second.second += 1;
+          // }
+
           //END: log for
         }
 
@@ -320,5 +398,13 @@ void PacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
   s->SetRecvCallback (MakeCallback (&PacketSink::HandleRead, this));
   m_socketList.push_back (s);
 }
-
+//BEGIN: log for
+// Time PacketSink::GetAverageDelay (Ipv4Address addr)
+// {
+//   auto itr = std::find_if(m_delayInfo.begin(),m_delayInfo.end(),
+//                           [&addr] (addrPair pair)
+//                             { return pair.first == addr; });
+//   return itr->second.first;  
+// }
+//END: log for
 } // Namespace ns3
