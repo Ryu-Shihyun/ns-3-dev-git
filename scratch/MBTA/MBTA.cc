@@ -70,6 +70,10 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("he-wifi-network");
 
 static void PrintRxByte(uint64_t *prevbyte, Ptr<PacketSink> packetsink, uint32_t payloadSize);
+static void PrintProgress(int value)
+{
+  std::cerr << "[" << value << "/100]\r" << std::flush;
+}
 
 int main (int argc, char *argv[])
 {
@@ -184,7 +188,7 @@ int main (int argc, char *argv[])
   maxAccessDevices = nStations;
   std::string ulName =(enableBsrp) ? "UONRA" : "UORA";
   std::stringstream csvName;
-  csvName << "Sta" << nStations << "_slot0_Warm" << warmUpTime << "_Sim" << simulationTime <<"_Rate" << payloadSize*8*bitRateVariable/1000000 << "M_payload" << payloadSize << "_" << ulName; 
+  csvName << "Sta" << nStations << "_Warm" << warmUpTime << "_Sim" << simulationTime <<"_Rate" << payloadSize*8*bitRateVariable/1000000 << "M_payload" << payloadSize << "_" << ulName; 
   std::string fileName = "./data/"+csvName.str() + "_"+csvOption+".csv";
   
   std::ofstream ofs(fileName);
@@ -433,6 +437,10 @@ int main (int argc, char *argv[])
               for(int i=1;i<(simulationTime+warmUpTime)/10;i++){
                 Simulator::Schedule (Seconds(i*10),&PrintRxByte,&rByte,DynamicCast<PacketSink> (serverApp.Get (0)),payloadSize);
                 // rByte = 8*payloadSize * DynamicCast<PacketSink> (serverApp.Get (0))->GetTotalRx ();
+              }
+              for(int i=0 ; i<101 ; i++)
+              {
+                Simulator::Schedule (Seconds((simulationTime+warmUpTime)/100*i),&PrintProgress,i);
               }
 
               Simulator::Stop (Seconds (simulationTime + warmUpTime));

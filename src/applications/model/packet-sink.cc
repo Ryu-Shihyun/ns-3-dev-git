@@ -260,7 +260,7 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
           std::ofstream  writting_file;
           std::string filename = "./data/delayData.csv";
           writting_file.open(filename, std::ios::app);
-          writting_file << ip_from << "," << delay.GetNanoSeconds() << std::endl;
+          writting_file << ip_from << "," << delay.GetInteger() << std::endl;
           writting_file.close();
 
           //END: log for

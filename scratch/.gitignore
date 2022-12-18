@@ -1,8 +1,9 @@
 # Ignore everything on scratch by default, except the provided examples
 
-MBTA/*.txt
-MBTA/*.zip
+# MBTA/*.txt
+# MBTA/*.zip
 !subdir/
-
+!MBTA/MBTA.cc
 !scratch-simulator.cc
 !CMakeLists.txt
+MBTA/*

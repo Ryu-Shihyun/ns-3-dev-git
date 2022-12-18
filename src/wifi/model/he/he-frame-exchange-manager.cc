@@ -1544,7 +1544,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
     
     if(m_txTimer.GetReason()==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF && mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA)
     {
-      std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << std::endl;
+      std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << ". Recorde!" << std::endl;
       UpdateSuccesses(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
     }else{
       std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". receiver: " << m_self << ". byte = " << mpdu->GetPacketSize() << std::endl;
@@ -2027,7 +2027,7 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
     }
     // std::cout << "loop end." << std::endl;
 
-    std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << staCount << ". same_max_arbi_num:" << same_max << std::endl; 
+    std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << staCount << ". my_arbi_num:" << int(my_ptr->arbitrationNum)<< ". same_max_arbi_num:" << same_max << std::endl; 
     if(max_arbi_num == my_ptr->arbitrationNum){
       std::cout << "win staId: "<<my_ptr->staId<<std::endl;
       m_wins++; // test by ryu 2022/11/22
@@ -2289,7 +2289,7 @@ HeFrameExchangeManager::SetSuccesses(Mac48Address addr)
   });
   if(itr == m_successes.end())
   {
-    m_successes.push_back({addr,0,1,0});
+    m_successes.push_back({addr,1,0,0});
   }else{
     itr->cCount += 1;
   }
