@@ -184,7 +184,7 @@ int main (int argc, char *argv[])
   // }
 
   //modify maxAccessDevices;
-  warmUpTime = (nStations+4)/5;
+  warmUpTime = (nStations+4)/5+20;
   maxAccessDevices = nStations;
   std::string ulName =(enableBsrp) ? "UONRA" : "UORA";
   std::stringstream csvName;

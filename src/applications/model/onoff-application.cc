@@ -385,6 +385,15 @@ void OnOffApplication::SendPacket ()
                        << InetSocketAddress::ConvertFrom(m_peer).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (m_peer).GetPort ()
                        << " total Tx " << m_totBytes << " bytes");
+
+          //BEGIN: log for
+          std::cout << "@ time " << Simulator::Now ().As (Time::S)
+                       << " on-off application sent "
+                       <<  packet->GetSize () << " bytes to "
+                       << InetSocketAddress::ConvertFrom(m_peer).GetIpv4 ()
+                       << " port " << InetSocketAddress::ConvertFrom (m_peer).GetPort ()
+                       << " total Tx " << m_totBytes << " bytes" << std::endl;
+          //END: log for
           m_txTraceWithAddresses (packet, localAddress, InetSocketAddress::ConvertFrom (m_peer));
         }
       else if (Inet6SocketAddress::IsMatchingType (m_peer))

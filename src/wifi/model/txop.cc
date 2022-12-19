@@ -312,10 +312,11 @@ Txop::UpdateBackoffSlotsNow (uint32_t nSlots, Time backoffUpdateBound, uint8_t l
 {
   NS_LOG_FUNCTION (this << nSlots << backoffUpdateBound << +linkId);
   auto& link = GetLink (linkId);
-
+  std::cout << "Function" <<  __func__ << ". link:" << int(linkId) << std::endl;
   link.backoffSlots -= nSlots;
   link.backoffStart = backoffUpdateBound;
   NS_LOG_DEBUG ("update slots=" << nSlots << " slots, backoff=" << link.backoffSlots);
+  std::cout << "update slots="<< nSlots << " slots, backoff=" << link.backoffSlots << std::endl;
 }
 
 void

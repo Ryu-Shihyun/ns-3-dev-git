@@ -1383,10 +1383,11 @@ HeFrameExchangeManager::ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, c
   for (const auto& tid : tids)
     {
       Ptr<QosTxop> edca = m_mac->GetQosTxop (tid);
-
+      std::cout <<"TID:" << int(tid) << std::endl;
       if (!edca->GetBaAgreementEstablished (hdr.GetAddr2 (), tid))
         {
           // no Block Ack agreement established for this TID
+          std::cout <<"sta:"<< m_staMac->GetAddress() << ". no Block Ack agreement established for this TID:" << int(tid) << std::endl;
           continue;
         }
 
@@ -1399,6 +1400,8 @@ HeFrameExchangeManager::ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, c
           && TryAddMpdu (mpdu, txParams, ppduDuration))
         {
           NS_LOG_DEBUG ("Sending a BAR within a TB PPDU");
+          std::cout <<"sta:"<< m_staMac->GetAddress() << ". Sending a BAR within a TB PPDU" << std::endl;
+          
           psdu = Create<WifiPsdu> (edca->GetBaManager ()->GetBar (true, tid, hdr.GetAddr2 ()), true);
           break;
         }
@@ -1408,10 +1411,11 @@ HeFrameExchangeManager::ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, c
           (mpdu = edca->PeekNextMpdu (m_linkId, tid, hdr.GetAddr2 ())))
         {
           Ptr<WifiMpdu> item = edca->GetNextMpdu (m_linkId, mpdu, txParams, ppduDuration, false);
-
+          std::cout << "peekNextMpdu" << std::endl;
           if (item)
             {
               // try A-MPDU aggregation
+              std::cout <<"sta:"<< m_staMac->GetAddress() << ". try A-MPDU aggregation" << std::endl;
               std::vector<Ptr<WifiMpdu>> mpduList = m_mpduAggregator->GetNextAmpdu (item, txParams,
                                                                                             ppduDuration);
               psdu = (mpduList.size () > 1 ? Create<WifiPsdu> (std::move (mpduList))
@@ -1429,6 +1433,7 @@ HeFrameExchangeManager::ReceiveBasicTrigger (const CtrlTriggerHeader& trigger, c
   else
     {
       // send QoS Null frames
+      std::cout <<"sta:"<< m_staMac->GetAddress() << ". Send QoS Null Frame" << std::endl;
       SendQosNullFramesInTbPpdu (trigger, hdr);
     }
 }

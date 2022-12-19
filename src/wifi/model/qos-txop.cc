@@ -498,6 +498,7 @@ QosTxop::GetNextMpdu (uint8_t linkId, Ptr<WifiMpdu> peekedItem,
   // Assign a sequence number if this is not a fragment nor a retransmission
   AssignSequenceNumber (mpdu);
   NS_LOG_DEBUG ("Got MPDU from EDCA queue: " << *mpdu);
+  std::cout << "Function:" << __func__ << ". Got MPDU from EDCA queue" << std::endl;
 
   return mpdu;
 }

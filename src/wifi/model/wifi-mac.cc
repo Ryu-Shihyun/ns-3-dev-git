@@ -1106,7 +1106,7 @@ WifiMac::Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)
               {
                 MgtAddBaRequestHeader reqHdr;
                 packet->RemoveHeader (reqHdr);
-
+                std::cout << "Function:" << typeid(this).name() << "Block Ack Addba Request. from:" << from << ". to" << to << std::endl;
                 //We've received an ADDBA Request. Our policy here is
                 //to automatically accept it, so we get the ADDBA
                 //Response on it's way immediately.
@@ -1123,7 +1123,7 @@ WifiMac::Receive (Ptr<const WifiMpdu> mpdu, uint8_t linkId)
               {
                 MgtAddBaResponseHeader respHdr;
                 packet->RemoveHeader (respHdr);
-
+                std::cout << "Function:" << typeid(this).name() << "Block Ack Addba ReSponse!!!. from:" << from << ". to" << to << ". from's tid:"<< int(respHdr.GetTid()) <<  std::endl;
                 //We've received an ADDBA Response. We assume that it
                 //indicates success after an ADDBA Request we have
                 //sent (we could, in principle, check this, but it

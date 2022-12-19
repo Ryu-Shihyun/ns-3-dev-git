@@ -774,12 +774,13 @@ RrMultiUserScheduler::UpdateCredits (std::list<MasterInfo>& staList, Time txDura
                         / std::accumulate (ruMap.begin (), ruMap.end (), 0,
                                            [](uint16_t sum, auto pair)
                                            { return sum + pair.second * HeRu::GetBandwidth (pair.first); });
-
+  std::cout << "Time:" << Simulator::Now() <<". Function:" << __func__ << std::endl;
   // assign credits to all stations
   for (auto& sta : staList)
     {
       sta.credits += creditsPerSta;
       sta.credits = std::min (sta.credits, m_maxCredits.ToDouble (Time::US));
+      std::cout << "sta:"<< sta.address << ". aid:"<<sta.aid << ". sta.credits:" << sta.credits << std::endl;
     }
 
   // subtract debits to the selected stations
@@ -787,13 +788,19 @@ RrMultiUserScheduler::UpdateCredits (std::list<MasterInfo>& staList, Time txDura
     {
       auto mapIt = txVector.GetHeMuUserInfoMap ().find (candidate.first->aid);
       NS_ASSERT (mapIt != txVector.GetHeMuUserInfoMap ().end ());
-
+     std::cout << "candidate addr:" << candidate.first->address << ", credits:" << candidate.first->credits ;
       candidate.first->credits -= debitsPerMhz * HeRu::GetBandwidth (mapIt->second.ru.GetRuType ());
+      std::cout << ". debitsPerMhz:" << debitsPerMhz << ". new credits:" << candidate.first->credits << ". band:" << HeRu::GetBandwidth (mapIt->second.ru.GetRuType ()) << std::endl; 
+
     }
 
   // sort the list in decreasing order of credits
   staList.sort ([] (const MasterInfo& a, const MasterInfo& b)
                 { return a.credits > b.credits; });
+  for(auto& sta: staList)
+  {
+    std::cout << "sorted: sta:" << sta.address << std::endl;
+  }
 
 }
 

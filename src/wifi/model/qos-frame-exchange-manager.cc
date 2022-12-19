@@ -366,8 +366,10 @@ QosFrameExchangeManager::TryAddMpdu (Ptr<const WifiMpdu> mpdu, WifiTxParameters&
   NS_LOG_DEBUG ("acknowledgment time=" << acknowledgmentTime);
 
   Time ppduDurationLimit = Time::Min ();
+  std::cout << "time::min()" << Time::Min() << std::endl;
   if (availableTime != Time::Min ())
     {
+      std::cout << "availableTime:" << availableTime << ", protectionTime:" << protectionTime << ", acknowledgementTime:" << acknowledgmentTime << std::endl;
       ppduDurationLimit = availableTime - protectionTime - acknowledgmentTime;
     }
 
@@ -383,6 +385,7 @@ QosFrameExchangeManager::TryAddMpdu (Ptr<const WifiMpdu> mpdu, WifiTxParameters&
         {
           txParams.m_acknowledgment.swap (acknowledgment);
         }
+        std::cout << "Function:" << __func__ << ". !IsWithinLimitsIfAddMpdu" << std::endl;
       return false;
     }
 
@@ -413,16 +416,18 @@ QosFrameExchangeManager::IsWithinSizeAndTimeLimits (uint32_t ppduPayloadSize, Ma
                                                     Time ppduDurationLimit) const
 {
   NS_LOG_FUNCTION (this << ppduPayloadSize << receiver << &txParams << ppduDurationLimit);
-
+ std::cout << "IsWithinSizeAndTimeLimits. ppduPayloadSize:" << int(ppduPayloadSize) << ". ppduDurationLimit:" << ppduDurationLimit <<std::endl;
   if (ppduDurationLimit != Time::Min () && ppduDurationLimit.IsNegative ())
     {
       NS_LOG_DEBUG ("ppduDurationLimit is null or negative, time limit is trivially exceeded");
+      std::cout << "ppduDurationLimit is null or negative, time limit is trivially exceeded" << std::endl;
       return false;
     }
 
   if (ppduPayloadSize > WifiPhy::GetMaxPsduSize (txParams.m_txVector.GetModulationClass ()))
     {
       NS_LOG_DEBUG ("the frame exceeds the max PSDU size");
+      std::cout << "the frame exceeds the max PSDU size" << std::endl;
       return false;
     }
 
@@ -431,11 +436,12 @@ QosFrameExchangeManager::IsWithinSizeAndTimeLimits (uint32_t ppduPayloadSize, Ma
 
   Time txTime = GetTxDuration (ppduPayloadSize, receiver, txParams);
   NS_LOG_DEBUG ("PPDU duration: " << txTime.As (Time::MS));
-
+  std::cout << "PPDU duration:" << txTime << ". ppduDurationLimit:" << ppduDurationLimit << ". maxPpduDuration:" << maxPpduDuration << std::endl;
   if ((ppduDurationLimit.IsStrictlyPositive () && txTime > ppduDurationLimit)
       || (maxPpduDuration.IsStrictlyPositive () && txTime > maxPpduDuration))
     {
       NS_LOG_DEBUG ("the frame does not meet the constraint on max PPDU duration or PPDU duration limit");
+      std::cout << "the frame does not meet the constraint on max PPDU duration or PPDU duration limit" << std::endl;
       return false;
     }
 

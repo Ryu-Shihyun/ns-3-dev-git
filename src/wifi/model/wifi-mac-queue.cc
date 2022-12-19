@@ -306,9 +306,10 @@ WifiMacQueue::PeekByQueueId (const WifiContainerQueueId& queueId,
   if (it == GetContainer ().GetQueue (queueId).cend ())
     {
       NS_LOG_DEBUG ("The queue is empty");
+      std::cout << "Function:" << __func__ << ". The queue is empty" << std::endl;
       return nullptr;
     }
-
+  std::cout << "Function:" << __func__ << ". Exist mpdu in queue" << std::endl;
   return it->mpdu;
 }
 
