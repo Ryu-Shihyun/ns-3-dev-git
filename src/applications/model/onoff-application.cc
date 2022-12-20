@@ -410,6 +410,7 @@ void OnOffApplication::SendPacket ()
   else
     {
       NS_LOG_DEBUG ("Unable to send packet; actual " << actual << " size " << m_pktSize << "; caching for later attempt");
+      std::cout << "Unable to send packet; actual " << actual << " size " << int(m_pktSize) << "; caching for later attempt" << std::endl;
       m_unsentPacket = packet;
     }
   m_residualBits = 0;
