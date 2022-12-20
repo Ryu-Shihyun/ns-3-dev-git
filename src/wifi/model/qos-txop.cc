@@ -141,6 +141,7 @@ QosTxop::GetQosQueueSize (uint8_t tid, Mac48Address receiver) const
   // A queue size value of 254 is used for all sizes greater than 64 768 octets.
   uint8_t queueSize = static_cast<uint8_t> (std::ceil (std::min (bufferSize, 64769u) / 256.0));
   NS_LOG_DEBUG ("Buffer size=" << bufferSize << " Queue Size=" << +queueSize);
+  std::cout << "receiver:" << receiver << ". Buffer size=" << int(bufferSize) << " Queue Size=" << int(queueSize) << ". tid:" << tid << ". receiver:" << receiver << std::endl;
   return queueSize;
 }
 

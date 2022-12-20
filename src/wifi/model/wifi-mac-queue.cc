@@ -482,7 +482,7 @@ Ptr<WifiMpdu>
 WifiMacQueue::DoRemove (ConstIterator pos)
 {
   NS_LOG_FUNCTION (this);
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__  << ". addr1:" << pos->mpdu->GetHeader().GetAddr1() << ". addr2:" << pos->mpdu->GetHeader().GetAddr2()<< std::endl;
   auto item = Queue<WifiMpdu, WifiMacQueueContainer>::DoRemove (pos);
 
   if (item)

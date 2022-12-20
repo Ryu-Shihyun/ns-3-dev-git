@@ -342,7 +342,7 @@ void OnOffApplication::SendPacket ()
       //BEGIN: log for
       std::ostringstream msg;
       msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ","; 
-      std::cout << msg.str() << std::endl;
+      std::cout << "m_enableSeqTsSizeHeader:"<< msg.str() << std::endl;
       packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize - header.GetSerializedSize ());
       //END: log for
 
@@ -360,7 +360,7 @@ void OnOffApplication::SendPacket ()
       m_socket->GetSockName (from);
       std::ostringstream msg;
       msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ","; 
-      std::cout << msg.str() << std::endl;
+      std::cout << "else:" << msg.str() << std::endl;
       packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize);
       //END: log for
 

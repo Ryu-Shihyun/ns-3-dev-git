@@ -63,7 +63,7 @@ WifiMacQueueContainer::erase (const_iterator pos)
   it->second -= pos->mpdu->GetSize ();
   
   std::cout << "Time:" << Simulator::Now() <<". Function:"<< __func__  <<". Queue Erase. addr1:"<<pos->mpdu->GetHeader().GetAddr1() 
-            << ". addr2:" << pos->mpdu->GetHeader().GetAddr2() << ". byte:"<< pos->mpdu->GetPacketSize() << std::endl;
+            << ". addr2:" << pos->mpdu->GetHeader().GetAddr2() << ". byte:"<< pos->mpdu->GetPacketSize()  << ". tid:" << int(std::get<2>(queueId)) << std::endl;
   return m_queues[queueId].erase (pos);
 }
 
