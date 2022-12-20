@@ -419,15 +419,16 @@ bool
 WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
 {
   NS_LOG_FUNCTION (this << *item);
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__;
   auto mpdu = m_scheduler->HasToDropBeforeEnqueue (m_ac, item);
 
   if (mpdu == item)
     {
       // the given item must be dropped
+      std::cout << "the given item must be dropped" << ". addr1:" << mpdu->GetHeader().GetAddr1() << ". addr2:" << mpdu->GetHeader().GetAddr2()<< std::endl;
       return false;
     }
-
+  
   auto queueId = WifiMacQueueContainer::GetQueueId (item);
   if (pos != GetContainer ().GetQueue (queueId).cend () && pos->mpdu == mpdu)
     {
@@ -436,6 +437,7 @@ WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
     }
   if (mpdu != nullptr)
     {
+      std::cout << "Do remove" << ". addr1:" << mpdu->GetHeader().GetAddr1() << ". addr2:" << mpdu->GetHeader().GetAddr2()<< std::endl;
       DoRemove (GetIt (mpdu));
     }
 
@@ -450,8 +452,11 @@ WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
       ret->deleter = [tag](auto mpdu){ mpdu->SetQueueIt (std::nullopt, tag); };
 
       m_scheduler->NotifyEnqueue (m_ac, item);
+      std::cout << ". addr1:" << pos->mpdu->GetHeader().GetAddr1() << ". addr2:" << pos->mpdu->GetHeader().GetAddr2()<< std::endl;
+      
       return true;
     }
+  std::cout << "return false" << std::endl;
   return false;
 }
 

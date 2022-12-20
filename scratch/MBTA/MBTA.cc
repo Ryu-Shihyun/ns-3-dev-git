@@ -308,7 +308,7 @@ int main (int argc, char *argv[])
                   apDevice = wifi.Install (phy, mac, wifiApNode);
                 }
 
-              RngSeedManager::SetSeed (2);
+              RngSeedManager::SetSeed (1);
               RngSeedManager::SetRun (1);
               int64_t streamNumber = 100;
               streamNumber += wifi.AssignStreams (apDevice, streamNumber);
