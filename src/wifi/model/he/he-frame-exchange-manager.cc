@@ -2225,7 +2225,7 @@ NS_LOG_FUNCTION (this << trigger << hdr);
 
   Ptr<WifiPsdu> psdu = (mpduList.size () > 1 ? Create<WifiPsdu> (std::move (mpduList))
                                              : Create<WifiPsdu> (mpduList.front (), true));
-  uint16_t staId = m_staMac->GetAssociationId ();
+  // uint16_t staId = m_staMac->GetAssociationId ();
   SendPsduMapWithProtection (WifiPsduMap {{staId, psdu}}, txParams);
 }
 int
