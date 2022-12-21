@@ -44,8 +44,9 @@ WifiMacQueueContainer::insert (const_iterator pos, Ptr<WifiMpdu> item)
 
   auto [it, ret] = m_nBytesPerQueue.insert ({queueId, 0});
   it->second += item->GetSize ();
-  std::cout << "Time:" << Simulator::Now() <<". Function:"<< __func__  <<". Queue Erase. addr1:"<<pos->mpdu->GetHeader().GetAddr1() 
-            << ". addr2:" << pos->mpdu->GetHeader().GetAddr2() << ". byte:"<< pos->mpdu->GetPacketSize()  << ". tid:" << int(std::get<2>(queueId)) << std::endl;
+  // auto m = pos->mpdu;
+  std::cout << "Time:" << Simulator::Now() <<". Function:"<< __func__  <<". Queue Erase. to"<< std::get<1>(queueId) 
+            << ". tid:" << int(std::get<2>(queueId)) << std::endl;
   
   return m_queues[queueId].emplace (pos, item);
 }
