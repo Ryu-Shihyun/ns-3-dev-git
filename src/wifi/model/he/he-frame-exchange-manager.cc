@@ -1967,61 +1967,61 @@ HeFrameExchangeManager::EndReceiveAmpdu (Ptr<const WifiPsdu> psdu, const RxSigna
 }
 
 //BEGIN: MY CODE
-void
-HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic)
-{
-   std::cout << "SendBusyTone..." << Simulator::Now() << std::endl; // added by ryu 10/20
-   auto ru_ptr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
-                                 return i.ru == ru;
-                           });
-   int same_max =0;
-   int staCount=0;
-   if(ru_ptr->bt.size()<=1){
-     ru_ptr->bt.at(0).isWin = true;
-     m_wins++; // test by ryu 2022/11/22
-     std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << 1 << ". same_max_arbi_num:" << 0<< std::endl;
-     if(isBasic){
-       ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
-     }else{
-       SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
-     }
+// void
+// HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic)
+// {
+//    std::cout << "SendBusyTone..." << Simulator::Now() << std::endl; // added by ryu 10/20
+//    auto ru_ptr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
+//                                  return i.ru == ru;
+//                            });
+//    int same_max =0;
+//    int staCount=0;
+//    if(ru_ptr->bt.size()<=1){
+//      ru_ptr->bt.at(0).isWin = true;
+//      m_wins++; // test by ryu 2022/11/22
+//      std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << 1 << ". same_max_arbi_num:" << 0<< std::endl;
+//      if(isBasic){
+//        ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
+//      }else{
+//        SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
+//      }
     
-     return;
-   }
-   auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
-                                 return i.staId == staId;
-                           });
-   uint8_t max_arbi_num = 0;
+//      return;
+//    }
+//    auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
+//                                  return i.staId == staId;
+//                            });
+//    uint8_t max_arbi_num = 0;
   
-   for (auto bt_ptr = ru_ptr->bt.begin(); bt_ptr != ru_ptr->bt.end(); bt_ptr++) {
-     // std::cout << "staId: "<<bt_ptr->staId<<std::endl;
-     staCount++;
-     if (max_arbi_num < bt_ptr->arbitrationNum) {
-       max_arbi_num = bt_ptr->arbitrationNum;
-       same_max=1;
-     }else if(max_arbi_num == bt_ptr->arbitrationNum){
-       same_max++;
-     }
-   }
-   // std::cout << "loop end." << std::endl;
+//    for (auto bt_ptr = ru_ptr->bt.begin(); bt_ptr != ru_ptr->bt.end(); bt_ptr++) {
+//      // std::cout << "staId: "<<bt_ptr->staId<<std::endl;
+//      staCount++;
+//      if (max_arbi_num < bt_ptr->arbitrationNum) {
+//        max_arbi_num = bt_ptr->arbitrationNum;
+//        same_max=1;
+//      }else if(max_arbi_num == bt_ptr->arbitrationNum){
+//        same_max++;
+//      }
+//    }
+//    // std::cout << "loop end." << std::endl;
  
-   std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << staCount << ". my_arbi_num:" << int(my_ptr->arbitrationNum)<< ". same_max_arbi_num:" << same_max << std::endl;
-   if(max_arbi_num == my_ptr->arbitrationNum){
-     std::cout << "win staId: "<<my_ptr->staId<<std::endl;
-     m_wins++; // test by ryu 2022/11/22
-     my_ptr->isWin=true;
-   }
-   if(same_max>1){
-     m_nConflict++;
-   }
+//    std::cout << "staId:"<< int(staId) <<". ru:"<<ru <<". count:" << staCount << ". my_arbi_num:" << int(my_ptr->arbitrationNum)<< ". same_max_arbi_num:" << same_max << std::endl;
+//    if(max_arbi_num == my_ptr->arbitrationNum){
+//      std::cout << "win staId: "<<my_ptr->staId<<std::endl;
+//      m_wins++; // test by ryu 2022/11/22
+//      my_ptr->isWin=true;
+//    }
+//    if(same_max>1){
+//      m_nConflict++;
+//    }
  
-   if(isBasic){
-     ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
-   }else{
-     SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
-   }
+//    if(isBasic){
+//      ReceiveBasicTriggerAfterA(trigger, hdr,staId,ru);
+//    }else{
+//      SendQosNullFramesInTbPpduAfterA(trigger, hdr,staId,ru);
+//    }
  
-}
+// }
  
 // void
 // HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId,HeRu::RuSpec ru)

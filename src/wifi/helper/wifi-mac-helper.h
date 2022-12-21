@@ -23,6 +23,7 @@
 
 #include "ns3/object-factory.h"
 #include "ns3/wifi-standards.h"
+#include "ns3/mac48-address.h"
 
 namespace ns3 {
 
