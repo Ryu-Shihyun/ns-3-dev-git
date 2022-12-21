@@ -28,6 +28,10 @@
 
 namespace ns3 {
 
+//BEGIN: Get Data
+Ptr<MultiUserScheduler> m_muSch_ptr;
+//END: Get Data
+
 WifiMacHelper::WifiMacHelper ()
 {
   //By default, we create an AdHoc MAC layer (without QoS).
@@ -81,5 +85,36 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
     }
   return mac;
 }
+
+//BEGIN: Get Data
+int
+WifiMacHelper::GetUplinkNum(int n) const
+{
+ if(n==0){
+   return m_muSch_ptr->GetBasicPhaseNum();
+ }else{
+   return m_muSch_ptr->GetBsrpPhaseNum();
+ }
+}
+ 
+int
+WifiMacHelper::GetConflictNum(void)
+{
+ return m_muSch_ptr->GetConflictStaNum();
+ }
+ 
+int
+WifiMacHelper::GetMaxCandidatesNum(void)
+{
+ return m_muSch_ptr->GetMaxCandidatesNum();
+ }
+ 
+std::vector<int>
+WifiMacHelper::GetCandidateInfo(Mac48Address addr)
+{
+ return m_muSch_ptr->GetCandidates(addr);
+}
+
+//END: Get Data
 
 } //namespace ns3

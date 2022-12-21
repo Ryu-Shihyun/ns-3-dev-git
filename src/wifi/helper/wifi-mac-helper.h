@@ -107,7 +107,13 @@ public:
    * This allows the ns3::WifiHelper class to create MAC objects from ns3::WifiHelper::Install.
    */
   virtual Ptr<WifiMac> Create (Ptr<WifiNetDevice> device, WifiStandard standard) const;
-
+  
+  //BEGIN: Get Data
+  int GetUplinkNum(int n) const;
+  int GetConflictNum(void);
+  int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidateInfo(Mac48Address addr);
+  //END: Get Data
 
 protected:
   ObjectFactory m_mac;                ///< MAC object factory

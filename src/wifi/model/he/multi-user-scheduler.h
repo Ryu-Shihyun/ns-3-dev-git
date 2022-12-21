@@ -111,6 +111,15 @@ public:
    * \return the information required to solicit an UL MU transmission
    */
   UlMuInfo& GetUlMuInfo (void);
+  
+  //BEGIN: Get Data
+  int GetBasicPhaseNum(void) ;
+  int GetBsrpPhaseNum(void) ;
+  int GetConflictStaNum(void);
+ 
+  int GetMaxCandidatesNum(void);
+  std::vector<int> GetCandidates(Mac48Address addr);
+  //END: Get Data
 
 protected:
   /**

@@ -91,6 +91,14 @@ public:
    */
   virtual void SetTargetRssi (CtrlTriggerHeader& trigger) const;
 
+  //BEGIN: MY CODE
+  int GetNBasic (void);
+  int GetNBsrp (void);
+  int GetNConflict (void);
+  int GetMaxNCandidates(void);
+  std::vector<int> GetCandidatesInfo(Mac48Address addr);
+  //END: MY CODE
+
 protected:
   void DoDispose () override;
 
@@ -215,6 +223,13 @@ protected:
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
 
+  //BEGIN: MY CODE
+  void SendQosNullFramesInTbPpduAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
+  void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic);
+  void SetSuccesses(Mac48Address addr);
+  void UpdateSuccesses(Mac48Address addr,int byte);
+  //END: MY CODE
+
 private:
   /**
    * Send the current PSDU map as a DL MU PPDU.
@@ -237,6 +252,11 @@ private:
   EventId m_multiStaBaEvent;                          //!< Sending a Multi-STA BlockAck event
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BAR
+  //BEGIN: MY CODE
+  void ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
+  int m_slot=0;
+  bool m_isbsrp;
+  //END: MY CODE
 };
 
 } //namespace ns3

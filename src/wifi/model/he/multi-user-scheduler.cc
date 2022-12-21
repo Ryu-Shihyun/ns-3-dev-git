@@ -194,4 +194,37 @@ MultiUserScheduler::CheckTriggerFrame (void)
   m_heFem->SetTargetRssi (m_ulInfo.trigger);
 }
 
+//BEGIN: Get Data
+int
+MultiUserScheduler::GetBasicPhaseNum(void)
+{
+ return m_heFem->GetNBasic();
+}
+ 
+int
+MultiUserScheduler::GetBsrpPhaseNum(void)
+{
+ return m_heFem->GetNBsrp();
+}
+ 
+int
+MultiUserScheduler::GetConflictStaNum(void)
+{
+ return m_heFem->GetNConflict();
+}
+ 
+int
+MultiUserScheduler::GetMaxCandidatesNum(void)
+{
+ return m_heFem->GetMaxNCandidates();
+}
+ 
+std::vector<int>
+MultiUserScheduler::GetCandidates(Mac48Address addr)
+{
+ return m_heFem->GetCandidatesInfo(addr);
+}
+
+//END: Get Data
+
 } //namespace ns3
