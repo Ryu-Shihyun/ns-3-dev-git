@@ -1,9 +1,9 @@
 # Ignore everything on scratch by default, except the provided examples
-
+!MBTA/MBTA.cc
 !.gitignore
 !subdir/
 !scratch-simulator.cc
 !CMakeLists.txt
 
-!MBTA/MBTA.cc
+
 MBTA/*
