@@ -82,6 +82,9 @@ WifiMacHelper::Create (Ptr<WifiNetDevice> device, WifiStandard standard) const
         {
           Ptr<MultiUserScheduler> muScheduler = m_muScheduler.Create<MultiUserScheduler> ();
           apMac->AggregateObject (muScheduler);
+          //BEGIN: Get Data
+          m_muSch_ptr = muScheduler;
+          //END: Get Data
         }
     }
   return mac;

@@ -495,6 +495,7 @@ WifiDefaultAckManager::GetAckInfoIfTfMuBar (Ptr<const WifiMacQueueItem> mpdu,
       Ptr<ApWifiMac> apMac = DynamicCast<ApWifiMac> (m_mac);
       NS_ABORT_MSG_IF (apMac == 0, "HE APs only can send DL MU PPDUs");
       uint16_t staId = apMac->GetAssociationId (receiver);
+      std::cout << "receiver:" << receiver << std::endl; // Check Aid
 
       NS_ABORT_MSG_IF (!hdr.IsQosData (),
                       "QoS data frames only can be aggregated when transmitting a "

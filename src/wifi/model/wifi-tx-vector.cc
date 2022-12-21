@@ -403,6 +403,7 @@ WifiTxVector::SetRu (HeRu::RuSpec ru, uint16_t staId)
 HeMuUserInfo
 WifiTxVector::GetHeMuUserInfo (uint16_t staId) const
 {
+  std::cout << "staId:" << staId << std::endl; // Check Aid
   NS_ABORT_MSG_IF (!IsMu (), "HE MU user info only available for MU");
   return m_muUserInfos.at (staId);
 }

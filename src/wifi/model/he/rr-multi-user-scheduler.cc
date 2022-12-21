@@ -45,7 +45,8 @@ RrMultiUserScheduler::GetTypeId (void)
                    "The maximum number of stations that can be granted an RU in a DL MU OFDMA transmission",
                    UintegerValue (4),
                    MakeUintegerAccessor (&RrMultiUserScheduler::m_nStations),
-                   MakeUintegerChecker<uint8_t> (1, 74))
+                  //  MakeUintegerChecker<uint8_t> (1, 74)) // Default
+                   MakeUintegerChecker<uint8_t> (1, 1000))
     .AddAttribute ("EnableTxopSharing",
                    "If enabled, allow A-MPDUs of different TIDs in a DL MU PPDU.",
                    BooleanValue (true),
