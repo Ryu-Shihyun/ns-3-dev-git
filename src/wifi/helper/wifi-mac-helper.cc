@@ -25,6 +25,7 @@
 #include "ns3/wifi-ack-manager.h"
 #include "ns3/multi-user-scheduler.h"
 #include "ns3/boolean.h"
+#include "ns3/mac48-address.h"
 
 namespace ns3 {
 
