@@ -311,18 +311,21 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
   if (m_state == STATE_CLOSED)
     {
       NS_LOG_LOGIC ("ERROR_BADF");
+      std::cout << "ERROR_BADF. m_staet:" << m_state << std::endl;//AT: CHECK ACTUCAL
       m_errno = ERROR_BADF;
       return -1;
     }
   if (m_shutdownSend)
     {
       NS_LOG_LOGIC ("ERROR_SHUTDOWN");
+      std::cout << "ERROR_SHUTDOWN. m_staet:" << m_state << ". m_shutdownSend:" << m_shutdownSend << std::endl;//AT: CHECK ACTUCAL
       m_errno = ERROR_SHUTDOWN;
       return -1;
     }
   if (!PacketSocketAddress::IsMatchingType (address))
     {
       NS_LOG_LOGIC ("ERROR_AFNOSUPPORT");
+      std::cout << "ERROR_AFNOSUPPORT. m_staet:" << m_state<< ". PacketSocketAddress::IsMatchingType (address):" <<PacketSocketAddress::IsMatchingType (address) << std::endl;//AT: CHECK ACTUCAL
       m_errno = ERROR_AFNOSUPPORT;
       return -1;
     }
@@ -330,6 +333,8 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
   if (p->GetSize () > GetMinMtu (ad))
     {
       m_errno = ERROR_MSGSIZE;
+      std::cout << "ERROR_MSGSIZE. m_staet:" << m_state << ". p->GetSize:" << p->GetSize () << ". GetMinMtu (ad):" << GetMinMtu (ad) << std::endl;//AT: CHECK ACTUCAL
+      
       return -1;
     }
 
@@ -350,6 +355,7 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
       if (!device->Send (p, dest, ad.GetProtocol ()))
         {
           NS_LOG_LOGIC ("error: NetDevice::Send error");
+          std::cout << "error: NetDevice::Send error. protocol:" << int(ad.GetProtocol()) << std::endl ; //AT: CHECK ACTUCAL
           error = true;
         }
     }
@@ -361,6 +367,7 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
           if (!device->Send (p, dest, ad.GetProtocol ()))
             {
               NS_LOG_LOGIC ("error: NetDevice::Send error");
+              std::cout << "error: NetDevice::Send error. protocol" << int(ad.GetProtocol()) << ". device:" << device->GetAddress() << std::endl; //AT: CHECK ACTUCAL
               error = true;
             }
         }
@@ -375,10 +382,13 @@ PacketSocket::SendTo (Ptr<Packet> p, uint32_t flags, const Address &address)
     {
       NS_LOG_LOGIC ("ERROR_INVAL 2");
       m_errno = ERROR_INVAL;
+      std::cout << "ERROR_INVAL. m_state:" << m_state << std::endl;//AT: CHECK ACTUCAL
+      
       return -1;
     }
   else
-    {
+    { 
+      std::cout << "return pktSize: m_state" << m_state<< ". p->GetSize:" << p->GetSize () << ". GetMinMtu (ad):" << GetMinMtu (ad)<< std::endl;//AT: CHECK ACTUCAL
       return pktSize;
     }
 }

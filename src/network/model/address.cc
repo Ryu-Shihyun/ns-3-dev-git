@@ -131,6 +131,7 @@ bool
 Address::IsMatchingType (uint8_t type) const
 {
   NS_LOG_FUNCTION (this << static_cast<uint32_t> (type));
+  std::cout << "m_type:" << int(m_type) << ". entry type:" << int(type) << std::endl;
   return m_type == type;
 }
 

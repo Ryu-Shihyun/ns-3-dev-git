@@ -573,6 +573,7 @@ FdNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& de
   if (IsLinkUp () == false)
     {
       m_macTxDropTrace (packet);
+      std::cout << "isLinkUp () == false" << std::endl;//AT: CHECK ACTUCAL
       return false;
     }
 
@@ -622,6 +623,7 @@ FdNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& de
   if(!buffer)
   {
     m_macTxDropTrace(packet);
+    std::cout << "packet->GetSize ():" << len << ". buffer:" << int(*buffer) << std::endl; //AT: CHECK ACTUCAL
     return false;
   }
 
@@ -639,6 +641,7 @@ FdNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& de
   if (written == -1 || (size_t) written != len)
     {
       m_macTxDropTrace (packet);
+      std::cout << "packet->GetSize ():" << len << ". written:" << int(written) << std::endl; //AT: CHECK ACTUCAL
       return false;
     }
 
