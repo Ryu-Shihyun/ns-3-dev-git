@@ -631,6 +631,10 @@ QosFrameExchangeManager::PreProcessFrame (Ptr<const WifiPsdu> psdu, const WifiTx
             {
               NS_LOG_DEBUG ("Station " << hdr.GetAddr2 () << " reported a buffer status of "
                                       << +hdr.GetQosQueueSize () << " for tid=" << +hdr.GetQosTid ());
+              //BEGIN: log for
+              std::cout << "Station " << hdr.GetAddr2 () << " reported a buffer status of "
+                                      << +hdr.GetQosQueueSize () << " for tid=" << +hdr.GetQosTid () << std::endl;
+              //END: log for
               StaticCast<ApWifiMac> (m_mac)->SetBufferStatus (hdr.GetQosTid (), hdr.GetAddr2 (), hdr.GetQosQueueSize ());
             }
         }

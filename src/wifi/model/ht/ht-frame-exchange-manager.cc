@@ -353,6 +353,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (peekedItem == 0)
     {
       NS_LOG_DEBUG ("No frames available for transmission");
+      std::cout << "ht fem: No frames available for transmission" << std::endl; //AT log for
       return false;
     }
 
@@ -369,6 +370,7 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
                                                                                             hdr.GetAddr1 ()));
       SendAddBaRequest (hdr.GetAddr1 (), hdr.GetQosTid (), startingSeq,
                         edca->GetBlockAckInactivityTimeout (), true);
+      std::cout << "ht fem: SendAddBaRequest" << std::endl; //AT log for
       return true;
     }
 
@@ -376,6 +378,8 @@ HtFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (hdr.IsQosData () && !hdr.GetAddr1 ().IsGroup () && !peekedItem->IsFragment ()
       && !m_mac->GetWifiRemoteStationManager ()->NeedFragmentation (peekedItem))
     {
+      std::cout << "ht fem: send data frame" << std::endl; //AT log for
+      
       return SendDataFrame (peekedItem, availableTime, initialFrame);
     }
 

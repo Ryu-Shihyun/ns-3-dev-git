@@ -256,20 +256,28 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
   for (const auto& candidate : m_candidates)
     {
+      
       uint8_t queueSize = m_apMac->GetMaxBufferStatus (candidate.first->address);
+      //BEGIN: log for
+      std::cout << "candidate:" << candidate.first->address << ". AID:" << candidate.first->aid 
+                << ". credit:" << candidate.first->credits << ". " ;
+      //END: log for
       if (queueSize == 255)
         {
           NS_LOG_DEBUG ("Buffer status of station " << candidate.first->address << " is unknown");
+          std::cout << "Buffer status of station " << candidate.first->address << " is unknown" << std::endl; //AT log for
           maxBufferSize = std::max (maxBufferSize, m_ulPsduSize);
         }
       else if (queueSize == 254)
         {
           NS_LOG_DEBUG ("Buffer status of station " << candidate.first->address << " is not limited");
+          std::cout << "Buffer status of station " << candidate.first->address << " is not limited" << std::endl; //AT log for
           maxBufferSize = 0xffffffff;
         }
       else
         {
           NS_LOG_DEBUG ("Buffer status of station " << candidate.first->address << " is " << +queueSize);
+          std::cout << "Buffer status of station " << candidate.first->address << " is " << +queueSize << std::endl; //AT log for
           maxBufferSize = std::max (maxBufferSize, static_cast<uint32_t> (queueSize * 256));
         }
       // serve the station if its queue size is not null
@@ -595,6 +603,8 @@ RrMultiUserScheduler::TrySendingDlMuPpdu (void)
                       // the frame meets the constraints
                       NS_LOG_DEBUG ("Adding candidate STA (MAC=" << staIt->address << ", AID="
                                     << staIt->aid << ") TID=" << +tid);
+                      std::cout << "Adding candidate STA (MAC=" << staIt->address << ", AID="
+                                    << staIt->aid << ") TID=" << +tid << std::endl;
                       m_candidates.push_back ({staIt, mpdu});
                       break;    // terminate the for loop
                     }
@@ -703,6 +713,12 @@ RrMultiUserScheduler::ComputeDlMuInfo (void)
 
   for (const auto& candidate : m_candidates)
     {
+      //BEGIN: log for
+      std::cout << "candidate:" << candidate.first->address << ". AID:" << candidate.first->aid 
+                << ". credit:" << candidate.first->credits << ". DL_MU_TX" << std::endl ;
+      //END: log for
+      
+
       // Let us try first A-MSDU aggregation if possible
       mpdu = candidate.second;
       NS_ASSERT (mpdu != nullptr);
@@ -819,6 +835,7 @@ RrMultiUserScheduler::AssignRuIndices (WifiTxVector& txVector)
         {
           NS_ASSERT (ruSetIt != ruSet.end ());
           txVector.SetRu (*ruSetIt, userInfo.first);
+          std::cout << "Assign Ru. staId:" << userInfo.first << ". RU:" << userInfo.second.ru << std::endl;
           ruSetIt++;
         }
       else

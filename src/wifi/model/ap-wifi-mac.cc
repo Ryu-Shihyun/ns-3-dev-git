@@ -825,18 +825,31 @@ ApWifiMac::SendAssocResp (Mac48Address to, bool success, bool isReassoc)
       code.SetSuccess ();
       uint16_t aid = 0;
       bool found = false;
-      if (isReassoc)
+      //BEGIN: MY CODE Fix Bug
+      for (const auto& sta : m_staList)
         {
-          for (const auto& sta : m_staList)
+          if (sta.second == to)
             {
-              if (sta.second == to)
-                {
-                  aid = sta.first;
-                  found = true;
-                  break;
-                }
+              aid = sta.first;
+              found = true;
+              break;
             }
         }
+      //END: MY CODE Fix Bug
+      //BEGIN: Default
+      // if (isReassoc)
+      //   {
+      //     for (const auto& sta : m_staList)
+      //       {
+      //         if (sta.second == to)
+      //           {
+      //             aid = sta.first;
+      //             found = true;
+      //             break;
+      //           }
+      //       }
+      //   }
+      //END: Default
       if (!found)
         {
           aid = GetNextAssociationId ();

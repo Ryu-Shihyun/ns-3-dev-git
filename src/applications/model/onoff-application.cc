@@ -334,14 +334,36 @@ void OnOffApplication::SendPacket ()
       header.SetSeq (m_seq++);
       header.SetSize (m_pktSize);
       NS_ABORT_IF (m_pktSize < header.GetSerializedSize ());
-      packet = Create<Packet> (m_pktSize - header.GetSerializedSize ());
+      
+      //BEGIN: Get Data
+      std::ostringstream msg;
+      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ",";
+      std::cout << "m_enableSeqTsSizeHeader:"<< msg.str() << std::endl;
+      packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize - header.GetSerializedSize ());
+     //END: Get Data
+      
+      //BEGIN: Default
+      // packet = Create<Packet> (m_pktSize - header.GetSerializedSize ());
+      //END: Default
+      
       // Trace before adding header, for consistency with PacketSink
       m_txTraceWithSeqTsSize (packet, from, to, header);
       packet->AddHeader (header);
     }
   else
     {
-      packet = Create<Packet> (m_pktSize);
+      //BEGIN: log for
+      Address from;
+      m_socket->GetSockName (from);
+      std::ostringstream msg;
+      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ",";
+      std::cout << "else:" << msg.str() << std::endl;
+      packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize);
+      //END: log for
+
+      //BEGIN: Default
+      // packet = Create<Packet> (m_pktSize);
+      //END: Default
     }
 
   int actual = m_socket->Send (packet);
@@ -360,6 +382,17 @@ void OnOffApplication::SendPacket ()
                        << InetSocketAddress::ConvertFrom(m_peer).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (m_peer).GetPort ()
                        << " total Tx " << m_totBytes << " bytes");
+          
+          //BEGIN: log for
+          std::cout << "@ time " << Simulator::Now ().As (Time::S)
+                      << " on-off application sent "
+                      <<  packet->GetSize () << " bytes to "
+                      << InetSocketAddress::ConvertFrom(m_peer).GetIpv4 ()
+                      << " port " << InetSocketAddress::ConvertFrom (m_peer).GetPort ()
+                      << " total Tx " << m_totBytes << " bytes" << std::endl;
+          //END: log for
+
+
           m_txTraceWithAddresses (packet, localAddress, InetSocketAddress::ConvertFrom (m_peer));
         }
       else if (Inet6SocketAddress::IsMatchingType (m_peer))

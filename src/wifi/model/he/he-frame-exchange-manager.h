@@ -255,7 +255,7 @@ private:
   //BEGIN: MY CODE
   void ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId, HeRu::RuSpec ru);
   int m_slot=0;
-  bool m_isbsrp;
+  bool m_is_after_bsrp;
   //END: MY CODE
 };
 

@@ -34,6 +34,10 @@
 #include "ns3/boolean.h"
 #include "ns3/ipv4-packet-info-tag.h"
 #include "ns3/ipv6-packet-info-tag.h"
+//BEGIN: My Include
+#include <fstream>
+#include <string>
+//END: My Include
 
 namespace ns3 {
 
@@ -209,6 +213,40 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
                        << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
                        << " total Rx " << m_totalRx << " bytes");
+          //BEGIN: log for
+         std::cout << "At time " << Simulator::Now ().As (Time::S)
+                      << " packet sink received "
+                      <<  packet->GetSize () << " bytes from "
+                      << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
+                      << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
+                      << " total Rx " << m_totalRx << " bytes" << std::endl;
+        
+         uint8_t *buffer = new uint8_t[packet->GetSize()];
+         packet->CopyData(buffer,packet->GetSize());
+         std::string str = std::string(buffer, buffer + packet->GetSize());
+         int first = 0;
+         int last = str.find_first_of(',');
+         std::cout << str << std::endl;
+         std::vector<std::string> result;
+         while (first < str.size()) {
+           result.push_back(str.substr(first, last - first));
+           first = last + 1;
+           last = str.find_first_of(',', first);
+           if (last == std::string::npos) last = str.size();
+         }
+        
+         auto ip_from = InetSocketAddress::ConvertFrom(from).GetIpv4 ();
+         Time delay = Simulator::Now() - Time(result.at(1));
+ 
+         //SUB BEGIN: record delay
+         std::ofstream  writting_file;
+         std::string filename = "./data/delayData.csv";
+         writting_file.open(filename, std::ios::app);
+         writting_file << ip_from << "," << delay.GetInteger() << std::endl;
+         writting_file.close();
+ 
+         //END: log for
+
         }
       else if (Inet6SocketAddress::IsMatchingType (from))
         {

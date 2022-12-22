@@ -162,11 +162,16 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
 
   if (txFormat == MultiUserScheduler::SU_TX)
     {
+      std::cout << "Time:" << Simulator::Now() << ". SU_TX. m_self:" << m_self << std::endl; //AT log for 
       return VhtFrameExchangeManager::StartFrameExchange (edca, availableTime, initialFrame);
     }
 
   if (txFormat == MultiUserScheduler::DL_MU_TX)
     {
+      //BEGIN: log for 
+      m_is_after_bsrp = false;//AT MY CODE
+      std::cout << "Time:" << Simulator::Now() << ". DL_MU_TX. m_self:" << m_self << std::endl;
+      //END: log for
       if (m_muScheduler->GetDlMuInfo ().psduMap.empty ())
         {
           NS_LOG_DEBUG ("The Multi-user Scheduler returned DL_MU_TX with empty psduMap, do not transmit");
@@ -180,6 +185,10 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
 
   if (txFormat == MultiUserScheduler::UL_MU_TX)
     {
+      //BEGIN: MY CODE
+      (!m_is_after_bsrp) ? m_numBasic++ : m_numBsrp++;
+      std::cout << "Time:" << Simulator::Now() << ". UL_MU_TX. m_self:" << m_self << std::endl;
+      //END: MY CODE
       auto packet = Create<Packet> ();
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
       auto trigger = Create<WifiMacQueueItem> (packet, m_muScheduler->GetUlMuInfo ().macHdr);
@@ -1809,6 +1818,10 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<WifiMacQueueItem> mpdu, RxSignalInfo rx
             }
           else if (trigger.IsBsrp ())
             {
+              //BEGIN: Get Data
+              SetSuccesses(m_self);
+              m_is_after_bsrp = true;
+              //END: Get Data
               Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::SendQosNullFramesInTbPpdu,
                                    this, trigger, hdr);
             }
@@ -2281,6 +2294,7 @@ HeFrameExchangeManager::UpdateSuccesses(Mac48Address addr,int byte)
 std::vector<int>
 HeFrameExchangeManager::GetCandidatesInfo(Mac48Address addr)
 {
+  std::cout << "Fucntion:" << __func__ << ". addr:" << addr << std::endl;
  auto itr = std::find_if(m_successes.begin(),m_successes.end(),[&addr](CandidateInfo ci){
    return ci.addr == addr;
  });
