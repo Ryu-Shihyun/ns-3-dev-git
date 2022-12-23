@@ -426,11 +426,7 @@ WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
   if (mpdu == item)
     {
       // the given item must be dropped
-<<<<<<< HEAD
       std::cout << "the given item must be dropped"<< std::endl;
-=======
-      // std::cout << "the given item must be dropped" << ". mpdu:" << *mpdu << std::endl;
->>>>>>> mbta-re1-3
       return false;
     }
   
@@ -442,11 +438,7 @@ WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
     }
   if (mpdu != nullptr)
     {
-<<<<<<< HEAD
       std::cout << "Do remove" << std::endl;
-=======
-      // std::cout << "Do remove" << ". addr1:" << mpdu->GetHeader().GetAddr1() << ". addr2:" << mpdu->GetHeader().GetAddr2()<< std::endl;
->>>>>>> mbta-re1-3
       DoRemove (GetIt (mpdu));
     }
 
