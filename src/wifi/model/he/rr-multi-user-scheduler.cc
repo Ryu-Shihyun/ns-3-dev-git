@@ -853,4 +853,75 @@ RrMultiUserScheduler::ComputeUlMuInfo (void)
   return UlMuInfo {m_trigger, m_triggerMacHdr, std::move (m_txParams)};
 }
 
+//BEGIN: MY CODE
+void
+RrMultiUserScheduler::AssignRuIndices (WifiTxVector& txVector, bool isRaRu)
+{
+  NS_LOG_FUNCTION (this << txVector);
+
+  uint8_t bw = txVector.GetChannelWidth ();
+
+  // find the RU types allocated in the TXVECTOR
+  std::set<HeRu::RuType> ruTypeSet;
+  for (const auto& userInfo : txVector.GetHeMuUserInfoMap ())
+    {
+      ruTypeSet.insert (userInfo.second.ru.GetRuType ());
+    }
+
+  std::vector<HeRu::RuSpec> ruSet, central26TonesRus;
+
+  // This scheduler allocates equal sized RUs and optionally the remaining 26-tone RUs
+  if (ruTypeSet.size () == 2)
+    {
+      // central 26-tone RUs have been allocated
+      NS_ASSERT (ruTypeSet.find (HeRu::RU_26_TONE) != ruTypeSet.end ());
+      ruTypeSet.erase (HeRu::RU_26_TONE);
+      NS_ASSERT (ruTypeSet.size () == 1);
+      central26TonesRus = HeRu::GetCentral26TonesRus (bw, *ruTypeSet.begin ());
+    }
+
+  NS_ASSERT (ruTypeSet.size () == 1);
+  ruSet = HeRu::GetRusOfType (bw, *ruTypeSet.begin ());
+
+  auto ruSetIt = ruSet.begin ();
+  auto central26TonesRusIt = central26TonesRus.begin ();
+
+  for (const auto& userInfo : txVector.GetHeMuUserInfoMap ())
+    {
+      if(isRaRu){
+        if (userInfo.second.ru.GetRuType () == *ruTypeSet.begin ())
+        {
+          NS_ASSERT (ruSetIt != ruSet.end ());
+          txVector.SetRu (*ruSetIt, userInfo.first);
+          std::cout << "Assign Ru. staId:" << userInfo.first << ". RU:" << userInfo.second.ru << std::endl;
+          ruSetIt++;
+        }
+      else
+        {
+          NS_ASSERT (central26TonesRusIt != central26TonesRus.end ());
+          txVector.SetRu (*central26TonesRusIt, userInfo.first);
+          central26TonesRusIt++;
+        }
+      }
+      else
+      {
+        if (userInfo.second.ru.GetRuType () == *ruTypeSet.begin ())
+        {
+          NS_ASSERT (ruSetIt != ruSet.end ());
+          txVector.SetRu (*ruSetIt, userInfo.first);
+          std::cout << "Assign Ru. staId:" << userInfo.first << ". RU:" << userInfo.second.ru << std::endl;
+          ruSetIt++;
+        }
+      else
+        {
+          NS_ASSERT (central26TonesRusIt != central26TonesRus.end ());
+          txVector.SetRu (*central26TonesRusIt, userInfo.first);
+          central26TonesRusIt++;
+        }
+      }
+    }
+}
+
+//END: MY CODE
+
 } //namespace ns3

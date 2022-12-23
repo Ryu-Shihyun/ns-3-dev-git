@@ -825,6 +825,7 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
       if (!m_txBuffer->Add (p))
         { // TxBuffer overflow, send failed
           m_errno = ERROR_MSGSIZE;
+          std::cout << "ERROR_MSGSIZE. m_state:" << TcpStateName[m_state] << std::endl; //AT: Check State
           return -1;
         }
       if (m_shutdownSend)
@@ -849,6 +850,7 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
                                                             this, m_connected);
             }
         }
+      std::cout << "return p->GetSize(). m_state:" << TcpStateName[m_state] << std::endl; //AT: Check State
       return p->GetSize ();
     }
   else

@@ -366,6 +366,12 @@ void OnOffApplication::SendPacket ()
       //END: Default
     }
 
+  //BEGIN: Log for
+  Address f;
+  m_socket->GetSockName(f);
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". m_self:" << InetScoketAddress::ConvertFrom(f).GetIpv4(); 
+  //END: log for
+
   int actual = m_socket->Send (packet);
   if ((unsigned) actual == m_pktSize)
     {

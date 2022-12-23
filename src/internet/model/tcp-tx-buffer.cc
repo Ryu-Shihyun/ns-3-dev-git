@@ -182,6 +182,7 @@ TcpTxBuffer::Add (Ptr<Packet> p)
   NS_LOG_FUNCTION (this << p);
   NS_LOG_LOGIC ("Try to append " << p->GetSize () << " bytes to window starting at "
                                 << m_firstByteSeq << ", availSize=" << Available ());
+  std::cout << "p->GetSize():" << p->GetSize() << ". Available():" << Available() << std::endl; //AT: Check State
   if (p->GetSize () <= Available ())
     {
       if (p->GetSize () > 0)
@@ -193,10 +194,15 @@ TcpTxBuffer::Add (Ptr<Packet> p)
 
           NS_LOG_LOGIC ("Updated size=" << m_size << ", lastSeq=" <<
                         m_firstByteSeq + SequenceNumber32 (m_size));
+          //BEGIN: Check State
+          std::cout << "Updated size=" << m_size << ", lastSeq=" <<
+                        m_firstByteSeq + SequenceNumber32 (m_size) << std::endl;
+          //EMD: Check State
         }
       return true;
     }
   NS_LOG_LOGIC ("Rejected. Not enough room to buffer packet.");
+  std::cout << "Rejected. Not enough room to buffer packet." << std::endl; //AT: Check State
   return false;
 }
 

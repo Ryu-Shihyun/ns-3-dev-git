@@ -137,6 +137,12 @@ private:
   CtrlTriggerHeader m_trigger;                          //!< Trigger Frame to send
   WifiMacHeader m_triggerMacHdr;                        //!< MAC header for Trigger Frame
   WifiTxParameters m_txParams;                          //!< TX parameters
+
+  //BEGIN: MY CODE
+  void AssignRuIndices (WifiTxVector& txVector, bool isRaRu);
+  //END: MY CODE
+
+
 };
 
 } //namespace ns3

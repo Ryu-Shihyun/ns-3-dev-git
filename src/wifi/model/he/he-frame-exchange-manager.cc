@@ -675,6 +675,9 @@ HeFrameExchangeManager::ForwardPsduMapDown (WifiConstPsduMap psduMap, WifiTxVect
 
   for (const auto& psdu : psduMap)
     {
+      std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". type:" << psdu.second->GetHeader(0).GetTypeString()
+                << "Transmitting: [STAID=" << psdu.first << ", " << *psdu.second << "]";
+      if(psdu.second->GetHeader(0).GetType()!=WifiMacType::WIFI_MAC_QOSDATA_NULL) std::cout << std::endl;
       NS_LOG_DEBUG ("Transmitting: [STAID=" << psdu.first << ", " << *psdu.second << "]");
     }
   NS_LOG_DEBUG ("TXVECTOR: " << txVector);
