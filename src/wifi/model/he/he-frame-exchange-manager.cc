@@ -725,7 +725,8 @@ HeFrameExchangeManager::ForwardPsduMapDown (WifiConstPsduMap psduMap, WifiTxVect
   for (const auto& psdu : psduMap)
     {
       std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ". type:" << psdu.second->GetHeader(0).GetTypeString() 
-                << ". addr1:"<<  psdu.second->GetAddr1() << ". addr2:" << psdu.second->GetAddr2() <<  ". byte:" << psdu.second->GetPacket()->GetSize() <<  std::endl;  
+                << ". addr1:"<<  psdu.second->GetAddr1() << ". addr2:" << psdu.second->GetAddr2() <<  ". byte:" << psdu.second->GetPacket()->GetSize();
+      if(psdu.second->GetHeader(0).GetType()!= WifiMacType::WIFI_MAC_QOSDATA_NULL) std::cout <<  std::endl;  
       NS_LOG_DEBUG ("Transmitting: [STAID=" << psdu.first << ", " << *psdu.second << "]");
     }
   NS_LOG_DEBUG ("TXVECTOR: " << txVector);
@@ -1930,9 +1931,49 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
               WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
               auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
               std::cout << "Time:" << Simulator::Now() << ". RECEIVE BASIC. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
+              if(trigger.GetMbtaIndicator()) SetSuccesses(m_self);
               //END: log for
-              Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
+
+              //BEGIN: MY CODE
+              if(trigger.GetArbitrationSlots()>0 && trigger.GetMbtaIndicator())
+              {
+                m_slot = trigger.GetArbitrationSlots();
+                Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+                uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot)-1);
+                HeRuMap sri;
+                std::vector<HeRuMap>::iterator itr;
+                uint16_t staId = m_staMac->GetAssociationId();
+                WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
+                auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+                itr = std::find_if(m_staRuInfo.begin(), m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
+                                  return i.ru == ru;
+                });
+                BusyTone busyTone = {staId, arbitrationNum,trigger,hdr,false};
+                if(itr==m_staRuInfo.end())
+                {
+                  sri.ru=ru;
+                  sri.bt.push_back(busyTone);
+                  m_staRuInfo.insert(m_staRuInfo.end(),sri);
+                }
+                else
+                {
+                  itr->bt.push_back(busyTone);
+                }
+                std::cout << "sta addr: " << m_self << ". staId:" << staId << std::endl;
+
+                Simulator::Schedule(m_phy->GetSifs(), &HeFrameExchangeManager::SendBusyTone,
+                                    this, trigger, hdr, staId,ru, true);
+              }
+              else
+              {
+                Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
                                    this, trigger, hdr);
+              }
+              //END: MY CODE
+              //BEGIN: Default
+              // Simulator::Schedule (m_phy->GetSifs (), &HeFrameExchangeManager::ReceiveBasicTrigger,
+              //                      this, trigger, hdr);
+              //END: Default
             }
           else if (trigger.IsBsrp ())
             {

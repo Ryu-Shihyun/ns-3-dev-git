@@ -193,6 +193,7 @@ public:
    * \param start The Time at which each of the applications should start.
    */
   void Start (Time start);
+  void ReadySocket(Time start);
 
   /**
    * \brief Start all of the Applications in this container at the start time

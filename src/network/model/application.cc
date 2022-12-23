@@ -126,6 +126,11 @@ void Application::StopApplication ()
   NS_LOG_FUNCTION (this);
 }
 
+void Application::ReadySocketForSta ()
+{ // Provide null functionality in case subclass is not interested
+  NS_LOG_FUNCTION (this);
+}
+
 } // namespace ns3
 
 

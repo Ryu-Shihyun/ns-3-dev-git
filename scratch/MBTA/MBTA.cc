@@ -399,7 +399,7 @@ int main (int argc, char *argv[])
                     PacketSinkHelper packetSinkHelper("ns3::TcpSocketFactory", localAddress);
                     serverApp = packetSinkHelper.Install(serverNodes.get());
                     serverApp.Start(Seconds(0.0));
-                    serverApp.Stop(Seconds(simulationTime + warmUpTime));
+                    serverApp.Stop(Seconds(simulationTime + warmUpTime+0.5 *nStations));
  
                     for (std::size_t i = 0; i < nStations; i++)
                     {
@@ -414,8 +414,9 @@ int main (int argc, char *argv[])
                             InetSocketAddress(serverInterfaces.GetAddress(i), port));
                         onoff.SetAttribute("Remote", remoteAddress);
                         ApplicationContainer clientApp = onoff.Install(clientNodes.Get(i));
-                        clientApp.Start(Seconds(warmUpTime));
-                        clientApp.Stop(Seconds(simulationTime + warmUpTime));
+                        clientApp.ReadySocket(Seconds(warmUpTime + 0.5 * i));
+                        clientApp.Start(Seconds(warmUpTime + 0.5 * nStations));
+                        clientApp.Stop(Seconds(simulationTime + warmUpTime + 0.5 * nStations));
                     }
                 }
             
@@ -440,10 +441,10 @@ int main (int argc, char *argv[])
               }
               for(int i=0 ; i<101 ; i++)
               {
-                Simulator::Schedule (Seconds((simulationTime+warmUpTime)/100*i),&PrintProgress,i);
+                Simulator::Schedule (Seconds((simulationTime+warmUpTime+ 0.5*nStations)/100*i),&PrintProgress,i);
               }
 
-              Simulator::Stop (Seconds (simulationTime + warmUpTime));
+              Simulator::Stop (Seconds (simulationTime + warmUpTime+ 0.5*nStations));
               Simulator::Run ();
 
               // When multiple stations are used, there are chances that association requests collide

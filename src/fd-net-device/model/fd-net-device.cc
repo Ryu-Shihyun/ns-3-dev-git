@@ -623,7 +623,7 @@ FdNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& de
   if(!buffer)
   {
     m_macTxDropTrace(packet);
-    std::cout << "packet->GetSize ():" << len << ". buffer:" << int(*buffer) << std::endl; //AT: CHECK ACTUCAL
+    std::cout << "packet->GetSize ():" << len << ". buffer is null" << std::endl; //AT: CHECK ACTUCAL
     return false;
   }
 

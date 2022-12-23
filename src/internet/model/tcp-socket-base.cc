@@ -825,11 +825,13 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
       if (!m_txBuffer->Add (p))
         { // TxBuffer overflow, send failed
           m_errno = ERROR_MSGSIZE;
+          std::cout << "ERROR_MSGSIZE. m_staet:" << m_state  << std::endl;//AT: CHECK ACTUCAL
           return -1;
         }
       if (m_shutdownSend)
         {
           m_errno = ERROR_SHUTDOWN;
+          std::cout << "ERROR_SHUTDOWN. m_staet:" << m_state  << std::endl;//AT: CHECK ACTUCAL
           return -1;
         }
 
@@ -839,6 +841,7 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
 
       // Submit the data to lower layers
       NS_LOG_LOGIC ("txBufSize=" << m_txBuffer->Size () << " state " << TcpStateName[m_state]);
+      std::cout << "txBufSize=" << m_txBuffer->Size () << " state " << TcpStateName[m_state] << std::endl;//AT: CHECK ACTUCAL
       if ((m_state == ESTABLISHED || m_state == CLOSE_WAIT) && AvailableWindow () > 0)
         { // Try to send the data out: Add a little step to allow the application
           // to fill the buffer
@@ -849,11 +852,13 @@ TcpSocketBase::Send (Ptr<Packet> p, uint32_t flags)
                                                             this, m_connected);
             }
         }
+      std::cout << "return true. m_staet:" << m_state  << std::endl;//AT: CHECK ACTUCAL
       return p->GetSize ();
     }
   else
     { // Connection not established yet
       m_errno = ERROR_NOTCONN;
+      std::cout << "ERROR_NOTCONN. m_staet:" << m_state  << std::endl;//AT: CHECK ACTUCAL
       return -1; // Send failure
     }
 }
@@ -1141,7 +1146,12 @@ TcpSocketBase::ForwardUp (Ptr<Packet> packet, Ipv4Header header, uint16_t port,
                 ":" << m_endPoint->GetPeerPort () <<
                 " to " << m_endPoint->GetLocalAddress () <<
                 ":" << m_endPoint->GetLocalPort ());
-
+  std::cout << "Time:" << Simulator::Now() << 
+               ". Socket " << this << " forward up " <<
+                m_endPoint->GetPeerAddress () <<
+                ":" << m_endPoint->GetPeerPort () <<
+                " to " << m_endPoint->GetLocalAddress () <<
+                ":" << m_endPoint->GetLocalPort () << std::endl;//My log
   Address fromAddress = InetSocketAddress (header.GetSource (), port);
   Address toAddress = InetSocketAddress (header.GetDestination (),
                                          m_endPoint->GetLocalPort ());
@@ -1152,6 +1162,7 @@ TcpSocketBase::ForwardUp (Ptr<Packet> packet, Ipv4Header header, uint16_t port,
   if (!IsValidTcpSegment (tcpHeader.GetSequenceNumber (), bytesRemoved,
                           packet->GetSize () - bytesRemoved))
     {
+      std::cout << "IsValidTcpSegment is false" << std::endl;//My log
       return;
     }
 
@@ -1255,6 +1266,11 @@ TcpSocketBase::IsValidTcpSegment (const SequenceNumber32 seq, const uint32_t tcp
                    ":" << seq + tcpPayloadSize <<
                    ") out of range [" << m_tcb->m_rxBuffer->NextRxSequence () << ":" <<
                    m_tcb->m_rxBuffer->MaxRxSequence () << ")");
+      std::cout << "At state " << TcpStateName[m_state] <<
+                   " received packet of seq [" << seq <<
+                   ":" << seq + tcpPayloadSize <<
+                   ") out of range [" << m_tcb->m_rxBuffer->NextRxSequence () << ":" <<
+                   m_tcb->m_rxBuffer->MaxRxSequence () << ")" << std::endl;
       // Acknowledgement should be sent for all unacceptable packets (RFC793, p.69)
       SendEmptyPacket (TcpHeader::ACK);
       return false;
@@ -1354,6 +1370,7 @@ TcpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
                             " received packet of seq [" << seq <<
                             ":" << seq + packet->GetSize () <<
                             ") without TS option. Silently discard it");
+              std::cout << "tcpHeader.HasOption(TS) is false" << std::endl;//My log
               return;
             }
           else
@@ -1383,6 +1400,7 @@ TcpSocketBase::DoForwardUp (Ptr<Packet> packet, const Address &fromAddress,
 
   // TCP state machine code in different process functions
   // C.f.: tcp_rcv_state_process() in tcp_input.c in Linux kernel
+  std::cout << "m_state:" << TcpStateName[m_state] << std::endl;
   switch (m_state)
     {
     case ESTABLISHED:
@@ -2188,6 +2206,7 @@ TcpSocketBase::ProcessListen (Ptr<Packet> packet, const TcpHeader& tcpHeader,
   // C.f.: the LISTEN part in tcp_v4_do_rcv() in tcp_ipv4.c in Linux kernel
   if (tcpflags != TcpHeader::SYN)
     {
+      std::cout << "tcpflag is not SYN" << std::endl;
       return;
     }
 
@@ -2195,6 +2214,7 @@ TcpSocketBase::ProcessListen (Ptr<Packet> packet, const TcpHeader& tcpHeader,
   // If the server app refuses the connection, do nothing
   if (!NotifyConnectionRequest (fromAddress))
     {
+      std::cout << "NotifyConnectionRequest is false" << std::endl;
       return;
     }
   // Clone the socket, simulate fork
@@ -2216,6 +2236,7 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
   if (tcpflags == 0)
     { // Bare data, accept it and move to ESTABLISHED state. This is not a normal behaviour. Remove this?
       NS_LOG_DEBUG ("SYN_SENT -> ESTABLISHED");
+      std::cout << "SYN_SENT -> ESTABLISHED" << std::endl;
       m_congestionControl->CongestionStateSet (m_tcb, TcpSocketState::CA_OPEN);
       m_tcb->m_congState = TcpSocketState::CA_OPEN;
       m_state = ESTABLISHED;
@@ -2227,10 +2248,12 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
     }
   else if (tcpflags & TcpHeader::ACK && !(tcpflags & TcpHeader::SYN))
     { // Ignore ACK in SYN_SENT
+      std::cout << "Ignore ACK in SYN_SENT" << std::endl;
     }
   else if (tcpflags & TcpHeader::SYN && !(tcpflags & TcpHeader::ACK))
     { // Received SYN, move to SYN_RCVD state and respond with SYN+ACK
       NS_LOG_DEBUG ("SYN_SENT -> SYN_RCVD");
+      std::cout << "SYN_SENT -> SYN_RCVD" << std::endl;
       m_state = SYN_RCVD;
       m_synCount = m_synRetries;
       m_tcb->m_rxBuffer->SetNextRxSequence (tcpHeader.GetSequenceNumber () + SequenceNumber32 (1));
@@ -2241,6 +2264,7 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
       if (m_tcb->m_useEcn != TcpSocketState::Off && (tcpflags & (TcpHeader::CWR | TcpHeader::ECE)) == (TcpHeader::CWR | TcpHeader::ECE))
         {
           NS_LOG_INFO ("Received ECN SYN packet");
+          std::cout << "Received ECN SYN packet" << std::endl;
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK | TcpHeader::ECE);
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
           m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
@@ -2248,6 +2272,7 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
       else
         {
           m_tcb->m_ecnState = TcpSocketState::ECN_DISABLED;
+          std::cout << "SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK);" << std::endl;
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK);
         }
     }
@@ -2255,6 +2280,7 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
            && m_tcb->m_nextTxSequence + SequenceNumber32 (1) == tcpHeader.GetAckNumber ())
     { // Handshake completed
       NS_LOG_DEBUG ("SYN_SENT -> ESTABLISHED");
+      std::cout << "SYN_SENT -> ESTABLISHED" << std::endl;
       m_congestionControl->CongestionStateSet (m_tcb, TcpSocketState::CA_OPEN);
       m_tcb->m_congState = TcpSocketState::CA_OPEN;
       m_state = ESTABLISHED;
@@ -2273,12 +2299,14 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
       if (m_tcb->m_useEcn != TcpSocketState::Off && (tcpflags & (TcpHeader::CWR | TcpHeader::ECE)) == (TcpHeader::ECE))
         {
           NS_LOG_INFO ("Received ECN SYN-ACK packet.");
+          std::cout << "Received ECN SYN-ACK packet." << std::endl;
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
           m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
         }
       else
         {
           m_tcb->m_ecnState = TcpSocketState::ECN_DISABLED;
+          std::cout << "m_tcb->m_ecnState = TcpSocketState::ECN_DISABLED;" << std::endl;
         }
       SendPendingData (m_connected);
       Simulator::ScheduleNow (&TcpSocketBase::ConnectionSucceeded, this);
@@ -2292,6 +2320,8 @@ TcpSocketBase::ProcessSynSent (Ptr<Packet> packet, const TcpHeader& tcpHeader)
         { // When (1) rx of FIN+ACK; (2) rx of FIN; (3) rx of bad flags
           NS_LOG_LOGIC ("Illegal flag combination " << TcpHeader::FlagsToString (tcpHeader.GetFlags ()) <<
                         " received in SYN_SENT. Reset packet is sent.");
+          std::cout << "Illegal flag combination " << TcpHeader::FlagsToString (tcpHeader.GetFlags ()) <<
+                        " received in SYN_SENT. Reset packet is sent."<< std::endl;
           SendRST ();
         }
       CloseAndNotify ();
@@ -2316,6 +2346,7 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
       // possibly due to ACK lost in 3WHS. If in-sequence ACK is received, the
       // handshake is completed nicely.
       NS_LOG_DEBUG ("SYN_RCVD -> ESTABLISHED");
+      std::cout << "SYN_RCVD -> ESTABLISHED" << std::endl;
       m_congestionControl->CongestionStateSet (m_tcb, TcpSocketState::CA_OPEN);
       m_tcb->m_congState = TcpSocketState::CA_OPEN;
       m_state = ESTABLISHED;
@@ -2355,6 +2386,7 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
       if (m_tcb->m_useEcn != TcpSocketState::Off && (tcpHeader.GetFlags () & (TcpHeader::CWR | TcpHeader::ECE)) == (TcpHeader::CWR | TcpHeader::ECE))
         {
           NS_LOG_INFO ("Received ECN SYN packet");
+          std::cout <<"Received ECN SYN packet" << std::endl;
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK |TcpHeader::ECE);
           NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
           m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
@@ -2362,6 +2394,7 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
       else
         {
           m_tcb->m_ecnState = TcpSocketState::ECN_DISABLED;
+
           SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK);
         }
     }
@@ -2369,6 +2402,7 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
     {
       if (tcpHeader.GetSequenceNumber () == m_tcb->m_rxBuffer->NextRxSequence ())
         { // In-sequence FIN before connection complete. Set up connection and close.
+         std::cout << "In-sequence FIN before connection complete. Set up connection and close." << std::endl;
           m_connected = true;
           m_retxEvent.Cancel ();
           m_tcb->m_highTxMark = ++m_tcb->m_nextTxSequence;
@@ -2393,6 +2427,8 @@ TcpSocketBase::ProcessSynRcvd (Ptr<Packet> packet, const TcpHeader& tcpHeader,
         { // When (1) rx of SYN+ACK; (2) rx of FIN; (3) rx of bad flags
           NS_LOG_LOGIC ("Illegal flag " << TcpHeader::FlagsToString (tcpflags) <<
                         " received. Reset packet is sent.");
+          std::cout << "Illegal flag " << TcpHeader::FlagsToString (tcpflags) <<
+                        " received. Reset packet is sent." << std::endl;
           if (m_endPoint)
             {
               m_endPoint->SetPeer (InetSocketAddress::ConvertFrom (fromAddress).GetIpv4 (),
@@ -2910,6 +2946,7 @@ TcpSocketBase::CompleteFork ([[maybe_unused]] Ptr<Packet> p, const TcpHeader& h,
 
   // Change the cloned socket from LISTEN state to SYN_RCVD
   NS_LOG_DEBUG ("LISTEN -> SYN_RCVD");
+  std::cout << "LISTEN -> SYN_RCVD" << std::endl;
   m_state = SYN_RCVD;
   m_synCount = m_synRetries;
   m_dataRetrCount = m_dataRetries;
@@ -2925,6 +2962,7 @@ TcpSocketBase::CompleteFork ([[maybe_unused]] Ptr<Packet> p, const TcpHeader& h,
     {
       SendEmptyPacket (TcpHeader::SYN | TcpHeader::ACK | TcpHeader::ECE);
       NS_LOG_DEBUG (TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE");
+      std::cout << TcpSocketState::EcnStateName[m_tcb->m_ecnState] << " -> ECN_IDLE" << std::endl;
       m_tcb->m_ecnState = TcpSocketState::ECN_IDLE;
     }
   else
@@ -3136,6 +3174,11 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       NS_LOG_DEBUG ("Send segment of size " << sz << " with remaining data " <<
                     remainingData << " via TcpL4Protocol to " <<  m_endPoint->GetPeerAddress () <<
                     ". Header " << header);
+      //BEGIN: Check actual
+      std::cout << "endpoint: Send segment of size " << sz << " with remaining data " <<
+                    remainingData << " via TcpL4Protocol to " <<  m_endPoint->GetPeerAddress () <<
+                    ". Header " << header << std::endl;
+      //END: Check actual
     }
   else
     {
@@ -3144,6 +3187,11 @@ TcpSocketBase::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool with
       NS_LOG_DEBUG ("Send segment of size " << sz << " with remaining data " <<
                     remainingData << " via TcpL4Protocol to " <<  m_endPoint6->GetPeerAddress () <<
                     ". Header " << header);
+      //BEGIN: Check actual
+      std::cout << "Send segment of size " << sz << " with remaining data " <<
+                    remainingData << " via TcpL4Protocol to " <<  m_endPoint->GetPeerAddress () <<
+                    ". Header " << header << std::endl;
+      //END: Check actual
     }
 
   UpdateRttHistory (seq, sz, isRetransmission);
@@ -3215,11 +3263,13 @@ TcpSocketBase::SendPendingData (bool withAck)
   // else branch to control silly window syndrome and Nagle)
   while (availableWindow > 0)
     {
+      std::cout << "avilableWindow:" << availableWindow << std::endl;//AT: log for
       if (IsPacingEnabled ())
         {
           NS_LOG_INFO ("Pacing is enabled");
           if (m_pacingTimer.IsRunning ())
             {
+              std::cout << "Skipping Packet due to pacing" << m_pacingTimer.GetDelayLeft () << std::endl;//AT: log for
               NS_LOG_INFO ("Skipping Packet due to pacing" << m_pacingTimer.GetDelayLeft ());
               break;
             }
@@ -3230,6 +3280,7 @@ TcpSocketBase::SendPendingData (bool withAck)
           && m_state == TcpSocket::FIN_WAIT_1)
         {
           NS_LOG_INFO ("FIN_WAIT and OPEN state; no data to transmit");
+          std::cout << "FIN_WAIT and OPEN state; no data to transmit" << std::endl;//AT: log for
           break;
         }
       // (C.1) The scoreboard MUST be queried via NextSeg () for the
@@ -3243,6 +3294,7 @@ TcpSocketBase::SendPendingData (bool withAck)
       if (!m_txBuffer->NextSeg (&next, &nextHigh, enableRule3))
         {
           NS_LOG_INFO ("no valid seq to transmit, or no data available");
+          std::cout << "no valid seq to transmit, or no data available" << std::endl;//AT: log for
           break;
         }
       else
@@ -3262,6 +3314,7 @@ TcpSocketBase::SendPendingData (bool withAck)
           if (availableWindow < m_tcb->m_segmentSize && availableData > availableWindow)
             {
               NS_LOG_LOGIC ("Preventing Silly Window Syndrome. Wait to send.");
+              std::cout << "Preventing Silly Window Syndrome. Wait to send." << std::endl;//AT: log for
               break; // No more
             }
           // Nagle's algorithm (RFC896): Hold off sending if there is unacked data
@@ -3271,6 +3324,9 @@ TcpSocketBase::SendPendingData (bool withAck)
               NS_LOG_DEBUG ("Invoking Nagle's algorithm for seq " << next <<
                             ", SFS: " << m_txBuffer->SizeFromSequence (next) <<
                             ". Wait to send.");
+              std::cout << "SendPendingData no segments sentInvoking Nagle's algorithm for seq " << next <<
+                            ", SFS: " << m_txBuffer->SizeFromSequence (next) <<
+                            ". Wait to send." << std::endl;//AT: log for
               break;
             }
 
@@ -3308,6 +3364,17 @@ TcpSocketBase::SendPendingData (bool withAck)
                         " total unAck: " << UnAckDataCount () <<
                         " sent seq " << m_tcb->m_nextTxSequence <<
                         " size " << sz);
+          //BEGIN: Log for
+          std::cout << " rxwin " << m_rWnd <<
+                        " segsize " << m_tcb->m_segmentSize <<
+                        " highestRxAck " << m_txBuffer->HeadSequence () <<
+                        " pd->Size " << m_txBuffer->Size () <<
+                        " pd->SFS " << m_txBuffer->SizeFromSequence (m_tcb->m_nextTxSequence)
+                    <<"cWnd: " << m_tcb->m_cWnd <<
+                        " total unAck: " << UnAckDataCount () <<
+                        " sent seq " << m_tcb->m_nextTxSequence <<
+                        " size " << sz << std::endl;
+          //END: Log for
           m_tcb->m_nextTxSequence += sz;
           ++nPacketsSent;
           if (IsPacingEnabled ())
@@ -3317,6 +3384,7 @@ TcpSocketBase::SendPendingData (bool withAck)
                 {
                   NS_LOG_DEBUG ("Current Pacing Rate " << m_tcb->m_pacingRate);
                   NS_LOG_DEBUG ("Timer is in expired state, activate it " << m_tcb->m_pacingRate.Get ().CalculateBytesTxTime (sz));
+                  std::cout << "Current Pacing Rate " << m_tcb->m_pacingRate << "Timer is in expired state, activate it " << m_tcb->m_pacingRate.Get ().CalculateBytesTxTime (sz) << std::endl;//AT: log for
                   m_pacingTimer.Schedule (m_tcb->m_pacingRate.Get ().CalculateBytesTxTime (sz));
                   break;
                 }
@@ -3346,10 +3414,12 @@ TcpSocketBase::SendPendingData (bool withAck)
         }
 
       NS_LOG_DEBUG ("SendPendingData sent " << nPacketsSent << " segments");
+      std::cout << "SendPendingData sent " << nPacketsSent << " segments" << std::endl;//AT: log for
     }
   else
     {
       NS_LOG_DEBUG ("SendPendingData no segments sent");
+      std::cout << "SendPendingData no segments sent" << std::endl;//AT: log for
     }
   return nPacketsSent;
 }
@@ -4454,20 +4524,25 @@ TcpSocketBase::IsPacingEnabled (void) const
 {
   if (!m_tcb->m_pacing)
     {
+      std::cout << "m_pacing is false" << std::endl;//AT: log for
       return false;
     }
   else
     {
       if (m_tcb->m_paceInitialWindow)
         {
+           std::cout << "m_pacingInitialWindow is true" << std::endl;//AT: log for
           return true;
         }
       SequenceNumber32 highTxMark = m_tcb->m_highTxMark; // cast traced value
+       std::cout << "highTxMark.GetValue ()"<<highTxMark.GetValue () << (GetInitialCwnd () * m_tcb->m_segmentSize) ;//AT: log for
       if (highTxMark.GetValue () > (GetInitialCwnd () * m_tcb->m_segmentSize))
         {
+          std::cout << ". true" << std::endl;//AT: log for
           return true;
         }
     }
+  std::cout << ". false" << std::endl;//AT: log for
   return false;
 }
 
