@@ -277,11 +277,11 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
       return TxFormat::SU_TX;
     }
   //BEGIN: Default
-  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
   //END: Default
   
   //BEGIN: My Code Ru Random Assign
-  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
+  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
   //END:  My Code Ru Random Assign
 
   if (txVector.GetHeMuUserInfoMap ().empty ())
@@ -346,6 +346,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   NS_LOG_DEBUG ("Duration of QoS Null frames: " << qosNullTxDuration.As (Time::MS));
   m_trigger.SetUlLength (ulLength);
   std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun UlMuTX" << std::endl;
+  m_isNotAfterBsrp = false;//AT: MY CODE
   return UL_MU_TX;
 }
 
@@ -370,9 +371,15 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   }
   //END: log for
   // only consider stations that do not have reported a null queue size
-  WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
-                                              { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+  //BEGIN: Default
+  // WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
+  //                                             { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+  //END: Default
 
+  //BEGIN: Ru Random Assign for UORA
+  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
+  m_isNotAfterBsrp = true;
+  //END: Ru Random Assing for UORA
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
       NS_LOG_DEBUG ("No suitable station found");

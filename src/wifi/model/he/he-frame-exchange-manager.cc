@@ -2094,18 +2094,13 @@ HeFrameExchangeManager::SendBusyTone(const CtrlTriggerHeader& trigger, const Wif
 void
 HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr, uint16_t staId,HeRu::RuSpec ru)
 {
-  // add staId, txVector
-  if(m_psduMap.empty()){
-    // std::cout << "empty" << std::endl;
-  };
-  // std::cout << "receiveBT " <<m_txTimer.IsRunning()<<std::endl;
-  std::cout << "receiveBasicTriggerAfterA..." <<Simulator::Now() << std::endl; // added by ryu 10/20
   NS_LOG_FUNCTION (this << trigger << hdr);
   NS_ASSERT (trigger.IsBasic ());
   NS_ASSERT (m_staMac && m_staMac->IsAssociated ());
 
   NS_LOG_DEBUG ("Received a Trigger Frame (basic variant) soliciting a transmission");
- 
+  std::cout << "Time:" << Simulator::Now() << ". " << __func__ << std::endl;
+
   if (trigger.GetCsRequired () && hdr.GetAddr2 () != m_txopHolder && m_navEnd > Simulator::Now ())
     {
       NS_LOG_DEBUG ("Carrier Sensing required and channel busy, do nothing");
@@ -2114,11 +2109,7 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
   auto ru_ptr = std::find_if(m_staRuInfo.begin(),m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
                                   return i.ru == ru;
                             });
-  // Starting from the Preferred AC indicated in the Trigger Frame, check if there
-  // is either a pending BlockAckReq frame or a data frame that can be transmitted
-  // in the allocated time and is addressed to a station with which a Block Ack
-  // agreement has been established.
-
+  
   auto my_ptr = std::find_if(ru_ptr->bt.begin(),ru_ptr->bt.end(),[&](const BusyTone &i)->bool {
                                   return i.staId == staId;
                             });
@@ -2126,7 +2117,14 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
     std::cout << "this sta " << staId << "is looser" << std::endl;
     return;
   }
+  // Starting from the Preferred AC indicated in the Trigger Frame, check if there
+  // is either a pending BlockAckReq frame or a data frame that can be transmitted
+  // in the allocated time and is addressed to a station with which a Block Ack
+  // agreement has been established.
+
+  // create the sequence of TIDs to check
   std::vector<uint8_t> tids;
+  //uint16_t staId = m_staMac->GetAssociationId ();
   AcIndex preferredAc = trigger.FindUserInfoWithAid (staId)->GetPreferredAc ();
   auto acIt = wifiAcList.find (preferredAc);
   for (uint8_t i = 0; i < 4; i++)
@@ -2141,9 +2139,6 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
           acIt = wifiAcList.begin ();
         }
     }
-  // std::cout << m_txTimer.IsRunning() << std::endl;
-  //Ptr<const WifiMacQueueItem> mpdu;
-  // Ptr<WifiMpdu> mpdu;//MODIFY
 
   Ptr<WifiPsdu> psdu;
   WifiTxParameters txParams;
@@ -2152,14 +2147,14 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
                                                                   tbTxVector,
                                                                   m_phy->GetPhyBand ());
 
-//  std::cout << m_txTimer.IsRunning() << std::endl;
   for (const auto& tid : tids)
     {
       Ptr<QosTxop> edca = m_mac->GetQosTxop (tid);
-
+      std::cout <<"TID:" << int(tid) << std::endl;
       if (!edca->GetBaAgreementEstablished (hdr.GetAddr2 (), tid))
         {
           // no Block Ack agreement established for this TID
+          std::cout <<"sta:"<< m_staMac->GetAddress() << ". no Block Ack agreement established for this TID:" << int(tid) << std::endl;
           continue;
         }
 
@@ -2171,46 +2166,43 @@ HeFrameExchangeManager::ReceiveBasicTriggerAfterA (const CtrlTriggerHeader& trig
           (mpdu = edca->GetBaManager ()->GetBar (false, tid, hdr.GetAddr2 ()))
           && TryAddMpdu (mpdu, txParams, ppduDuration))
         {
-          // std::cout << "sending a bar with in a tb ppdu" << std::endl;//added by ryu 2022/10/11
           NS_LOG_DEBUG ("Sending a BAR within a TB PPDU");
+          std::cout <<"sta:"<< m_staMac->GetAddress() << ". Sending a BAR within a TB PPDU" << std::endl;
+          
           psdu = Create<WifiPsdu> (edca->GetBaManager ()->GetBar (true, tid, hdr.GetAddr2 ()), true);
           break;
         }
 
       // otherwise, check if a suitable data frame is available
       if (Ptr<WifiMpdu> mpdu;
-          (mpdu = /*edca->PeekNextMpdu (tid, hdr.GetAddr2 ())*/ edca->PeekNextMpdu (m_linkId, tid, hdr.GetAddr2 ())))
+          (mpdu = edca->PeekNextMpdu (m_linkId, tid, hdr.GetAddr2 ())))
         {
-          // Ptr<WifiMacQueueItem> item = edca->GetNextMpdu (mpdu, txParams, ppduDuration, false);
-         Ptr<WifiMpdu> item = edca->GetNextMpdu (m_linkId, mpdu, txParams, ppduDuration, false);
+          Ptr<WifiMpdu> item = edca->GetNextMpdu (m_linkId, mpdu, txParams, ppduDuration, false);
+          std::cout << "peekNextMpdu" << std::endl;
           if (item)
             {
               // try A-MPDU aggregation
-              //std::vector<Ptr<WifiMacQueueItem>> mpduList = m_mpduAggregator->GetNextAmpdu (item, txParams,ppduDuration);
+              std::cout <<"sta:"<< m_staMac->GetAddress() << ". try A-MPDU aggregation" << std::endl;
               std::vector<Ptr<WifiMpdu>> mpduList = m_mpduAggregator->GetNextAmpdu (item, txParams,
                                                                                             ppduDuration);
-              
               psdu = (mpduList.size () > 1 ? Create<WifiPsdu> (std::move (mpduList))
                                            : Create<WifiPsdu> (item, true));
-              std::cout << "try A-MPDU aggregation" << std::endl;//added by ryu 2022/10/11
               break;
             }
         }
     }
-    // std::cout << m_txTimer.IsRunning() << std::endl;
+
   if (psdu)
     {
-      std::cout << "set psdu" << std::endl; //added by ryu 2022/10/11
       psdu->SetDuration (hdr.GetDuration () - m_phy->GetSifs () - ppduDuration);
       SendPsduMapWithProtection (WifiPsduMap {{staId, psdu}}, txParams);
     }
   else
     {
       // send QoS Null frames
-      std::cout << "send qos null frames" << std::endl; //added by ryu 2022/10/11
+      std::cout <<"sta:"<< m_staMac->GetAddress() << ". Send QoS Null Frame" << std::endl;
       SendQosNullFramesInTbPpdu (trigger, hdr);
     }
-    // m_ul=false;
 }
 
 void
