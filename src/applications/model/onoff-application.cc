@@ -153,6 +153,46 @@ OnOffApplication::AssignStreams (int64_t stream)
 }
 
 void
+OnOffApplication::ReadySocketForSta (void)
+{
+  m_socket = Socket::CreateSocket (GetNode (), m_tid);
+  int ret = -1;
+
+  if (! m_local.IsInvalid())
+    {
+      NS_ABORT_MSG_IF ((Inet6SocketAddress::IsMatchingType (m_peer) && InetSocketAddress::IsMatchingType (m_local)) ||
+                        (InetSocketAddress::IsMatchingType (m_peer) && Inet6SocketAddress::IsMatchingType (m_local)),
+                        "Incompatible peer and local address IP version");
+      ret = m_socket->Bind (m_local);
+    }
+  else
+    {
+      if (Inet6SocketAddress::IsMatchingType (m_peer))
+        {
+          ret = m_socket->Bind6 ();
+        }
+      else if (InetSocketAddress::IsMatchingType (m_peer) ||
+                PacketSocketAddress::IsMatchingType (m_peer))
+        {
+          ret = m_socket->Bind ();
+        }
+    }
+
+  if (ret == -1)
+    {
+      NS_FATAL_ERROR ("Failed to bind socket");
+    }
+
+  m_socket->Connect (m_peer);
+  m_socket->SetAllowBroadcast (true);
+  m_socket->ShutdownRecv ();
+
+  m_socket->SetConnectCallback (
+    MakeCallback (&OnOffApplication::ConnectionSucceeded, this),
+    MakeCallback (&OnOffApplication::ConnectionFailed, this)); 
+}
+
+void
 OnOffApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -172,42 +212,44 @@ void OnOffApplication::StartApplication () // Called at time specified by Start
   // Create the socket if not already
   if (!m_socket)
     {
-      m_socket = Socket::CreateSocket (GetNode (), m_tid);
-      int ret = -1;
-
-      if (! m_local.IsInvalid())
-        {
-          NS_ABORT_MSG_IF ((Inet6SocketAddress::IsMatchingType (m_peer) && InetSocketAddress::IsMatchingType (m_local)) ||
-                           (InetSocketAddress::IsMatchingType (m_peer) && Inet6SocketAddress::IsMatchingType (m_local)),
-                           "Incompatible peer and local address IP version");
-          ret = m_socket->Bind (m_local);
-        }
-      else
-        {
-          if (Inet6SocketAddress::IsMatchingType (m_peer))
-            {
-              ret = m_socket->Bind6 ();
-            }
-          else if (InetSocketAddress::IsMatchingType (m_peer) ||
-                   PacketSocketAddress::IsMatchingType (m_peer))
-            {
-              ret = m_socket->Bind ();
-            }
-        }
-
-      if (ret == -1)
-        {
-          NS_FATAL_ERROR ("Failed to bind socket");
-        }
-
-      m_socket->Connect (m_peer);
-      m_socket->SetAllowBroadcast (true);
-      m_socket->ShutdownRecv ();
-
-      m_socket->SetConnectCallback (
-        MakeCallback (&OnOffApplication::ConnectionSucceeded, this),
-        MakeCallback (&OnOffApplication::ConnectionFailed, this));
+      ReadySocketForSta();
     }
+    //   m_socket = Socket::CreateSocket (GetNode (), m_tid);
+    //   int ret = -1;
+
+    //   if (! m_local.IsInvalid())
+    //     {
+    //       NS_ABORT_MSG_IF ((Inet6SocketAddress::IsMatchingType (m_peer) && InetSocketAddress::IsMatchingType (m_local)) ||
+    //                        (InetSocketAddress::IsMatchingType (m_peer) && Inet6SocketAddress::IsMatchingType (m_local)),
+    //                        "Incompatible peer and local address IP version");
+    //       ret = m_socket->Bind (m_local);
+    //     }
+    //   else
+    //     {
+    //       if (Inet6SocketAddress::IsMatchingType (m_peer))
+    //         {
+    //           ret = m_socket->Bind6 ();
+    //         }
+    //       else if (InetSocketAddress::IsMatchingType (m_peer) ||
+    //                PacketSocketAddress::IsMatchingType (m_peer))
+    //         {
+    //           ret = m_socket->Bind ();
+    //         }
+    //     }
+
+    //   if (ret == -1)
+    //     {
+    //       NS_FATAL_ERROR ("Failed to bind socket");
+    //     }
+
+    //   m_socket->Connect (m_peer);
+    //   m_socket->SetAllowBroadcast (true);
+    //   m_socket->ShutdownRecv ();
+
+    //   m_socket->SetConnectCallback (
+    //     MakeCallback (&OnOffApplication::ConnectionSucceeded, this),
+    //     MakeCallback (&OnOffApplication::ConnectionFailed, this));
+    // }
   m_cbrRateFailSafe = m_cbrRate;
 
   // Insure no pending event

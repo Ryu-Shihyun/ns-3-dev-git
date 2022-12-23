@@ -564,7 +564,11 @@ TcpL4Protocol::SendPacketV4 (Ptr<Packet> packet, const TcpHeader &outgoing,
                                  << " flags " << TcpHeader::FlagsToString (outgoing.GetFlags ())
                                  << " data size " << packet->GetSize ());
   // XXX outgoingHeader cannot be logged
-
+  std::cout << "TcpL4Protocol " << this
+                                 << " sending seq " << outgoing.GetSequenceNumber ()
+                                 << " ack " << outgoing.GetAckNumber ()
+                                 << " flags " << TcpHeader::FlagsToString (outgoing.GetFlags ())
+                                 << " data size " << packet->GetSize () << std::endl;
   TcpHeader outgoingHeader = outgoing;
   /** \todo UrgentPointer */
   /* outgoingHeader.SetUrgentPointer (0); */
@@ -593,8 +597,10 @@ TcpL4Protocol::SendPacketV4 (Ptr<Packet> packet, const TcpHeader &outgoing,
       else
         {
           NS_LOG_ERROR ("No IPV4 Routing Protocol");
+          std::cout << "No IPV4 Routing Protocol" << std::endl;
           route = 0;
         }
+        std::cout << "Function:"<< __func__ << ". pacjet:" << packet->GetSize() << ". saddr:" << saddr<< ". daddr:" << daddr << ". protocol:" << +PROT_NUMBER << std::endl;    //AT: LOG FOR
       m_downTarget (packet, saddr, daddr, PROT_NUMBER, route);
     }
   else

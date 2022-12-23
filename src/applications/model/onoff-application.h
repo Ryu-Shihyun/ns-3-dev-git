@@ -136,7 +136,7 @@ private:
   // inherited from Application base class.
   virtual void StartApplication (void);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
-
+  virtual void ReadySocketForSta (void) override;
   //helpers
   /**
    * \brief Cancel all pending events.

@@ -122,6 +122,7 @@ public:
    */
   typedef void (*StateTransitionCallback)(const std::string &oldState,
                                           const std::string &newState);
+  virtual void ReadySocketForSta(void);
 
 private:
   /**
@@ -132,7 +133,7 @@ private:
    * subclasses.
    */
   virtual void StartApplication (void);
-
+  
   /**
    * \brief Application specific shutdown code
    *

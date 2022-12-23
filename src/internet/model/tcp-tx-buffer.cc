@@ -127,6 +127,7 @@ TcpTxBuffer::SetSackEnabled (bool enabled)
 uint32_t
 TcpTxBuffer::Available (void) const
 {
+  std::cout << "m_maxBuffer:" << m_maxBuffer << ". m_size:" << m_size <<std::endl;
   return m_maxBuffer - m_size;
 }
 
@@ -194,9 +195,11 @@ TcpTxBuffer::Add (Ptr<Packet> p)
           NS_LOG_LOGIC ("Updated size=" << m_size << ", lastSeq=" <<
                         m_firstByteSeq + SequenceNumber32 (m_size));
         }
+      std::cout << "p->GetSize():" << p->GetSize() << ". Available:" << Available () << std::endl;//AT: CHECK ACTUCAL
       return true;
     }
   NS_LOG_LOGIC ("Rejected. Not enough room to buffer packet.");
+  std::cout << "Rejected. Not enough room to buffer packet. p->GetSize():" << p->GetSize() << ". Available:" << Available () << std::endl;//AT: CHECK ACTUCAL
   return false;
 }
 

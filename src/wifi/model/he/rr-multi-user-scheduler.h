@@ -179,6 +179,10 @@ private:
   CtrlTriggerHeader m_trigger;                          //!< Trigger Frame to send
   WifiMacHeader m_triggerMacHdr;                        //!< MAC header for Trigger Frame
   WifiTxParameters m_txParams;                          //!< TX parameters
+
+  //BEGIN: MY CODE
+  bool m_isNotAfterBsrp=true;
+  //END: MY CODE
 };
 
 } //namespace ns3

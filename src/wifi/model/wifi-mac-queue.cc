@@ -195,7 +195,7 @@ WifiMacQueue::Insert (ConstIterator pos, Ptr<WifiMpdu> item)
   NS_LOG_FUNCTION (this << *item);
   NS_ASSERT_MSG (GetMaxSize ().GetUnit () == QueueSizeUnit::PACKETS,
                  "WifiMacQueues must be in packet mode");
-
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << ".item:" << *item <<  std::endl;
   // insert the item if the queue is not full
   if (QueueBase::GetNPackets () < GetMaxSize ().GetValue ())
     {
@@ -420,13 +420,17 @@ bool
 WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
 {
   NS_LOG_FUNCTION (this << *item);
-  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__;
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
   auto mpdu = m_scheduler->HasToDropBeforeEnqueue (m_ac, item);
 
   if (mpdu == item)
     {
       // the given item must be dropped
+<<<<<<< HEAD
       std::cout << "the given item must be dropped"<< std::endl;
+=======
+      // std::cout << "the given item must be dropped" << ". mpdu:" << *mpdu << std::endl;
+>>>>>>> mbta-re1-3
       return false;
     }
   
@@ -438,7 +442,11 @@ WifiMacQueue::DoEnqueue (ConstIterator pos, Ptr<WifiMpdu> item)
     }
   if (mpdu != nullptr)
     {
+<<<<<<< HEAD
       std::cout << "Do remove" << std::endl;
+=======
+      // std::cout << "Do remove" << ". addr1:" << mpdu->GetHeader().GetAddr1() << ". addr2:" << mpdu->GetHeader().GetAddr2()<< std::endl;
+>>>>>>> mbta-re1-3
       DoRemove (GetIt (mpdu));
     }
 
@@ -488,7 +496,7 @@ Ptr<WifiMpdu>
 WifiMacQueue::DoRemove (ConstIterator pos)
 {
   NS_LOG_FUNCTION (this);
-  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__  << ". addr1:" << pos->mpdu->GetHeader().GetAddr1() << ". addr2:" << pos->mpdu->GetHeader().GetAddr2()<< std::endl;
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__  << std::endl;
   auto item = Queue<WifiMpdu, WifiMacQueueContainer>::DoRemove (pos);
 
   if (item)

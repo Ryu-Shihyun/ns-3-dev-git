@@ -21,6 +21,7 @@
 #include "ns3/names.h"
 #include "ns3/log.h"
 #include "application-container.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -81,6 +82,16 @@ ApplicationContainer::Add (std::string name)
 {
   Ptr<Application> application = Names::Find<Application> (name);
   m_applications.push_back (application);
+}
+
+void
+ApplicationContainer::ReadySocket(Time start)
+{
+  for (Iterator i = Begin (); i != End (); ++i)
+    {
+      Ptr<Application> app = *i;
+      Simulator::Schedule(start, &Application::ReadySocketForSta, app);
+    }
 }
 
 void
