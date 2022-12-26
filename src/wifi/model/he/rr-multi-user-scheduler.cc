@@ -372,12 +372,12 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   //END: log for
   // only consider stations that do not have reported a null queue size
   //BEGIN: Default
-  // WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
+  WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
   //                                             { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
   //END: Default
 
   //BEGIN: Ru Random Assign for UORA
-  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
+  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
   m_isNotAfterBsrp = true;
   //END: Ru Random Assing for UORA
   if (txVector.GetHeMuUserInfoMap ().empty ())

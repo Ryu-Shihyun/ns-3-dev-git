@@ -254,7 +254,7 @@ private:
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BAR
 
-  int m_slot=2;
+  int m_slot=0;
   bool m_isbsrp;
 };
 

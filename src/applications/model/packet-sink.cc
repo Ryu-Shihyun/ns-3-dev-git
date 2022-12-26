@@ -36,6 +36,7 @@
 #include "ns3/ipv6-packet-info-tag.h"
 #include <fstream>
 #include <string>
+#include "ns3/string.h"
 
 namespace ns3 {
 
@@ -65,6 +66,11 @@ PacketSink::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&PacketSink::m_enableSeqTsSizeHeader),
                    MakeBooleanChecker ())
+    .AddAttribute("FileName",
+                    "Csv file name",
+                   StringValue ("default"),
+                   MakeStringAccessor (&PacketSink::m_dataName),
+                   MakeStringChecker ())
     .AddTraceSource ("Rx",
                      "A packet has been received",
                      MakeTraceSourceAccessor (&PacketSink::m_rxTrace),
@@ -258,8 +264,9 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
 
           //SUB BEGIN: record delay
           std::ofstream  writting_file;
-          std::string filename = "./data/delayData.csv";
-          writting_file.open(filename, std::ios::app);
+          std::stringstream filename;
+          filename << "./data/delayData_" <<  m_dataName << ".csv";
+          writting_file.open(filename.str(), std::ios::app);
           writting_file << ip_from << "," << delay.GetInteger() << std::endl;
           writting_file.close();
 

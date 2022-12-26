@@ -397,6 +397,7 @@ int main (int argc, char *argv[])
                     uint16_t port = 50000;
                     Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
                     PacketSinkHelper packetSinkHelper("ns3::TcpSocketFactory", localAddress);
+                    packetSinkHelper.SetAttribute("FileName",StringValue(csvName.str()));
                     serverApp = packetSinkHelper.Install(serverNodes.get());
                     serverApp.Start(Seconds(0.0));
                     serverApp.Stop(Seconds(simulationTime + warmUpTime+0.5 *nStations));

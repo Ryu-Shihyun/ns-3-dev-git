@@ -30,6 +30,7 @@
 #include "ns3/inet6-socket-address.h"
 #include "ns3/seq-ts-size-header.h"
 #include <unordered_map>
+#include <string>
 
 namespace ns3 {
 
@@ -205,9 +206,7 @@ private:
   TracedCallback<Ptr<const Packet>, const Address &, const Address &, const SeqTsSizeHeader&> m_rxTraceWithSeqTsSize;
 
   //BEGIN: log for
-  // typedef std::pair<Time, int> delayPair;
-  // typedef std::pair<Ipv4Address, delayPair> addrPair;
-  // std::vector <addrPair> m_delayInfo;
+  std::string m_dataName = "default";
   //BEGIN: log for
 };
 
