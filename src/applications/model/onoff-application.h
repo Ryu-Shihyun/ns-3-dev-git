@@ -176,7 +176,8 @@ private:
   uint32_t        m_seq {0};      //!< Sequence
   Ptr<Packet>     m_unsentPacket; //!< Unsent packet cached for future attempt
   bool            m_enableSeqTsSizeHeader {false}; //!< Enable or disable the use of SeqTsSizeHeader
-
+  int             m_createNum=0;//AT: log for
+  
 
   /// Traced Callback: transmitted packets.
   TracedCallback<Ptr<const Packet> > m_txTrace;

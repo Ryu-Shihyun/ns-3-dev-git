@@ -401,7 +401,7 @@ void OnOffApplication::SendPacket ()
       Address from;
       m_socket->GetSockName (from);
       std::ostringstream msg;
-      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ","; 
+      msg << InetSocketAddress::ConvertFrom(from).GetIpv4 () << "," << Simulator::Now() << ",create:"<< m_createNum << ","; 
       std::cout << "else:" << msg.str() << std::endl;
       packet = Create<Packet> ((uint8_t *)msg.str().c_str(), m_pktSize);
       //END: log for
@@ -435,6 +435,7 @@ void OnOffApplication::SendPacket ()
                        << InetSocketAddress::ConvertFrom(m_peer).GetIpv4 ()
                        << " port " << InetSocketAddress::ConvertFrom (m_peer).GetPort ()
                        << " total Tx " << m_totBytes << " bytes" << std::endl;
+          m_createNum++;
           //END: log for
           m_txTraceWithAddresses (packet, localAddress, InetSocketAddress::ConvertFrom (m_peer));
         }

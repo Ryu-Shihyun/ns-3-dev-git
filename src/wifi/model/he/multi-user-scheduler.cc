@@ -335,6 +335,39 @@ MultiUserScheduler::GetCandidates(Mac48Address addr)
 {
   return m_heFem->GetCandidatesInfo(addr);
 }
+
+float
+MultiUserScheduler::GetWasteRuRate(void)
+{
+  return m_heFem->GetWasteRuRate();
+}
+
+int
+MultiUserScheduler::GetWasteRuCount(void)
+{
+  return m_heFem->GetWasteRuCount();
+}
+bool 
+MultiUserScheduler::isEnableBsrp()
+{
+  return false;
+}
+void 
+MultiUserScheduler::SetEnableBsrp(bool isBsrp)
+{
+  // nothing
+};
+void
+MultiUserScheduler::SwitchRuAssignMode(bool sw)
+{
+  //nothing
+}
+void
+MultiUserScheduler::SetIsDoneUl(bool flag)
+{
+  m_isDoneUl = flag;
+}
+
 //END: MY CODE
 
 } //namespace ns3

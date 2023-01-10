@@ -49,6 +49,13 @@ public:
   static TypeId GetTypeId (void);
   RrMultiUserScheduler ();
   virtual ~RrMultiUserScheduler ();
+  //BEGIN: My Proposed
+  //Change m_enableBsrp When STA`s Conflict threashold reached;
+  // void SetEnableBsrp(bool isBsrp);
+  bool isEnableBsrp(void) override;
+  void SetEnableBsrp(bool isBsrp) override;
+  void SwitchRuAssignMode(bool sw) override;
+  //END: My Proposed
 
 protected:
   void DoDispose (void) override;
@@ -182,6 +189,7 @@ private:
 
   //BEGIN: MY CODE
   bool m_isNotAfterBsrp=true;
+  bool m_isRuRand=false;
   //END: MY CODE
 };
 

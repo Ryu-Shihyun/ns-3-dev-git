@@ -125,12 +125,14 @@ WifiMacQueueContainer::DoExtractExpiredMpdus (ContainerQueue& queue) const
   iterator firstExpiredIt = queue.begin ();
   iterator lastExpiredIt = firstExpiredIt;
   Time now = Simulator::Now ();
+  int count = 0;//AT: log for
 
   while (lastExpiredIt != queue.end () && lastExpiredIt->expiryTime <= now)
     {
       lastExpiredIt->expired = true;
       // this MPDU is no longer queued
       lastExpiredIt->ac = AC_UNDEF;
+      std::cout << "### delete mpdu:" << *(lastExpiredIt->mpdu) << std::endl;//AT: log for
       lastExpiredIt->deleter (lastExpiredIt->mpdu);
 
       WifiContainerQueueId queueId = GetQueueId (lastExpiredIt->mpdu);
@@ -140,8 +142,9 @@ WifiMacQueueContainer::DoExtractExpiredMpdus (ContainerQueue& queue) const
       it->second -= lastExpiredIt->mpdu->GetSize ();
 
       ++lastExpiredIt;
+      count++;//AT: log for
     }
-
+  std::cout << "### expired count:" << count << std::endl;//AT: log for
   if (lastExpiredIt != firstExpiredIt)
     {
       // transfer MPDUs with expired lifetime to the tail of m_expiredQueue

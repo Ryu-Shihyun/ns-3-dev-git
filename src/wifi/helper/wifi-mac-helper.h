@@ -134,6 +134,8 @@ public:
   int GetConflictNum(void);
   int GetMaxCandidatesNum(void);
   std::vector<int> GetCandidateInfo(Mac48Address addr);
+  float GetWasteRuRate(void);
+  int GetWasteRuCount(void);
   //END: MY CODE
 
 protected:

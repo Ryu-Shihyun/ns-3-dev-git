@@ -56,7 +56,11 @@ public:
   static TypeId GetTypeId (void);
   MultiUserScheduler ();
   virtual ~MultiUserScheduler ();
-
+  //BEGIN: My Propose
+  virtual bool isEnableBsrp(void);
+  virtual void SetEnableBsrp(bool isBsrp);
+  virtual void SwitchRuAssignMode(bool sw);
+  void SetIsDoneUl(bool flag);
   /// Enumeration of the possible transmission formats
   enum TxFormat
   {
@@ -122,6 +126,10 @@ public:
 
   int GetMaxCandidatesNum(void);
   std::vector<int> GetCandidates(Mac48Address addr);
+
+  float GetWasteRuRate(void);
+  int GetWasteRuCount(void);
+  bool m_isDoneUl;//AT: log for
   // END: MY CODE
 protected:
   /**

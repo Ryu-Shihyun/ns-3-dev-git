@@ -97,6 +97,10 @@ public:
   int GetNConflict (void);
   int GetMaxNCandidates(void);
   std::vector<int> GetCandidatesInfo(Mac48Address addr);
+  float GetWasteRuRate(void);
+  int GetWasteRuCount(void);
+  std::vector<int> GetBpsSets(void);
+  std::vector<Mac48Address > GetQosNullStas(void);
   // END: MY CODE
 
 protected:
@@ -225,9 +229,17 @@ protected:
   Ptr<StaWifiMac> m_staMac;                           //!< MAC pointer (null if not a STA)
   WifiTxVector m_trigVector;                          //!< the TRIGVECTOR
 
+  //BEGIN: MY CODE
   void SendBusyTone(const CtrlTriggerHeader& trigger, const WifiMacHeader& hdr,uint8_t staId, HeRu::RuSpec ru, bool isBasic);
   void SetSuccesses(Mac48Address addr);
   void UpdateSuccesses(Mac48Address addr,int byte);
+  void SetBsrpTfReceive(Mac48Address addr);
+  void SetQosNullReceived(Mac48Address addr);
+  void SetUlSuccesses(Mac48Address addr);
+  void SearchUlSuccessSta(Mac48Address addr);
+  void AddUlSuccessStaSize(Mac48Address addr,int byte);
+  int GetNRuForUl(void);
+  //END: MY CODE
 
 private:
   /**
@@ -254,8 +266,11 @@ private:
   MuSnrTag m_muSnrTag;                                //!< Tag to attach to Multi-STA BlockAck frames
   bool m_triggerFrameInAmpdu;                         //!< True if the received A-MPDU contains an MU-BAR
 
-  int m_slot=0;
+  // int m_slot=0;
   bool m_isbsrp;
+  // Ptr<NormalRandomVariable> m_rand = CreateObject<NormalRandomVariable> ();
+  Ptr<UniformRandomVariable> m_rand = CreateObject<UniformRandomVariable> ();
+
 };
 
 } //namespace ns3

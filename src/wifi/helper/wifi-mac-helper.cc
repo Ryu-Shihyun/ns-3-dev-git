@@ -154,6 +154,20 @@ WifiMacHelper::GetCandidateInfo(Mac48Address addr)
 {
   return m_muSch_ptr->GetCandidates(addr);
 }
+
+float
+WifiMacHelper::GetWasteRuRate(void)
+{
+  return m_muSch_ptr->GetWasteRuRate();
+}
+
+int
+WifiMacHelper::GetWasteRuCount(void)
+{
+  return m_muSch_ptr->GetWasteRuCount();
+}
+
+
 //END: MY CODE
 
 } //namespace ns3

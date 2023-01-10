@@ -30,6 +30,7 @@
 #include "he-phy.h"
 #include <algorithm>
 #include <functional>
+#include <fstream>
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT std::clog << "[link=" << +m_linkId << "][mac=" << m_self << "] "
@@ -45,11 +46,17 @@ int m_numBasic=0;
 int m_numBsrp=0;
 int m_nConflict =0;
 int m_wins;
+int m_ruNum;
+int m_bsrpSuccessNum;
+bool m_isArbi;
+
 struct CandidateInfo {
   Mac48Address addr;
   int cCount;
   int sCount;
   int byte;
+  int bsrpTfReceiveCount;
+  int QosNullReceivedCount;
 };
 std::vector<CandidateInfo> m_successes; 
 int m_candidate;
@@ -67,6 +74,22 @@ struct HeRuMap {
   std::vector<BusyTone> bt;
 };
 std::vector<HeRuMap> m_staRuInfo;
+
+std::vector<std::pair<Mac48Address,int>> m_UlSuccessStas;
+int bsrpCand;
+int bsrpSucc;
+
+std::vector<float> m_wasteRuRates;
+int m_wasteRuCount;
+int m_dlCount = -1;
+int m_slot = 0;
+float m_succRate = 0.0;
+
+std::vector<Mac48Address> m_qosNullStas;
+int m_BARu;
+int m_sumByte;
+int m_maxByte;
+
 // ----- END: MY CODE -----
 
 TypeId
@@ -182,15 +205,111 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
   if (txFormat == MultiUserScheduler::DL_MU_TX)
     {
       //BEGIN: MY CODE
-      m_isbsrp = false; // added 10/28
+      m_dlCount++;
+      
       if(m_candidate > m_max_candidate)
       {
         m_max_candidate = m_candidate;
       }
+      
+      //Sub BEGIN: My Proposed
+      //check rate of success sta;
+      // int unSuccessNum=0;
+      auto ul_ptr = std::max_element(m_UlSuccessStas.begin(),m_UlSuccessStas.end(),[](const auto& a, const auto& b) {
+        return a.second < b.second;
+      });
+      int maxByte = 0;
+      if(ul_ptr != m_UlSuccessStas.end()) maxByte = ul_ptr->second;
+      int padding=0;
+      int sumByte=0;
+      for(const auto&sta : m_UlSuccessStas)
+      {
+        // if(sta.sCount*1.0/sta.cCount <= 0.2)
+        // {
+        //   unSuccessNum++;
+        // }
+        // unSuccessNum += sta.sCount;
+        padding += maxByte - sta.second;
+        sumByte += sta.second;
+      }
+      
+
+
+      
+      std::ofstream writting;
+      std::stringstream filename;
+      filename << "./data/CountOfPadding.csv";
+      std::string status = "normal";
+      writting.open(filename.str(), std::ios::app);
+      
+      //if unSuccessNum > 20 ? switch UONRA or MBTA
+      float nSTA = 100.0;
+      // UONRA
+      if(m_UlSuccessStas.size()>0)
+      {
+        if(sumByte/maxByte*m_ruNum < (5472000+36000+260000)/(5472000+36000+260000+476000))
+        {
+          // m_muScheduler->SetEnableBsrp(true);
+          status =  "maybe bsrp";
+        }
+        else if(m_isbsrp)
+        {
+          status = "uonra";
+
+        }
+        else
+        {
+          // m_muScheduler->SetEnableBsrp(false);
+          status = "uora";
+        }
+      }
+      
+
+      // MBTA
+      
+      // if((unSuccessNum/nSTA) - m_succRate <=0.2 && !m_muScheduler->isEnableBsrp())
+      // {
+      //   m_slot = 4;
+      //   status = "MBTA";
+      //   m_muScheduler->SwitchRuAssignMode(true);
+      // }
+      // else
+      // {
+      //   m_slot=0;
+      //   m_muScheduler->SwitchRuAssignMode(false);
+      // }
+      // m_succRate = (unSuccessNum/nSTA);
+
+      writting << (m_dlCount) << "," << padding << "," << status << "," << m_UlSuccessStas.size() << ","<< m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << "," << sumByte  << "," << maxByte*m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << std::endl;
+      writting.close();
+
+      
+      //Sub End: My Proposed
       std::cout << "Time:" << Simulator::Now() << ". DL_MU_TX" << std::endl;
       std::cout << "empty:" << m_muScheduler->GetDlMuInfo ().psduMap.empty () << std::endl;
       m_candidate = 0;
+      // m_isbsrp = false; // added 10/28
       m_staRuInfo.clear();
+      if(bsrpCand!=bsrpSucc)
+      {
+        std::cout << "Loss in BSRP!! BsrpCand:" << bsrpCand << ". BsrpSucc:" << bsrpSucc << std::endl;
+      }
+      else
+      {
+        std::cout << "successBsrp count" << bsrpCand << std::endl;
+      }
+      bsrpCand=0;
+      bsrpSucc=0;
+      for(const auto &s : m_UlSuccessStas)
+      {
+        SetUlSuccesses(s.first);
+      }
+      int wrc  = m_ruNum - m_UlSuccessStas.size();
+      m_wasteRuCount += wrc;
+      m_wasteRuRates.push_back(wrc/m_ruNum);
+      // m_UlSuccessStas.clear();
+      m_bsrpSuccessNum = 0;
+      m_isArbi = true;
       //END: MY CODE
       if (m_muScheduler->GetDlMuInfo ().psduMap.empty ())
         {
@@ -210,8 +329,9 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       std::cout << "Time:" << Simulator::Now() << ". UL_MU_TX" << std::endl;
       CtrlTriggerHeader& trigger_ptr = m_muScheduler->GetUlMuInfo ().trigger;
       (!m_isbsrp) ? m_numBasic++ : m_numBsrp++;
-      trigger_ptr.SetMbtaIndicator(!m_isbsrp);
+      trigger_ptr.SetMbtaIndicator(m_isArbi);
       trigger_ptr.SetArbitrationSlots(m_slot);
+      m_muScheduler->SetIsDoneUl(false);
       //END: MY CODE
       
       packet->AddHeader (m_muScheduler->GetUlMuInfo ().trigger);
@@ -551,6 +671,12 @@ HeFrameExchangeManager::SendPsduMap (void)
       timerType = WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF;
       responseTxVector = &acknowledgment->tbPpduTxVector;
       m_trigVector = GetTrigVector (m_muScheduler->GetUlMuInfo ().trigger);
+      
+      //BEGIN: MY CODE
+      m_BARu=0;
+      m_qosNullStas.clear();
+      m_UlSuccessStas.clear();
+      //END: MY CODE
     }
   /*
    * BSRP Trigger Frame
@@ -565,6 +691,7 @@ HeFrameExchangeManager::SendPsduMap (void)
       NS_ASSERT (m_apMac);
       //BEGIN: log for
       std::cout << "Time:" << Simulator::Now() << ". BSRP TF" << std::endl;
+      m_isbsrp = false;
       //END: log for
       // record the set of stations solicited by this Trigger Frame
       m_staExpectTbPpduFrom.clear ();
@@ -1548,11 +1675,34 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
     std::cout << "type: " << mpdu->GetHeader().GetTypeString() << std::endl;
     std::cout << "txTimer: " << m_txTimer.GetReasonString(m_txTimer.GetReason()) << std::endl;
     
-    if(m_txTimer.GetReason()==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF && mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA)
+    if(m_txTimer.GetReason()==WifiTxTimer::WAIT_TB_PPDU_AFTER_BASIC_TF)
     {
-      std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << ". Recorde!" << std::endl;
-      UpdateSuccesses(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
-    }else{
+      if(mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA)
+      {
+        std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << ". Recorde!" << std::endl;
+        UpdateSuccesses(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
+        SearchUlSuccessSta(mpdu->GetHeader().GetAddr2());
+        AddUlSuccessStaSize(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
+        m_muScheduler->SetIsDoneUl(true);
+      }
+      else if(mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA_NULL)
+      {
+        uint16_t staId = txVector.GetHeMuUserInfoMap ().begin ()->first;
+        m_qosNullStas.push_back(mpdu->GetHeader().GetAddr2());
+      }
+      else
+      {
+        m_BARu++;
+      }
+      
+    }
+    else if(m_txTimer.GetReason()==WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF && mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA_NULL)
+    {
+      SetQosNullReceived(mpdu->GetHeader().GetAddr2());
+      bsrpSucc++;
+    }
+    else
+    {
       std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". receiver: " << m_self << ". byte = " << mpdu->GetPacketSize() << std::endl;
       
     }
@@ -1931,20 +2081,23 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
               WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
               auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
               std::cout << "Time:" << Simulator::Now() << ". RECEIVE BASIC. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
-              if(trigger.GetMbtaIndicator()) SetSuccesses(m_self);
+              // if(trigger.GetMbtaIndicator()) SetSuccesses(m_self);
+              SetSuccesses(m_self);
+               m_ruNum = HeRu::GetNRus(80,ru.GetRuType());
               //END: log for
 
               //BEGIN: MY CODE
               if(trigger.GetArbitrationSlots()>0 && trigger.GetMbtaIndicator())
               {
                 m_slot = trigger.GetArbitrationSlots();
-                Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
-                uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot)-1);
+                //Ptr<NormalRandomVariable> rand = CreateObject<NormalRandomVariable> ();
+                uint8_t arbitrationNum = m_rand->GetInteger(0,std::pow(2,m_slot)-1);
                 HeRuMap sri;
                 std::vector<HeRuMap>::iterator itr;
                 uint16_t staId = m_staMac->GetAssociationId();
                 WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
                 auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
+                
                 itr = std::find_if(m_staRuInfo.begin(), m_staRuInfo.end(),[&](const HeRuMap &i)->bool {
                                   return i.ru == ru;
                 });
@@ -1983,16 +2136,20 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
                 auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
                  std::cout << "Time:" << Simulator::Now()<<". RECEIVE BSRP. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
+                // m_ruNum = HeRu::GetNRus(80,ru.GetRuType());
                 m_candidate++;
-                SetSuccesses(m_self);
+                m_isbsrp=true;
+                m_isArbi=false;
+                bsrpCand++;
+                SetBsrpTfReceive(m_self);
                 // END: My Code
               if(trigger.GetArbitrationSlots()>0) {
                 
-
+                
                 // save info for arbitration phase
                 m_slot = trigger.GetArbitrationSlots();
-                Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
-                uint8_t arbitrationNum = rand->GetInteger(0,std::pow(2,m_slot) -1);
+                // Ptr<NormalRandomVariable> rand = CreateObject<NormalRandomVariable> (); //ランダム値を生成
+                uint8_t arbitrationNum = m_rand->GetInteger(0,std::pow(2,m_slot) -1);
                 HeRuMap sri;
                 std::vector<HeRuMap>::iterator itr;
                 
@@ -2327,7 +2484,7 @@ HeFrameExchangeManager::SetSuccesses(Mac48Address addr)
   });
   if(itr == m_successes.end())
   {
-    m_successes.push_back({addr,1,0,0});
+    m_successes.push_back({addr,1,0,0,0,0});
   }else{
     itr->cCount += 1;
   }
@@ -2341,7 +2498,7 @@ HeFrameExchangeManager::UpdateSuccesses(Mac48Address addr,int byte)
   });
   if(itr != m_successes.end())
   {
-    itr->sCount += 1;
+    // itr->sCount += 1;
     itr->byte += byte;
   }
 }
@@ -2354,11 +2511,111 @@ HeFrameExchangeManager::GetCandidatesInfo(Mac48Address addr)
   });
   if(itr != m_successes.end())
   {
-    return {itr->cCount,itr->sCount,itr->byte};
+    return {itr->cCount,itr->sCount,itr->byte,itr->bsrpTfReceiveCount,itr->QosNullReceivedCount};
   }else{
-    return {0,0,0};
+    return {0,0,0,0,0};
   }
 }
+
+void 
+HeFrameExchangeManager::SetBsrpTfReceive(Mac48Address addr)
+{
+  auto itr = std::find_if(m_successes.begin(),m_successes.end(),[&addr](CandidateInfo ci){
+    return ci.addr == addr;
+  });
+  if(itr == m_successes.end())
+  {
+    m_successes.push_back({addr,0,0,0,1,0});
+  }else{
+    itr->bsrpTfReceiveCount += 1;
+  }
+}
+
+void 
+HeFrameExchangeManager::SetQosNullReceived(Mac48Address addr)
+{
+  auto itr = std::find_if(m_successes.begin(),m_successes.end(),[&addr](CandidateInfo ci){
+    return ci.addr == addr;
+  });
+  if(itr != m_successes.end())
+  {
+    itr->QosNullReceivedCount += 1;
+  }
+}
+
+void 
+HeFrameExchangeManager::SetUlSuccesses(Mac48Address addr)
+{
+  auto itr = std::find_if(m_successes.begin(),m_successes.end(),[&addr](CandidateInfo ci){
+    return ci.addr == addr;
+  });
+  if(itr != m_successes.end())
+  {
+    itr->sCount += 1;
+  }
+}
+void 
+HeFrameExchangeManager::SearchUlSuccessSta(Mac48Address addr)
+{
+  auto itr = std::find_if(m_UlSuccessStas.begin(),m_UlSuccessStas.end(),[&addr](std::pair<Mac48Address,int> pair){
+    return pair.first == addr;
+  });
+  if(itr == m_UlSuccessStas.end())
+  {
+    m_UlSuccessStas.push_back({addr,0});
+  }
+}
+void 
+HeFrameExchangeManager::AddUlSuccessStaSize(Mac48Address addr,int byte)
+{
+  auto itr = std::find_if(m_UlSuccessStas.begin(),m_UlSuccessStas.end(),[&addr](std::pair<Mac48Address,int> pair){
+    return pair.first == addr;
+  });
+  if(itr == m_UlSuccessStas.end())
+  {
+    m_UlSuccessStas.push_back({addr,byte});
+  }else
+  {
+    itr->second += byte;
+  }
+}
+
+
+float
+HeFrameExchangeManager::GetWasteRuRate(void)
+{
+  float sumRate=0;
+  for(const auto &rate : m_wasteRuRates)
+  {
+    sumRate += rate;
+  }
+  return sumRate/m_wasteRuRates.size();
+}
+
+int
+HeFrameExchangeManager::GetWasteRuCount(void)
+{
+  return m_wasteRuCount;
+}
+
+std::vector<int>
+HeFrameExchangeManager::GetBpsSets(void)
+{
+  return {m_sumByte, m_maxByte*GetNRuForUl()};
+}
+
+std::vector<Mac48Address>
+HeFrameExchangeManager::GetQosNullStas(void)
+{
+  return m_qosNullStas;
+}
+
+int 
+HeFrameExchangeManager::GetNRuForUl(void)
+{
+  return m_ruNum - m_BARu;
+}
+
 // ----- END: MY CODE -----
 
 void

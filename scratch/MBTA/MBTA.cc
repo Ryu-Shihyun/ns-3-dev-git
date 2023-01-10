@@ -98,6 +98,7 @@ int main (int argc, char *argv[])
   int bitRateVariable{1500};
   int warmUpTime{40};
   std::string csvOption = "default";
+  std::vector <int> rateVector;
 
   CommandLine cmd (__FILE__);
   cmd.AddValue ("frequency", "Whether working in the 2.4, 5 or 6 GHz band (other values gets rejected)", frequency);
@@ -192,7 +193,7 @@ int main (int argc, char *argv[])
   std::string fileName = "./data/"+csvName.str() + "_"+csvOption+".csv";
   
   std::ofstream ofs(fileName);
-  ofs << "index,IP Address,candidate,Success Receive to AP, total Packet Size,Average Duration of Transmission" << std::endl;
+  ofs << "index,IP Address,candidate,Success Receive to AP, total Packet Size,Data Rate,Number of BSRP TF, Number Of Qos Null" << std::endl;
   std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n';
   int minMcs = 0;
   int maxMcs = 11;
@@ -397,11 +398,19 @@ int main (int argc, char *argv[])
                     uint16_t port = 50000;
                     Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
                     PacketSinkHelper packetSinkHelper("ns3::TcpSocketFactory", localAddress);
-                    packetSinkHelper.SetAttribute("FileName",StringValue(csvName.str()));
+                    packetSinkHelper.SetAttribute("FileName",StringValue(csvName.str()+ "_"+csvOption));
                     serverApp = packetSinkHelper.Install(serverNodes.get());
                     serverApp.Start(Seconds(0.0));
                     serverApp.Stop(Seconds(simulationTime + warmUpTime+0.5 *nStations));
- 
+                    // Ptr<UniformRandomVariable> rateRand = CreateObject<UniformRandomVariable> (); //ランダム値を生成
+                    
+                    //user deterministicRandom
+                    Ptr<DeterministicRandomVariable> rateRand = CreateObject<DeterministicRandomVariable> (); //ランダム値を生成
+                    double arr[] =  {500, 500, 7500, 500, 500};
+                    rateRand->SetValueArray(arr,5);
+
+
+                    int dr;
                     for (std::size_t i = 0; i < nStations; i++)
                     {
                         OnOffHelper onoff("ns3::TcpSocketFactory", Ipv4Address::GetAny());
@@ -410,7 +419,27 @@ int main (int argc, char *argv[])
                         onoff.SetAttribute("OffTime",
                                            StringValue("ns3::ConstantRandomVariable[Constant=0]"));
                         onoff.SetAttribute("PacketSize", UintegerValue(payloadSize));
-                        onoff.SetAttribute("DataRate", DataRateValue(payloadSize*8*bitRateVariable)); // bit/s
+                        //UniformRandom
+                        // dr = payloadSize*8*rateRand->GetInteger(500,7500);
+                        
+                        //20% 30Mbps 80% 20Mbps
+                        // int dr_el = rateRand->GetInteger(1,100);
+                        // if(dr_el<=20)
+                        // {
+                        //   dr = payloadSize*8*7500;
+                        // }else
+                        // {
+                        //   dr = payloadSize*8*500;
+                        // }
+                        dr = payloadSize*8*bitRateVariable;
+
+                        //user deterministicRandom
+                        // double dr_el = rateRand->GetValue();
+                        // std::cerr << dr_el << std::endl;
+                        // dr = payloadSize*8*dr_el;
+
+                        rateVector.push_back(dr);
+                        onoff.SetAttribute("DataRate", DataRateValue(dr)); // bit/s
                         AddressValue remoteAddress(
                             InetSocketAddress(serverInterfaces.GetAddress(i), port));
                         onoff.SetAttribute("Remote", remoteAddress);
@@ -481,6 +510,10 @@ int main (int argc, char *argv[])
               int bsrpNum = mac.GetUplinkNum(1);
               int conflictStaNum = mac.GetConflictNum();
               int maxCandidates = mac.GetMaxCandidatesNum();
+              auto rate_ptr = rateVector.begin();
+              float ruWasteAverageRate = mac.GetWasteRuRate();
+              int ruWasteSum = mac.GetWasteRuCount();
+
             for (int i=0; i<wifiStaNodes.GetN(); i++) {
               Address addr = wifiStaNodes.Get(i)->GetDevice(0)->GetAddress();
               auto candidateInfo = mac.GetCandidateInfo(Mac48Address::ConvertFrom(addr));
@@ -489,11 +522,12 @@ int main (int argc, char *argv[])
               //                     [&ipAddr] (averageDelay pair)
               //               { return pair.first == ipAddr; });
               // std::cout << ipAddr << ((v_ptr!=v.end()) ? "true" : "false") << std::endl;
-              ofs << i << "," <<  ipAddr << "," <<  candidateInfo.at(0)<< "," <<  candidateInfo.at(1)<< "," <<  candidateInfo.at(2) /*<<"," << v_ptr->second */<< std::endl;
+              ofs << i << "," <<  ipAddr << "," <<  candidateInfo.at(0)<< "," <<  candidateInfo.at(1)<< "," <<  candidateInfo.at(2) <<"," << ((rate_ptr!=rateVector.end()) ? *rate_ptr : 0)<< "," << candidateInfo.at(3) << "," << candidateInfo.at(4) << std::endl;
+              if(rate_ptr!=rateVector.end()) rate_ptr++;
             }
               Simulator::Destroy ();
-              // std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t\t" << "Throughput" << '\n'; 
-              std::cout << nStations << "\t\t" <<mcs << "\t\t" << channelWidth << "\t\t" << gi << "\t\t" << throughput  << "\t\t" << basicNum << "\t\t" << bsrpNum << "\t\t" << conflictStaNum << "\t\t"  << maxCandidates << std::endl;
+              std::cout << "Number of Station" << "\t\t" <<"MCS value" << "\t\t" << "Channel width" << "\t\t" << "GI" << "\t\t" << "Throughput" << "BASIC" << "BSRP" << "conflict in Arbitration" << "maxCandidates" << "Sum of Waste Ru" << "Average of Waste Ru Rate" << '\n'; 
+              std::cout << nStations << "\t\t" <<mcs << "\t\t" << channelWidth << "\t\t" << gi << "\t\t" << throughput  << "\t\t" << basicNum << "\t\t" << bsrpNum << "\t\t" << conflictStaNum << "\t\t"  << maxCandidates<< "\t\t" << ruWasteSum<< "\t\t"  << ruWasteAverageRate << std::endl;
               // std::cout << nStations << "\t\t" <<mcs << "\t\t" << channelWidth << "\t\t" << gi << "\t\t" << throughput   << std::endl;
 
               //test first element

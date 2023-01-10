@@ -281,8 +281,79 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   //END: Default
   
   //BEGIN: My Code Ru Random Assign
-  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
+  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
   //END:  My Code Ru Random Assign
+  //BEGIN: My Propose
+  WifiTxVector txVector;
+  if(m_isDoneUl)
+  {
+    int actual, theoretical;
+    actual = m_heFem->GetBpsSets().at(0);
+    theoretical = m_heFem->GetBpsSets().at(1);
+    
+    auto qosNullStas = m_heFem->GetQosNullStas();
+
+    auto staIt = m_staListUl.begin ();
+    int nullcount=0;
+    int index=0;
+    while (staIt != m_staListUl.end ()
+          && index < std::min<std::size_t> (m_nStations, 37))
+      {
+
+        uint8_t tid = 0;
+        while (tid < 8)
+          {
+            // check that a BA agreement is established with the receiver for the
+            // considered TID, since ack sequences for UL MU require block ack
+            if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+              {
+                break;
+              }
+            ++tid;
+          }
+        if (tid == 8)
+          {
+          staIt++;
+            continue;
+          }
+
+        // prepare the MAC header of a frame that would be sent to the candidate station,
+        // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+        // WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+        // hdr.SetAddr1 (staIt->address);
+        // hdr.SetAddr2 (m_apMac->GetAddress ());
+        // WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+        // txVector.SetHeMuUserInfo (staIt->aid,
+        //                           {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+        //                           suTxVector.GetMode (),
+        //                           suTxVector.GetNss ()});
+        // m_candidates.push_back ({staIt, nullptr});
+        auto itr = std::find(qosNullStas.begin(),qosNullStas.end(),staIt->address);
+        if(itr != qosNullStas.end()) nullcount++;
+
+        // move to the next station in the list
+        index++;
+        staIt++;
+      }
+    if(actual/theoretical < (5472000+36000+260000)/(5472000+36000+260000+476000) && nullcount == qosNullStas.size() )
+    {
+      std::cout << "** Start UONRA" << std::endl;
+      txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+    }
+    else
+    {
+      std::cout << "** Start UORA" << std::endl;
+      TrySendingBasicTf();
+      // txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+    }
+  }
+  else
+  {
+    std::cout << "** Default" << std::endl;
+    txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  }
+  
+  //END: My Propose
 
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
@@ -373,11 +444,25 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   // only consider stations that do not have reported a null queue size
   //BEGIN: Default
   WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
-  //                                             { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+                                               { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
   //END: Default
 
   //BEGIN: Ru Random Assign for UORA
+  
   // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
+
+  // WifiTxVector txVector;
+  // if(m_isRuRand) // My propose
+  // {
+  //   txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
+  //   // std::cerr << "It`s My Propose!" << std::endl;
+  // }
+  // else // Default
+  // {
+  //   txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
+  //                                              { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+  // }
+
   m_isNotAfterBsrp = true;
   //END: Ru Random Assing for UORA
   if (txVector.GetHeMuUserInfoMap ().empty ())
@@ -999,7 +1084,7 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector, bool isBsrp)
   // printing them will crash the simulation
   NS_LOG_FUNCTION (this);
   NS_ASSERT (txVector.GetHeMuUserInfoMap ().size () == m_candidates.size ());
-  std::cout << "Finalize isBsrp:" << ((isBsrp)? "true" : "false") << std::endl;
+  std::cout << "Finalize isBsrp! ";
   // compute how many stations can be granted an RU and the RU size
   std::size_t nRusAssigned = m_candidates.size ();
   std::size_t nCentral26TonesRus;
@@ -1078,5 +1163,22 @@ RrMultiUserScheduler::FinalizeTxVector (WifiTxVector& txVector, bool isBsrp)
 
 //END: My Code Ru Random Assign
 
+//BEGIN: My Propose
+bool
+RrMultiUserScheduler::isEnableBsrp()
+{
+  return m_enableBsrp;
+}
+void
+RrMultiUserScheduler::SetEnableBsrp(bool isBsrp)
+{
+  m_enableBsrp = isBsrp;
+}
+void
+RrMultiUserScheduler::SwitchRuAssignMode(bool sw)
+{
+  m_isRuRand = sw;
+}
+//END: My Propose
 
 } //namespace ns3
