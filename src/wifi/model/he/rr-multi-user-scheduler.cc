@@ -30,12 +30,20 @@
 #include "ns3/rng-seed-manager.h"
 #include <algorithm>
 #include <numeric>
+#include <fstream>
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RrMultiUserScheduler");
 
 NS_OBJECT_ENSURE_REGISTERED (RrMultiUserScheduler);
+
+//BEGIN: My Propose
+std::map<int /*staId*/, bool /*will_be_qosnull*/> m_will_be_qos_null;
+std::map<int /*staId*/, int /*Buffer Status*/> m_bsr;
+std::vector <int > m_bsrpList;
+std::vector <int> m_zerobsr;
+//END: My Propose
 
 TypeId
 RrMultiUserScheduler::GetTypeId (void)
@@ -90,6 +98,12 @@ RrMultiUserScheduler::GetTypeId (void)
                    TimeValue (Seconds (1)),
                    MakeTimeAccessor (&RrMultiUserScheduler::m_maxCredits),
                    MakeTimeChecker ())
+    .AddAttribute ("NQosNull",
+                   "Threshold of the border number of will_be_qosnull to decide sending bsrp(proposal), "
+                   "If m_will_be_qos_null has more trues than the threshold, send bsrp",
+                   IntegerValue (1),
+                   MakeIntegerAccessor (&RrMultiUserScheduler::m_threshold1),
+                   MakeIntegerChecker<int> ())
   ;
   return tid;
 }
@@ -116,6 +130,11 @@ RrMultiUserScheduler::DoInitialize (void)
   for (const auto& ac : wifiAcList)
     {
       m_staListDl.insert ({ac.first, {}});
+    }
+  for(int i=1; i<= m_nStations ; i++)
+    {
+      m_will_be_qos_null[i] = false;
+      m_bsr[i] = 0;
     }
   MultiUserScheduler::DoInitialize ();
 }
@@ -201,6 +220,30 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
   txVector.SetGuardInterval (heConfiguration->GetGuardInterval ().GetNanoSeconds ());
   txVector.SetBssColor (heConfiguration->GetBssColor ());
 
+  //BEGIN: My Propose
+  if(!m_bsrpList.empty())
+  {
+    auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
+    for(auto staId : m_bsrpList)
+    {
+      std::cout << "+++ m_bsrpList:" << staId << std::endl;
+      auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
+        return sta.aid == staId;
+      });
+      if(itr != m_staListUl.end())
+      {
+        itr->credits = max_ptr->credits;
+
+        // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
+      }
+    }
+    m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
+                { return a.credits > b.credits; });
+
+  }
+  //END: My Propose
+
+
   // iterate over the associated stations until an enough number of stations is identified
   auto staIt = m_staListUl.begin ();
   m_candidates.clear ();
@@ -284,67 +327,120 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
   // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },true);
   //END:  My Code Ru Random Assign
   //BEGIN: My Propose
+  // WifiTxVector txVector;
+  // if(m_isDoneUl)
+  // {
+  //   int actual, theoretical;
+  //   actual = m_heFem->GetBpsSets().at(0);
+  //   theoretical = m_heFem->GetBpsSets().at(1);
+    
+  //   auto qosNullStas = m_heFem->GetQosNullStas();
+
+  //   auto staIt = m_staListUl.begin ();
+  //   int nullcount=0;
+  //   int index=0;
+  //   while (staIt != m_staListUl.end ()
+  //         && index < std::min<std::size_t> (m_nStations, 37))
+  //     {
+
+  //       uint8_t tid = 0;
+  //       while (tid < 8)
+  //         {
+  //           // check that a BA agreement is established with the receiver for the
+  //           // considered TID, since ack sequences for UL MU require block ack
+  //           if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+  //             {
+  //               break;
+  //             }
+  //           ++tid;
+  //         }
+  //       if (tid == 8)
+  //         {
+  //         staIt++;
+  //           continue;
+  //         }
+
+  //       // prepare the MAC header of a frame that would be sent to the candidate station,
+  //       // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+  //       // WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+  //       // hdr.SetAddr1 (staIt->address);
+  //       // hdr.SetAddr2 (m_apMac->GetAddress ());
+  //       // WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+  //       // txVector.SetHeMuUserInfo (staIt->aid,
+  //       //                           {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+  //       //                           suTxVector.GetMode (),
+  //       //                           suTxVector.GetNss ()});
+  //       // m_candidates.push_back ({staIt, nullptr});
+  //       auto itr = std::find(qosNullStas.begin(),qosNullStas.end(),staIt->address);
+  //       if(itr != qosNullStas.end()) nullcount++;
+
+  //       // move to the next station in the list
+  //       index++;
+  //       staIt++;
+  //     }
+  //   if(actual/theoretical*1.0 < (5472000+36000+260000)*1.0/(5472000+36000+260000+476000) && nullcount >0 ) //
+  //   {
+  //     std::cout << "** Start UONRA. actual/theoretical:" << actual/theoretical*1.0 << ". nullcount" << nullcount << std::endl;
+  //     txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  //   }
+  //   else
+  //   {
+  //     std::cout << "** Start UORA actual/theoretical:" << actual/theoretical*1.0<< ". nullcount" << nullcount << std::endl;
+  //     return TrySendingBasicTf();
+  //     // txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  //   }
+  // }
+  // else
+  // {
+  //   std::cout << "** Default" << std::endl;
+  //   txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+  // }
+  
+  //END: My Propose
+
+  //BEGIN: My Propose v2
   WifiTxVector txVector;
+  m_bsrpList.clear();
   if(m_isDoneUl)
   {
-    int actual, theoretical;
-    actual = m_heFem->GetBpsSets().at(0);
-    theoretical = m_heFem->GetBpsSets().at(1);
-    
-    auto qosNullStas = m_heFem->GetQosNullStas();
-
-    auto staIt = m_staListUl.begin ();
-    int nullcount=0;
-    int index=0;
-    while (staIt != m_staListUl.end ()
-          && index < std::min<std::size_t> (m_nStations, 37))
-      {
-
-        uint8_t tid = 0;
-        while (tid < 8)
-          {
-            // check that a BA agreement is established with the receiver for the
-            // considered TID, since ack sequences for UL MU require block ack
-            if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
-              {
-                break;
-              }
-            ++tid;
-          }
-        if (tid == 8)
-          {
-          staIt++;
-            continue;
-          }
-
-        // prepare the MAC header of a frame that would be sent to the candidate station,
-        // just for the purpose of retrieving the TXVECTOR used to transmit to that station
-        // WifiMacHeader hdr (WIFI_MAC_QOSDATA);
-        // hdr.SetAddr1 (staIt->address);
-        // hdr.SetAddr2 (m_apMac->GetAddress ());
-        // WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
-        // txVector.SetHeMuUserInfo (staIt->aid,
-        //                           {HeRu::RuSpec (), // assigned later by FinalizeTxVector
-        //                           suTxVector.GetMode (),
-        //                           suTxVector.GetNss ()});
-        // m_candidates.push_back ({staIt, nullptr});
-        auto itr = std::find(qosNullStas.begin(),qosNullStas.end(),staIt->address);
-        if(itr != qosNullStas.end()) nullcount++;
-
-        // move to the next station in the list
-        index++;
-        staIt++;
-      }
-    if(actual/theoretical < (5472000+36000+260000)/(5472000+36000+260000+476000) && nullcount == qosNullStas.size() )
+    int count_true=0;
+    UpdateWillBeQosNull();
+    m_zerobsr.clear();
+    std::ofstream writting_2;
+    std::stringstream filename;
+    filename << "./data/WillBeQosNull.csv";
+    writting_2.open(filename.str(), std::ios::app);
+    for(int i=1; i<= m_nStations ; i++)
     {
-      std::cout << "** Start UONRA" << std::endl;
+      //std::string address = "00:00:00:00:00:";
+      bool isQosnull=false;
+      if(m_bsr[0]==0)
+      {
+        m_zerobsr.push_back(i);
+      }
+      // if(i<10) address += "0";
+      // address += i;
+      // Mac48Address addr = Mac48Address::Mac48Address(address)
+      if(m_will_be_qos_null[i])
+      {
+        count_true++;
+        m_bsrpList.push_back(i);
+        isQosnull = true;
+      } 
+      writting_2 << "," << ((isQosnull)?"true" : "false");
+    }
+    writting_2 << "," << Simulator::Now()<< std::endl;
+    writting_2.close();
+      
+    if(count_true >= m_threshold1 ) //
+    {
+      std::cout << "** Start UONRA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
       txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
     }
     else
     {
-      std::cout << "** Start UORA" << std::endl;
-      TrySendingBasicTf();
-      // txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+      std::cout << "** Start UORA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
+      return TrySendingBasicTf();
     }
   }
   else
@@ -353,7 +449,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
     txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
   }
   
-  //END: My Propose
+  //END:My Propose v2
 
   if (txVector.GetHeMuUserInfoMap ().empty ())
     {
@@ -435,11 +531,27 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
 
   // check if an UL OFDMA transmission is possible after a DL OFDMA transmission
   NS_ABORT_MSG_IF (m_ulPsduSize == 0, "The UlPsduSize attribute must be set to a non-null value");
+  m_bsrpList.clear();
   //BEGIN: log for
   for(auto info : m_staListUl)
   {
     std::cout << "Sta:" << info.address << ". maxBufferStatus:" << int(m_apMac->GetMaxBufferStatus(info.address)) << std::endl;
   }
+  std::ofstream writting;
+  std::stringstream filename;
+  filename << "./data/MaxBufferStatus.csv";
+  writting.open(filename.str(), std::ios::app);
+  for(int i=1; i<= m_nStations ; i++)
+  {
+    auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&i](auto &sta){
+      return sta.aid == i;
+    });
+    int mbs = int(m_apMac->GetMaxBufferStatus(itr->address));
+    // std::cerr << << "," << mbs << std::endl;
+    writting << "," << mbs;
+  }
+  writting << "," << Simulator::Now()<< std::endl;
+  writting.close();
   //END: log for
   // only consider stations that do not have reported a null queue size
   //BEGIN: Default
@@ -1179,6 +1291,62 @@ RrMultiUserScheduler::SwitchRuAssignMode(bool sw)
 {
   m_isRuRand = sw;
 }
+
+void 
+RrMultiUserScheduler::UpdateBsr(int staId, int byte)
+{
+  std::cout <<"Function:" << __func__ << ", staId:" << staId << ", byte:" << byte << std::endl;
+  if(byte <0)
+  {
+    if(m_bsr[staId]>0)
+    {
+      m_bsr[staId] += byte;
+      if(m_bsr[staId]<=0)
+      {
+        m_will_be_qos_null[staId] = true;
+      }
+    }
+  }
+  else
+  {
+    m_bsr[staId] = byte;
+    
+    m_will_be_qos_null[staId] = false;
+      
+  }
+  
+}
+
+void
+RrMultiUserScheduler::UpdateWillBeQosNull()
+{
+  auto qosNullStas = m_heFem->GetQosNullStas();
+  std::ofstream writting_3;
+  std::stringstream filename;
+  filename << "./data/MyBsr.csv";
+  writting_3.open(filename.str(), std::ios::app);
+  for(int i=1; i<= m_nStations ; i++)
+  {
+    writting_3 << "," << m_bsr[i] ;
+    auto addr_ptr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&i](auto &sta){
+      return sta.aid == i;
+    });
+    auto itr = std::find(qosNullStas.begin(),qosNullStas.end(),addr_ptr->address);
+    auto zero_ptr = std::find(m_zerobsr.begin(),m_zerobsr.end(),i);
+
+    if(itr != qosNullStas.end())
+    {
+      m_will_be_qos_null[i] = true;
+    }
+    else if(zero_ptr != m_zerobsr.end())
+    {
+      m_will_be_qos_null[i] = false;
+    } 
+  }
+  writting_3 << "," << Simulator::Now()<< std::endl;
+  writting_3.close();
+}
+
 //END: My Propose
 
 } //namespace ns3

@@ -130,6 +130,7 @@ public:
   float GetWasteRuRate(void);
   int GetWasteRuCount(void);
   bool m_isDoneUl;//AT: log for
+  virtual void UpdateBsr(int staId, int byte);
   // END: MY CODE
 protected:
   /**

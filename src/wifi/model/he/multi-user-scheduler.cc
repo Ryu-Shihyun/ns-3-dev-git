@@ -367,7 +367,11 @@ MultiUserScheduler::SetIsDoneUl(bool flag)
 {
   m_isDoneUl = flag;
 }
-
+void
+MultiUserScheduler::UpdateBsr(int staId, int byte)
+{
+  //nothing
+}
 //END: MY CODE
 
 } //namespace ns3

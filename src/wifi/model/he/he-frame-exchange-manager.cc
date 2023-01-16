@@ -247,7 +247,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       // UONRA
       if(m_UlSuccessStas.size()>0)
       {
-        if(sumByte/maxByte*m_ruNum < (5472000+36000+260000)/(5472000+36000+260000+476000))
+        if(sumByte*1.0/(maxByte*GetNRuForUl()) < (5472000+36000+260000)*1.0/(5472000+36000+260000+476000))
         {
           // m_muScheduler->SetEnableBsrp(true);
           status =  "maybe bsrp";
@@ -280,7 +280,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       // }
       // m_succRate = (unSuccessNum/nSTA);
 
-      writting << (m_dlCount) << "," << padding << "," << status << "," << m_UlSuccessStas.size() << ","<< m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << "," << sumByte  << "," << maxByte*m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << std::endl;
+      writting << (m_dlCount) << "," << padding << "," << status << "," << m_UlSuccessStas.size() << ","<< m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << "," << sumByte  << "," << maxByte*GetNRuForUl()<< "," << sumByte*1.0/(maxByte*GetNRuForUl()) << std::endl;
       writting.close();
 
       
@@ -1679,26 +1679,34 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
     {
       if(mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA)
       {
-        std::cout << "sender:" << mpdu->GetHeader().GetAddr2() << ". byte = " << mpdu->GetPacketSize() << ". Recorde!" << std::endl;
-        UpdateSuccesses(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
-        SearchUlSuccessSta(mpdu->GetHeader().GetAddr2());
-        AddUlSuccessStaSize(mpdu->GetHeader().GetAddr2(),mpdu->GetPacketSize());
+        uint16_t staId = txVector.GetHeMuUserInfoMap ().begin ()->first;
+        Mac48Address sender = mpdu->GetHeader().GetAddr2();
+        std::cout << "sender:" << sender << ". byte = " << mpdu->GetPacketSize() << ". Recorde!" << std::endl;
+        UpdateSuccesses(sender,mpdu->GetPacketSize());
+        SearchUlSuccessSta(sender);
+        AddUlSuccessStaSize(sender,mpdu->GetPacketSize());
         m_muScheduler->SetIsDoneUl(true);
+        int queueSize = std::ceil (mpdu->GetPacketSize() / 256.0);
+        m_muScheduler->UpdateBsr(staId,-1*queueSize);
       }
       else if(mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA_NULL)
       {
         uint16_t staId = txVector.GetHeMuUserInfoMap ().begin ()->first;
         m_qosNullStas.push_back(mpdu->GetHeader().GetAddr2());
+        m_muScheduler->UpdateBsr(staId, int(mpdu->GetHeader().GetQosQueueSize ()));
       }
       else
       {
         m_BARu++;
+        std::cout << "m_BARu!" << std::endl;
       }
       
     }
     else if(m_txTimer.GetReason()==WifiTxTimer::WAIT_QOS_NULL_AFTER_BSRP_TF && mpdu->GetHeader().GetType()==WifiMacType::WIFI_MAC_QOSDATA_NULL)
     {
+      uint16_t staId = txVector.GetHeMuUserInfoMap ().begin ()->first;
       SetQosNullReceived(mpdu->GetHeader().GetAddr2());
+      m_muScheduler->UpdateBsr(staId, int(mpdu->GetHeader().GetQosQueueSize ()));
       bsrpSucc++;
     }
     else
@@ -2136,7 +2144,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 WifiTxVector tbTxVector = GetHeTbTxVector (trigger, hdr.GetAddr2 ());
                 auto ru =tbTxVector.GetHeMuUserInfo(staId).ru;
                  std::cout << "Time:" << Simulator::Now()<<". RECEIVE BSRP. sta addr: " << m_self << ". staId:" << staId << ".ru:" << ru << std::endl;
-                // m_ruNum = HeRu::GetNRus(80,ru.GetRuType());
+                m_ruNum = HeRu::GetNRus(80,ru.GetRuType());
                 m_candidate++;
                 m_isbsrp=true;
                 m_isArbi=false;

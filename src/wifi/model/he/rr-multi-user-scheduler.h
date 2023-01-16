@@ -55,6 +55,7 @@ public:
   bool isEnableBsrp(void) override;
   void SetEnableBsrp(bool isBsrp) override;
   void SwitchRuAssignMode(bool sw) override;
+  void UpdateBsr(int staId, int byte) override;
   //END: My Proposed
 
 protected:
@@ -190,6 +191,8 @@ private:
   //BEGIN: MY CODE
   bool m_isNotAfterBsrp=true;
   bool m_isRuRand=false;
+  int m_threshold1;
+  void UpdateWillBeQosNull(void);
   //END: MY CODE
 };
 
