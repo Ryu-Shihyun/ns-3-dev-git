@@ -221,26 +221,26 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
   txVector.SetBssColor (heConfiguration->GetBssColor ());
 
   //BEGIN: My Propose
-  if(!m_bsrpList.empty())
-  {
-    auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
-    for(auto staId : m_bsrpList)
-    {
-      std::cout << "+++ m_bsrpList:" << staId << std::endl;
-      auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
-        return sta.aid == staId;
-      });
-      if(itr != m_staListUl.end())
-      {
-        itr->credits = max_ptr->credits;
+  // if(!m_bsrpList.empty())
+  // {
+  //   auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
+  //   for(auto staId : m_bsrpList)
+  //   {
+  //     std::cout << "+++ m_bsrpList:" << staId << std::endl;
+  //     auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
+  //       return sta.aid == staId;
+  //     });
+  //     if(itr != m_staListUl.end())
+  //     {
+  //       itr->credits = max_ptr->credits;
 
-        // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
-      }
-    }
-    m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
-                { return a.credits > b.credits; });
+  //       // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
+  //     }
+  //   }
+  //   m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
+  //               { return a.credits > b.credits; });
 
-  }
+  // }
   //END: My Propose
 
 
@@ -432,16 +432,17 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
     writting_2 << "," << Simulator::Now()<< std::endl;
     writting_2.close();
       
-    if(count_true >= m_threshold1 ) //
-    {
+    // if(count_true >= m_threshold1 ) //
+    // {
       std::cout << "** Start UONRA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
-      txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
-    }
-    else
-    {
-      std::cout << "** Start UORA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
-      return TrySendingBasicTf();
-    }
+    //   txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+    // }
+    // else
+    // {
+    //   std::cout << "** Start UORA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
+    //   return TrySendingBasicTf();
+    // }
+    WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });//AT: Default
   }
   else
   {
