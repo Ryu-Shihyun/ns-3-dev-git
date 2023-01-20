@@ -442,7 +442,7 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
     //   std::cout << "** Start UORA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
     //   return TrySendingBasicTf();
     // }
-    WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });//AT: Default
+    txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });//AT: Default
   }
   else
   {

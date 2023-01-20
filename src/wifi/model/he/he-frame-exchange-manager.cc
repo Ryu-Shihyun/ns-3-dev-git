@@ -306,7 +306,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       }
       int wrc  = m_ruNum - m_UlSuccessStas.size();
       m_wasteRuCount += wrc;
-      m_wasteRuRates.push_back(wrc/m_ruNum);
+      if(m_ruNum > 0) m_wasteRuRates.push_back(wrc/m_ruNum);
       // m_UlSuccessStas.clear();
       m_bsrpSuccessNum = 0;
       m_isArbi = true;
