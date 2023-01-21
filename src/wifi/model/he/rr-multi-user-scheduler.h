@@ -56,6 +56,7 @@ public:
   void SetEnableBsrp(bool isBsrp) override;
   void SwitchRuAssignMode(bool sw) override;
   void UpdateBsr(int staId, int byte) override;
+  int GetStaIdFromList(Mac48Address addr) override;
   //END: My Proposed
 
 protected:
@@ -112,8 +113,13 @@ private:
   //BEGIN: My Code My Code Ru Random Assign
   template <class Func>
   WifiTxVector GetTxVectorForUlMu (Func canBeSolicited,bool isBsrp);
-  //END: My Code My Code Ru Random Assign
 
+  //END: My Code My Code Ru Random Assign
+  
+  //BEGIN: My Proposal v3
+  template <class Func>
+  WifiTxVector GetTxVectorForUlMuBsr (Func canBeSolicited);
+  //END: My Proposal v3
   /**
    * Notify the scheduler that a station associated with the AP
    *
@@ -193,6 +199,8 @@ private:
   bool m_isRuRand=false;
   int m_threshold1;
   void UpdateWillBeQosNull(void);
+  template <class Func>
+  std::vector<int> GetWillBeTxForUlMu (Func canbeSolicited);
   //END: MY CODE
 };
 

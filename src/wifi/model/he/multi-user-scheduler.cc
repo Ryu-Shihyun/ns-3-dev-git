@@ -372,6 +372,11 @@ MultiUserScheduler::UpdateBsr(int staId, int byte)
 {
   //nothing
 }
+int
+MultiUserScheduler::GetStaIdFromList(Mac48Address addr)
+{
+  return -1;
+}
 //END: MY CODE
 
 } //namespace ns3

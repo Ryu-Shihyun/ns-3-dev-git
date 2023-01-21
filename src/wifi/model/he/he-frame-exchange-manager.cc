@@ -1715,6 +1715,18 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
       
     }
   }
+
+  if(!m_txTimer.IsRunning())
+  {
+    if(mpdu->GetPacketSize() > 500)
+    {
+      int queueSize = std::ceil (mpdu->GetPacketSize() / 256.0);
+      int staId = m_muScheduler->GetStaIdFromList(mpdu->GetDestinationAddress());
+      m_muScheduler->UpdateBsr(staId, -1*queueSize);
+      
+    }
+  }
+
   //END: MY CODE
   // The received MPDU is either broadcast or addressed to this station
   NS_ASSERT (mpdu->GetHeader ().GetAddr1 ().IsGroup ()

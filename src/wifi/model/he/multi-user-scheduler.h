@@ -131,6 +131,7 @@ public:
   int GetWasteRuCount(void);
   bool m_isDoneUl;//AT: log for
   virtual void UpdateBsr(int staId, int byte);
+  virtual int GetStaIdFromList(Mac48Address addr);
   // END: MY CODE
 protected:
   /**

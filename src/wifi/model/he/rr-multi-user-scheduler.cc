@@ -221,26 +221,27 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
   txVector.SetBssColor (heConfiguration->GetBssColor ());
 
   //BEGIN: My Propose
-  if(!m_bsrpList.empty())
-  {
-    auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
-    for(auto staId : m_bsrpList)
-    {
-      std::cout << "+++ m_bsrpList:" << staId << std::endl;
-      auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
-        return sta.aid == staId;
-      });
-      if(itr != m_staListUl.end())
-      {
-        itr->credits = max_ptr->credits;
+  // if(!m_bsrpList.empty())
+  // {
+  //   auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
+  //   for(auto staId : m_bsrpList)
+  //   {
+  //     std::cout << "+++ m_bsrpList:" << staId << std::endl;
+  //     auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
+  //       return sta.aid == staId;
+  //     });
+  //     if(itr != m_staListUl.end())
+  //     {
+  //       itr->credits = max_ptr->credits;
 
-        // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
-      }
-    }
-    m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
-                { return a.credits > b.credits; });
+  //       // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
+  //     }
+  //   }
+  //   m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
+  //               { return a.credits > b.credits; });
 
-  }
+  // }
+
   //END: My Propose
 
 
@@ -410,21 +411,25 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
     std::stringstream filename;
     filename << "./data/WillBeQosNull.csv";
     writting_2.open(filename.str(), std::ios::app);
-    for(int i=1; i<= m_nStations ; i++)
+    //Check will-be-qosnull in sta-will-ul-data
+    std::vector<int> willBeUls = GetWillBeTxForUlMu([this](const MasterInfo& info)
+                                               { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+
+    for(auto staId : willBeUls)
     {
       //std::string address = "00:00:00:00:00:";
       bool isQosnull=false;
-      if(m_bsr[0]==0)
-      {
-        m_zerobsr.push_back(i);
-      }
+      // if(m_bsr[staId]==0)
+      // {
+      //   m_zerobsr.push_back(i);
+      // }
       // if(i<10) address += "0";
       // address += i;
       // Mac48Address addr = Mac48Address::Mac48Address(address)
-      if(m_will_be_qos_null[i])
+      if(m_will_be_qos_null[staId])
       {
         count_true++;
-        m_bsrpList.push_back(i);
+        m_bsrpList.push_back(staId);
         isQosnull = true;
       } 
       writting_2 << "," << ((isQosnull)?"true" : "false");
@@ -435,7 +440,11 @@ RrMultiUserScheduler::TrySendingBsrpTf (void)
     if(count_true >= m_threshold1 ) //
     {
       std::cout << "** Start UONRA. count_true:" <<count_true << ". m_threshold1:" << m_threshold1 << std::endl;
-      txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+      //Defaullt
+      // txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; });
+
+      //Propose
+      txVector = GetTxVectorForUlMuBsr([](const MasterInfo&){ return true; });
     }
     else
     {
@@ -615,7 +624,11 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       std::cout << "Time:" << Simulator::Now() << ". Fucntion:" <<__func__ << ". retrun DlMuTX. maxBufferSize is 0" << std::endl;
       return DL_MU_TX;
     }
-
+  
+  //BEGIN: Propose v3
+  std::cout <<"$$$ maxBufferSize is " << maxBufferSize << ". is m_ulPsduSize:" << ((maxBufferSize == m_ulPsduSize)? "true" : "false")<<std::endl;
+  maxBufferSize = m_ulPsduSize;
+  //END: Propose v3
   m_trigger = CtrlTriggerHeader (TriggerFrameType::BASIC_TRIGGER, txVector);
   txVector.SetGuardInterval (m_trigger.GetGuardInterval ());
 
@@ -1296,6 +1309,7 @@ void
 RrMultiUserScheduler::UpdateBsr(int staId, int byte)
 {
   std::cout <<"Function:" << __func__ << ", staId:" << staId << ", byte:" << byte << std::endl;
+  if(staId<0) return;
   if(byte <0)
   {
     if(m_bsr[staId]>0)
@@ -1332,19 +1346,258 @@ RrMultiUserScheduler::UpdateWillBeQosNull()
       return sta.aid == i;
     });
     auto itr = std::find(qosNullStas.begin(),qosNullStas.end(),addr_ptr->address);
-    auto zero_ptr = std::find(m_zerobsr.begin(),m_zerobsr.end(),i);
+    // auto zero_ptr = std::find(m_zerobsr.begin(),m_zerobsr.end(),i);
 
     if(itr != qosNullStas.end())
     {
       m_will_be_qos_null[i] = true;
     }
-    else if(zero_ptr != m_zerobsr.end())
-    {
-      m_will_be_qos_null[i] = false;
-    } 
+    // else if(zero_ptr != m_zerobsr.end())
+    // {
+    //   m_will_be_qos_null[i] = false;
+    // } 
   }
   writting_3 << "," << Simulator::Now()<< std::endl;
   writting_3.close();
+}
+
+template <class Func>
+std::vector<int>
+RrMultiUserScheduler::GetWillBeTxForUlMu (Func canbeSolicited)
+{
+  NS_LOG_FUNCTION (this);
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+  //END: log for
+  // determine RUs to allocate to stations
+  auto count = std::min<std::size_t> (m_nStations, m_staListUl.size ());
+  std::size_t nCentral26TonesRus;
+  HeRu::GetEqualSizedRusForStations (m_allowedWidth, count, nCentral26TonesRus);
+  NS_ASSERT (count >= 1);
+
+  if (!m_useCentral26TonesRus)
+    {
+      nCentral26TonesRus = 0;
+    }
+
+  Ptr<HeConfiguration> heConfiguration = m_apMac->GetHeConfiguration ();
+  NS_ASSERT (heConfiguration);
+
+  
+  // WifiTxVector txVector;
+  // txVector.SetPreambleType (WIFI_PREAMBLE_HE_TB);
+  // txVector.SetChannelWidth (m_allowedWidth);
+  // txVector.SetGuardInterval (heConfiguration->GetGuardInterval ().GetNanoSeconds ());
+  // txVector.SetBssColor (heConfiguration->GetBssColor ());
+
+  std::vector<int> candidates;
+
+  // iterate over the associated stations until an enough number of stations is identified
+  auto staIt = m_staListUl.begin ();
+  // m_candidates.clear ();
+
+  while (staIt != m_staListUl.end ()
+         && candidates.size () < std::min<std::size_t> (m_nStations, count + nCentral26TonesRus))
+    {
+      NS_LOG_DEBUG ("Next candidate STA (MAC=" << staIt->address << ", AID=" << staIt->aid << ")");
+      std::cout << "Next candidate STA(MAC=" << staIt->address << ", AID=" << staIt->aid << ")" << std::endl;
+      if (!canbeSolicited (*staIt))
+        {
+          NS_LOG_DEBUG ("Skipping station based on provided function object");
+          std::cout << "Skipping station based on provided function object" << std::endl;
+          staIt++;
+          continue;
+        }
+
+      uint8_t tid = 0;
+      while (tid < 8)
+        {
+          // check that a BA agreement is established with the receiver for the
+          // considered TID, since ack sequences for UL MU require block ack
+          if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+            {
+              break;
+            }
+          ++tid;
+        }
+      if (tid == 8)
+        {
+          NS_LOG_DEBUG ("No Block Ack agreement established with " << staIt->address);
+          staIt++;
+          continue;
+        }
+
+      // prepare the MAC header of a frame that would be sent to the candidate station,
+      // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+      // WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+      // hdr.SetAddr1 (staIt->address);
+      // hdr.SetAddr2 (m_apMac->GetAddress ());
+      // WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+      // txVector.SetHeMuUserInfo (staIt->aid,
+      //                           {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+      //                           suTxVector.GetMode (),
+      //                           suTxVector.GetNss ()});
+      candidates.push_back (staIt->aid);
+
+      // move to the next station in the list
+      staIt++;
+    }
+
+  // if (txVector.GetHeMuUserInfoMap ().empty ())
+  //   {
+  //     NS_LOG_DEBUG ("No suitable station");
+  //     return txVector;
+  //   }
+  
+  // FinalizeTxVector (txVector);
+  return candidates;
+}
+
+template <class Func>
+WifiTxVector
+RrMultiUserScheduler::GetTxVectorForUlMuBsr (Func canbeSolicited)
+{
+  NS_LOG_FUNCTION (this);
+
+  // determine RUs to allocate to stations
+  auto count = std::min<std::size_t> (m_nStations, m_staListUl.size ());
+  std::size_t nCentral26TonesRus;
+  HeRu::GetEqualSizedRusForStations (m_allowedWidth, count, nCentral26TonesRus);
+  NS_ASSERT (count >= 1);
+
+  if (!m_useCentral26TonesRus)
+    {
+      nCentral26TonesRus = 0;
+    }
+
+  Ptr<HeConfiguration> heConfiguration = m_apMac->GetHeConfiguration ();
+  NS_ASSERT (heConfiguration);
+
+  WifiTxVector txVector;
+  txVector.SetPreambleType (WIFI_PREAMBLE_HE_TB);
+  txVector.SetChannelWidth (m_allowedWidth);
+  txVector.SetGuardInterval (heConfiguration->GetGuardInterval ().GetNanoSeconds ());
+  txVector.SetBssColor (heConfiguration->GetBssColor ());
+
+  // iterate over the associated stations until an enough number of stations is identified
+  auto staIt = m_staListUl.begin ();
+  auto bsrIt = m_bsrpList.begin();
+  m_candidates.clear ();
+  
+  while (bsrIt != m_bsrpList.end())
+  {
+    uint8_t tid = 0;
+    while (tid < 8)
+      {
+        // check that a BA agreement is established with the receiver for the
+        // considered TID, since ack sequences for UL MU require block ack
+        if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+          {
+            break;
+          }
+        ++tid;
+      }
+    if (tid == 8)
+      {
+        NS_LOG_DEBUG ("No Block Ack agreement established with " << staIt->address);
+        bsrIt++;
+        continue;
+      }
+
+    // prepare the MAC header of a frame that would be sent to the candidate station,
+    // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+    WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+    int staId = *bsrIt;
+    auto bsrStaIt = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto s){
+      return s.aid == staId;
+    });
+    hdr.SetAddr1 (bsrStaIt->address);
+    hdr.SetAddr2 (m_apMac->GetAddress ());
+    WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+    txVector.SetHeMuUserInfo (bsrStaIt->aid,
+                              {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+                              suTxVector.GetMode (),
+                              suTxVector.GetNss ()});
+    m_candidates.push_back ({bsrStaIt, nullptr});
+    bsrIt++;
+  }
+
+
+  while (staIt != m_staListUl.end ()
+         && txVector.GetHeMuUserInfoMap ().size () < std::min<std::size_t> (m_nStations, count + nCentral26TonesRus))
+    {
+      NS_LOG_DEBUG ("Next candidate STA (MAC=" << staIt->address << ", AID=" << staIt->aid << ")");
+      std::cout << "Next candidate STA(MAC=" << staIt->address << ", AID=" << staIt->aid << ")" << std::endl;
+      auto bsr_ptr = std::find(m_bsrpList.begin(),m_bsrpList.end(),staIt->aid);
+      if (!canbeSolicited (*staIt)||bsr_ptr != m_bsrpList.end())
+        {
+          NS_LOG_DEBUG ("Skipping station based on provided function object");
+          std::cout << "Skipping station based on provided function object" << std::endl;
+          staIt++;
+          continue;
+        }
+
+      uint8_t tid = 0;
+      while (tid < 8)
+        {
+          // check that a BA agreement is established with the receiver for the
+          // considered TID, since ack sequences for UL MU require block ack
+          if (m_heFem->GetBaAgreementEstablished (staIt->address, tid))
+            {
+              break;
+            }
+          ++tid;
+        }
+      if (tid == 8)
+        {
+          NS_LOG_DEBUG ("No Block Ack agreement established with " << staIt->address);
+          staIt++;
+          continue;
+        }
+
+      // prepare the MAC header of a frame that would be sent to the candidate station,
+      // just for the purpose of retrieving the TXVECTOR used to transmit to that station
+      WifiMacHeader hdr (WIFI_MAC_QOSDATA);
+      hdr.SetAddr1 (staIt->address);
+      hdr.SetAddr2 (m_apMac->GetAddress ());
+      WifiTxVector suTxVector = GetWifiRemoteStationManager ()->GetDataTxVector (hdr, m_allowedWidth);
+      txVector.SetHeMuUserInfo (staIt->aid,
+                                {HeRu::RuSpec (), // assigned later by FinalizeTxVector
+                                suTxVector.GetMode (),
+                                suTxVector.GetNss ()});
+      m_candidates.push_back ({staIt, nullptr});
+
+      // move to the next station in the list
+      staIt++;
+    }
+
+  if (txVector.GetHeMuUserInfoMap ().empty ())
+    {
+      NS_LOG_DEBUG ("No suitable station");
+      return txVector;
+    }
+  //BEGIN: log for
+  std::cout << "Time:" << Simulator::Now() << ". Function:" << __func__ << std::endl;
+  //END: log for
+  
+  FinalizeTxVector (txVector);
+  return txVector;
+}
+
+int
+RrMultiUserScheduler::GetStaIdFromList(Mac48Address addr)
+{
+  auto sta_ptr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&addr](const auto sta){
+    return sta.address==addr;
+  });
+  if(sta_ptr != m_staListUl.end())
+  {
+    return sta_ptr->aid;
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 //END: My Propose
