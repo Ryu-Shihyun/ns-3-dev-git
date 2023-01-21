@@ -627,7 +627,7 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   
   //BEGIN: Propose v3
   std::cout <<"$$$ maxBufferSize is " << maxBufferSize << ". is m_ulPsduSize:" << ((maxBufferSize == m_ulPsduSize)? "true" : "false")<<std::endl;
-  maxBufferSize = m_ulPsduSize;
+  // maxBufferSize = m_ulPsduSize;
   //END: Propose v3
   m_trigger = CtrlTriggerHeader (TriggerFrameType::BASIC_TRIGGER, txVector);
   txVector.SetGuardInterval (m_trigger.GetGuardInterval ());
