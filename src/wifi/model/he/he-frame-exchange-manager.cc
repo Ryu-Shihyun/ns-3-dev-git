@@ -82,7 +82,7 @@ int bsrpSucc;
 std::vector<float> m_wasteRuRates;
 int m_wasteRuCount;
 int m_dlCount = -1;
-int m_slot = 0;
+int m_slot = 4;
 float m_succRate = 0.0;
 
 std::vector<Mac48Address> m_qosNullStas;
@@ -306,7 +306,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       }
       int wrc  = m_ruNum - m_UlSuccessStas.size();
       m_wasteRuCount += wrc;
-      m_wasteRuRates.push_back(wrc/m_ruNum);
+      if(m_ruNum >0) m_wasteRuRates.push_back(wrc/m_ruNum);
       // m_UlSuccessStas.clear();
       m_bsrpSuccessNum = 0;
       m_isArbi = true;

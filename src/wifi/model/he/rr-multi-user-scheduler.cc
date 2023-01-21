@@ -220,28 +220,28 @@ RrMultiUserScheduler::GetTxVectorForUlMu (Func canbeSolicited)
   txVector.SetGuardInterval (heConfiguration->GetGuardInterval ().GetNanoSeconds ());
   txVector.SetBssColor (heConfiguration->GetBssColor ());
 
-  //BEGIN: My Propose
-  if(!m_bsrpList.empty())
-  {
-    auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
-    for(auto staId : m_bsrpList)
-    {
-      std::cout << "+++ m_bsrpList:" << staId << std::endl;
-      auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
-        return sta.aid == staId;
-      });
-      if(itr != m_staListUl.end())
-      {
-        itr->credits = max_ptr->credits;
+  //BEGIN: My Propose v2
+  // if(!m_bsrpList.empty())
+  // {
+  //   auto max_ptr = std::max_element(m_staListUl.begin(),m_staListUl.end(),[](const auto sta1,const auto sta2){ return sta1.credits < sta2.credits;});
+  //   for(auto staId : m_bsrpList)
+  //   {
+  //     std::cout << "+++ m_bsrpList:" << staId << std::endl;
+  //     auto itr = std::find_if(m_staListUl.begin(),m_staListUl.end(),[&staId](auto &sta){
+  //       return sta.aid == staId;
+  //     });
+  //     if(itr != m_staListUl.end())
+  //     {
+  //       itr->credits = max_ptr->credits;
 
-        // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
-      }
-    }
-    m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
-                { return a.credits > b.credits; });
+  //       // m_apMac->SetBufferStatus(itr->aid,itr->address,255);
+  //     }
+  //   }
+  //   m_staListUl.sort ([] (const MasterInfo& a, const MasterInfo& b)
+  //               { return a.credits > b.credits; });
 
-  }
-  //END: My Propose
+  // }
+  //END: My Propose v2
 
 
   // iterate over the associated stations until an enough number of stations is identified
@@ -555,13 +555,13 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
   //END: log for
   // only consider stations that do not have reported a null queue size
   //BEGIN: Default
-  WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
-                                               { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
+  // WifiTxVector txVector = GetTxVectorForUlMu ([this](const MasterInfo& info)
+                                              //  { return m_apMac->GetMaxBufferStatus (info.address) > 0; });
   //END: Default
 
   //BEGIN: Ru Random Assign for UORA
   
-  // WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
+  WifiTxVector txVector = GetTxVectorForUlMu ([](const MasterInfo&){ return true; },m_isNotAfterBsrp);
 
   // WifiTxVector txVector;
   // if(m_isRuRand) // My propose
