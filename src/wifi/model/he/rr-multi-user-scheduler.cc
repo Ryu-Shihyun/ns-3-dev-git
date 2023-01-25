@@ -80,7 +80,9 @@ RrMultiUserScheduler::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("UlPsduSize",
                    "The default size in bytes of the solicited PSDU (to be sent in a TB PPDU)",
-                   UintegerValue (500),
+                  //  UintegerValue (500),//Default
+                   UintegerValue (600),
+                   
                    MakeUintegerAccessor (&RrMultiUserScheduler::m_ulPsduSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UseCentral26TonesRus",

@@ -304,6 +304,7 @@ QosTxop::HasFramesToTransmit (uint8_t linkId)
   // check if the BA manager has anything to send, so that expired
   // frames (if any) are removed and a BlockAckRequest is scheduled to advance
   // the starting sequence number of the transmit (and receiver) window
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   bool baManagerHasPackets {m_baManager->GetBar (false)};
   // remove MSDUs with expired lifetime starting from the head of the queue
   m_queue->WipeAllExpiredMpdus ();
@@ -355,7 +356,7 @@ Ptr<WifiMpdu>
 QosTxop::PeekNextMpdu (uint8_t linkId, uint8_t tid, Mac48Address recipient, Ptr<WifiMpdu> item)
 {
   NS_LOG_FUNCTION (this << +linkId << +tid << recipient << item);
-
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   // lambda to peek the next frame
   auto peek = [this, &linkId, &tid, &recipient, &item] () -> Ptr<WifiMpdu>
     {
@@ -582,7 +583,9 @@ void
 QosTxop::GotAddBaResponse (const MgtAddBaResponseHeader *respHdr, Mac48Address recipient)
 {
   NS_LOG_FUNCTION (this << respHdr << recipient);
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   uint8_t tid = respHdr->GetTid ();
+
   if (respHdr->GetStatusCode ().IsSuccess ())
     {
       NS_LOG_DEBUG ("block ack agreement established with " << recipient << " tid " << +tid);

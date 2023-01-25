@@ -22,6 +22,7 @@
 #include "ns3/enum.h"
 #include "fcfs-wifi-queue-scheduler.h"
 #include "wifi-mac-queue.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -54,6 +55,7 @@ FcfsWifiQueueScheduler::FcfsWifiQueueScheduler ()
 Ptr<WifiMpdu>
 FcfsWifiQueueScheduler::HasToDropBeforeEnqueuePriv (AcIndex ac, Ptr<WifiMpdu> mpdu)
 {
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   auto queue = GetWifiMacQueue (ac);
   if (queue->QueueBase::GetNPackets () < queue->GetMaxSize ().GetValue ())
     {
@@ -104,6 +106,7 @@ void
 FcfsWifiQueueScheduler::DoNotifyDequeue (AcIndex ac, const std::list<Ptr<WifiMpdu>>& mpdus)
 {
   NS_LOG_FUNCTION (this << +ac << mpdus.size ());
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
 
   std::set<WifiContainerQueueId> queueIds;
 
@@ -131,6 +134,7 @@ void
 FcfsWifiQueueScheduler::DoNotifyRemove (AcIndex ac, const std::list<Ptr<WifiMpdu>>& mpdus)
 {
   NS_LOG_FUNCTION (this << +ac << mpdus.size ());
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
 
   std::set<WifiContainerQueueId> queueIds;
 

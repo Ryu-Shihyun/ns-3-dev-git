@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include "ns3/rr-multi-user-scheduler.h"
 #include <string>
+#include "ns3/wifi-net-device.h"
 
 // This is a simple example in order to show how to configure an IEEE 802.11ax Wi-Fi network.
 //
@@ -336,6 +337,9 @@ int main (int argc, char *argv[])
               Vector v = discStaPos->GetNext();
               positionAlloc->Add (v);
               std::cout << "STA" << i << "\t\t" << v.x <<"\t\t" << v.y << "\n";
+              Ptr<NetDevice> dev = wifiStaNodes.Get (i)->GetDevice (0);
+              Ptr<WifiNetDevice> wifi_dev = DynamicCast<WifiNetDevice> (dev);
+              wifi_dev->GetMac ()->SetAttribute ("BE_MaxAmpduSize", UintegerValue (0));
             }
               
               mobility.SetPositionAllocator (positionAlloc);

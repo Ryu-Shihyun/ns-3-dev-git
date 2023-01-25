@@ -48,7 +48,9 @@ WifiMacQueue::GetTypeId (void)
                                           &QueueBase::GetMaxSize),
                    MakeQueueSizeChecker ())
     .AddAttribute ("MaxDelay", "If a packet stays longer than this delay in the queue, it is dropped.",
-                   TimeValue (MilliSeconds (500)),
+                   TimeValue (MilliSeconds (500)),//Default
+                  //  TimeValue (MilliSeconds (20)),
+                  
                    MakeTimeAccessor (&WifiMacQueue::SetMaxDelay),
                    MakeTimeChecker ())
     .AddTraceSource ("Expired", "MPDU dropped because its lifetime expired.",
@@ -280,6 +282,7 @@ WifiMacQueue::Peek (uint8_t linkId) const
 Ptr<WifiMpdu>
 WifiMacQueue::PeekByTidAndAddress (uint8_t tid, Mac48Address dest, Ptr<const WifiMpdu> item) const
 {
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   NS_LOG_FUNCTION (this << +tid << dest << item);
   NS_ABORT_IF (dest.IsGroup ());
   WifiContainerQueueId queueId (WIFI_QOSDATA_UNICAST_QUEUE, dest, tid);
@@ -321,7 +324,7 @@ WifiMacQueue::PeekFirstAvailable (uint8_t linkId,
 {
   NS_LOG_FUNCTION (this << +linkId << item);
   NS_ASSERT (!item || item->IsQueued ());
-
+  std::cout <<"Time:" << Simulator::Now() << "Funciton:" << __func__ << std::endl;
   if (item)
     {
       NS_ASSERT (!item->GetHeader ().IsQosData ()

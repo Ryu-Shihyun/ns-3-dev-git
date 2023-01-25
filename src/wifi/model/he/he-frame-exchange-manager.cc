@@ -1943,7 +1943,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
           NS_ABORT_MSG_IF (!blockAck.IsMultiSta (),
                            "A Multi-STA BlockAck is expected after a TB PPDU");
           NS_LOG_DEBUG ("Received a Multi-STA BlockAck from=" << hdr.GetAddr2 ());
-
+          std::cout << "Received a Multi-STA BlockAck from=" << hdr.GetAddr2 () << std::endl;
           NS_ASSERT (m_staMac && m_staMac->IsAssociated ());
           if (hdr.GetAddr2 () != m_bssid)
             {
@@ -1972,6 +1972,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                 {
                   // Acknowledgment context
                   NS_ABORT_IF (m_psduMap.empty () || m_psduMap.begin ()->first != staId);
+                  std::cout << "TEST access NotifyGotAck" << std::endl;
                   GetBaManager (tid)->NotifyGotAck (*m_psduMap.at (staId)->begin ());
                 }
               else
@@ -1986,7 +1987,7 @@ HeFrameExchangeManager::ReceiveMpdu (Ptr<const WifiMpdu> mpdu, RxSignalInfo rxSi
                       NS_ABORT_MSG_IF (tids.size () > 1, "Multi-TID A-MPDUs not supported yet");
                       tid = *tids.begin ();
                     }
-
+                  std::cout << "TEST access NotifyGotBlockAck" << std::endl;
                   std::pair<uint16_t,uint16_t> ret = GetBaManager (tid)->NotifyGotBlockAck (blockAck,
                                                                                             hdr.GetAddr2 (),
                                                                                             {tid}, index);
