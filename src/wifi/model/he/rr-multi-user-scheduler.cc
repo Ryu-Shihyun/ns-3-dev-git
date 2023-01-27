@@ -608,7 +608,10 @@ RrMultiUserScheduler::TrySendingBasicTf (void)
       else
         {
           NS_LOG_DEBUG ("Buffer status of station " << staIt->second << " is " << +queueSize);
-          maxBufferSize = std::max (maxBufferSize, static_cast<uint32_t> (queueSize * 256));
+          // maxBufferSize = std::max (maxBufferSize, static_cast<uint32_t> (queueSize * 256));//Default
+          maxBufferSize = std::max (maxBufferSize, m_ulPsduSize);//My Evaluation
+          
+
         }
     }
 
