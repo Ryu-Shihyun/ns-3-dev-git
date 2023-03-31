@@ -1,0 +1,4 @@
+./ns3 run "MBTA --mcs=8 --nStations=40 --enableBsrp=false --simulationTime=20 --bitRateVariable=7500 --payloadSize=500  --option="MBTA_RR""> ./scratch/MBTA/log_sta40_slot0_sim20_rate30M_Pro_PR.txt
+./ns3 run "MBTA --mcs=8 --nStations=100 --enableBsrp=false --simulationTime=20 --bitRateVariable=7500 --payloadSize=500  --option="MBTA_RR""> ./scratch/MBTA/log_sta100_slot0_sim20_rate30M_Pro_PR.txt
+./ns3 run "MBTA --mcs=8 --nStations=40 --enableBsrp=false --simulationTime=20 --bitRateVariable=250 --payloadSize=500  --option="MBTA_RR""> ./scratch/MBTA/log_sta40_slot0_sim20_rate1M_Pro_PR.txt
+./ns3 run "MBTA --mcs=8 --nStations=100 --enableBsrp=false --simulationTime=20 --bitRateVariable=250 --payloadSize=500  --option="MBTA_RR""> ./scratch/MBTA/log_sta100_slot0_sim20_rate1M_Pro_PR.txt

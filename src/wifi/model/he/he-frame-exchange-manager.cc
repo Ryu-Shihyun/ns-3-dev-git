@@ -280,7 +280,7 @@ HeFrameExchangeManager::StartFrameExchange (Ptr<QosTxop> edca, Time availableTim
       // }
       // m_succRate = (unSuccessNum/nSTA);
 
-      writting << (m_dlCount) << "," << padding << "," << status << "," << m_UlSuccessStas.size() << ","<< m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << "," << sumByte  << "," << maxByte*GetNRuForUl()<< "," << sumByte*1.0/(maxByte*GetNRuForUl()) << std::endl;
+      writting << (m_dlCount) << "," << padding << "," << status << "," << m_UlSuccessStas.size() << ","<< m_ruNum << "," << padding*1.0/m_UlSuccessStas.size() << "," << sumByte  << "," << maxByte*m_ruNum<< "," << sumByte*1.0/(maxByte*m_ruNum) <<"," << m_BARu <<"," << m_qosNullStas.size() <<"," << m_qosNullStas.size()/m_ruNum << std::endl;
       writting.close();
 
       
